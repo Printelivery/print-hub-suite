@@ -83,7 +83,7 @@
             border-radius: 50%;
             cursor: pointer;
             font-weight: bold;
-            display: none; /* Shown dynamically via JS if multi-images load */
+            display: none;
             z-index: 10;
         }
         .slider-btn.prev { left: 10px; }
@@ -192,7 +192,7 @@
                     <div class="image-container" id="${cardId}">
                         <button class="slider-btn prev" onclick="moveSlide('${cardId}', -1)">&#10094;</button>
                         <div class="slider-wrapper">
-                            <img class="product-image" src="../images/1_${prod.code}.jpg" data-index="0" onerror="handleImageError(this, '${prod.code}')">
+                            <img class="product-image" src="../tools/images/1_${prod.code}.jpg" data-index="0" onerror="handleImageError(this, '${prod.code}')">
                         </div>
                         <button class="slider-btn next" onclick="moveSlide('${cardId}', 1)">&#10095;</button>
                     </div>
@@ -210,41 +210,34 @@
             catalogContainer.innerHTML += cardHTML;
         });
 
-        // Smart image resolver logic
         function handleImageError(img, code) {
-            const currentIdx = parseInt(img.getAttribute('data-index') || "0");
+            const currentIdx = img.getAttribute('data-index');
             
-            if (currentIdx === 0) {
-                // If 1_PRNTLRY_xx fails, fall back immediately to single layout: PRNTLRY_xx.jpg
+            if (currentIdx === "0") {
                 img.setAttribute('data-index', "single");
-                img.src = `../images/${code}.jpg`;
-            } else if (img.getAttribute('data-index') === "single") {
-                // If single template fails too, fall back to text placeholder graphic
+                img.src = `../tools/images/${code}.jpg`;
+            } else if (currentIdx === "single") {
                 img.setAttribute('data-index', "failed");
                 img.src = `https://placehold.co/600x400/075E54/white?text=${encodeURIComponent(code)}`;
             } else {
-                // End of multi-image track loop reached; clean up extra blank slide targets
                 img.remove();
             }
             
-            // Check if slider controls need adjustments
             updateSliderControls(img.closest('.image-container'));
         }
 
-        // Checks for sequential files (e.g., if 1_ exists, check for 2_ and 3_ dynamically)
         document.querySelectorAll('.product-card').forEach((card, idx) => {
             const code = products[idx].code;
             const container = card.querySelector('.slider-wrapper');
             const mainImg = container.querySelector('.product-image');
             
-            // If it's using multi-image layout, probe for image #2
             setTimeout(() => {
-                if (mainImg.getAttribute('data-index') === "0") {
+                if (mainImg && mainImg.getAttribute('data-index') === "0") {
                     for (let i = 2; i <= 3; i++) {
                         const newImg = document.createElement('img');
                         newImg.className = 'product-image';
                         newImg.setAttribute('data-index', i - 1);
-                        newImg.src = `../images/${i}_${code}.jpg`;
+                        newImg.src = `../tools/images/${i}_${code}.jpg`;
                         newImg.onerror = function() { this.remove(); updateSliderControls(card.querySelector('.image-container')); };
                         newImg.onload = function() { updateSliderControls(card.querySelector('.image-container')); };
                         container.appendChild(newImg);
@@ -267,7 +260,6 @@
             }
         }
 
-        // Slider Navigation Control Engine
         function moveSlide(containerId, direction) {
             const container = document.getElementById(containerId);
             const wrapper = container.querySelector('.slider-wrapper');
