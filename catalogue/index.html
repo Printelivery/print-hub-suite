@@ -194,7 +194,8 @@
 
         async function fetchProducts() {
             try {
-                const response = await fetch(CSV_URL);
+                //const response = await fetch(CSV_URL);
+                const response = await fetch(CSV_URL + "&cachebuster=" + new Date().getTime());
                 const dataText = await response.text();
                 const parsedRows = parseCSV(dataText);
                 
