@@ -112,22 +112,27 @@
 
 <div class="admin-container">
     <h2>Product Management Portal</h2>
-    <p class="subtitle">Add a new item or type an existing product ID to overwrite details.</p>
+    <p class="subtitle">Add a new item or type an existing Product ID to overwrite details.</p>
     
     <form id="productForm">
         <div class="form-group">
-            <label for="code">Product Code / ID (Matches Image Name)</label>
-            <input type="text" id="code" placeholder="e.g., PRNTLRY_01" required>
+            <label for="productGroup">Product Group / Category</label>
+            <input type="text" id="productGroup" placeholder="e.g., Document Printing" required>
+        </div>
+
+        <div class="form-group">
+            <label for="productId">Product ID (Matches Image File Name)</label>
+            <input type="text" id="productId" placeholder="e.g., PRNTLRY_01" required>
         </div>
         
         <div class="form-group">
-            <label for="title">Product Title</label>
-            <input type="text" id="title" placeholder="e.g., A4 Plain Paper Printing" required>
+            <label for="productName">Product Name / Title</label>
+            <input type="text" id="productName" placeholder="e.g., A4 Plain Paper Printing" required>
         </div>
         
         <div class="form-group">
-            <label for="desc">Product Description</label>
-            <textarea id="desc" placeholder="Enter specifications, paper quality, options..." required></textarea>
+            <label for="description">Product Description</label>
+            <textarea id="description" placeholder="Enter specifications, paper quality, options..." required></textarea>
         </div>
         
         <div class="form-group">
@@ -155,40 +160,38 @@
         const submitBtn = document.getElementById('submitBtn');
         const messageDiv = document.getElementById('message');
         
-        // UI feedback during process
         submitBtn.disabled = true;
         submitBtn.innerText = "Processing update...";
         messageDiv.style.display = "none";
         
         const payload = {
-            code: document.getElementById('code').value.trim(),
-            title: document.getElementById('title').value.trim(),
-            desc: document.getElementById('desc').value.trim(),
+            productGroup: document.getElementById('productGroup').value.trim(),
+            productId: document.getElementById('productId').value.trim(),
+            productName: document.getElementById('productName').value.trim(),
+            description: document.getElementById('description').value.trim(),
             price: document.getElementById('price').value.trim(),
             password: document.getElementById('password').value
         };
 
         try {
-            // Send payload to Google Web App using a standard fetch call
-            const response = await fetch(SCRIPT_URL, {
+            await fetch(SCRIPT_URL, {
                 method: 'POST',
-                mode: 'no-cors', // Required for Google Script cross-domain execution redirects
+                mode: 'no-cors',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(payload)
             });
 
-            // Note: 'no-cors' requests return an opaque response structure where status cannot be read directly via JS,
-            // but the execution will process successfully in the sheet background.
             messageDiv.className = "success";
             messageDiv.innerText = "Request dispatched successfully! Check your Google Sheet to verify changes.";
             messageDiv.style.display = "block";
             
-            // Clear inputs except password for workflow efficiency
-            document.getElementById('code').value = '';
-            document.getElementById('title').value = '';
-            document.getElementById('desc').value = '';
+            // Clear entry inputs safely
+            document.getElementById('productGroup').value = '';
+            document.getElementById('productId').value = '';
+            document.getElementById('productName').value = '';
+            document.getElementById('description').value = '';
             document.getElementById('price').value = '';
 
         } catch (error) {
