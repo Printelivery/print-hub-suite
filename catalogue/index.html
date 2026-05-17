@@ -3,72 +3,119 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Product Catalogue</title>
+    <title>Product Catalogue - Printelivery</title>
     <style>
+        :root {
+            --primary-color: #075E54;
+            --accent-color: #25D366;
+            --bg-color: #f8f9fa;
+            --text-dark: #2d3748;
+        }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: #f8f9fa;
+            background-color: var(--bg-color);
             margin: 0;
-            padding: 20px;
-            color: #2d3748;
+            padding: 40px 20px;
+            color: var(--text-dark);
         }
         .header {
             text-align: center;
-            margin-bottom: 40px;
+            margin-bottom: 50px;
         }
         .header h1 {
-            color: #075E54;
-            font-size: 2.2rem;
-            margin-bottom: 8px;
+            color: var(--primary-color);
+            font-size: 2.5rem;
+            margin-bottom: 10px;
         }
         .header p {
             color: #718096;
+            font-size: 1.1rem;
             margin: 0;
         }
         .catalog-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 25px;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 30px;
             max-width: 1200px;
             margin: 0 auto;
         }
         .product-card {
             background: #ffffff;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            border-radius: 16px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
             overflow: hidden;
             display: flex;
             flex-direction: column;
             border: 1px solid #e2e8f0;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
         }
         .image-container {
             width: 100%;
-            height: 220px;
+            height: 260px;
             background-color: #edf2f7;
+            position: relative;
+            overflow: hidden;
+        }
+        .slider-wrapper {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.3s ease-in-out;
         }
         .product-image {
-            width: 100%;
+            min-width: 100%;
             height: 100%;
             object-fit: cover;
         }
+        .slider-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-weight: bold;
+            display: none; /* Shown dynamically via JS if multi-images load */
+            z-index: 10;
+        }
+        .slider-btn.prev { left: 10px; }
+        .slider-btn.next { right: 10px; }
         .product-details {
-            padding: 20px;
+            padding: 24px;
             display: flex;
             flex-direction: column;
             flex-grow: 1;
         }
-        .product-title {
-            font-size: 1.15rem;
+        .product-id {
+            font-size: 0.8rem;
             font-weight: 700;
-            margin: 0 0 8px 0;
+            color: #718096;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 4px;
+        }
+        .product-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin: 0 0 10px 0;
             color: #1a202c;
+            line-height: 1.4;
         }
         .product-desc {
             font-size: 0.9rem;
             color: #4a5568;
-            line-height: 1.4;
+            line-height: 1.5;
             margin: 0 0 20px 0;
             flex-grow: 1;
+            white-space: pre-line;
         }
         .action-row {
             display: flex;
@@ -77,18 +124,22 @@
             margin-top: auto;
         }
         .price {
+            font-size: 1.25rem;
             font-weight: 800;
-            color: #075E54;
-            font-size: 1.1rem;
+            color: var(--primary-color);
         }
         .order-button {
-            background-color: #25D366;
+            background-color: var(--accent-color);
             color: white;
             text-decoration: none;
-            padding: 8px 14px;
-            border-radius: 6px;
+            padding: 10px 18px;
+            border-radius: 8px;
             font-weight: 600;
-            font-size: 0.85rem;
+            font-size: 0.9rem;
+            transition: background-color 0.2s ease;
+        }
+        .order-button:hover {
+            background-color: #20ba59;
         }
     </style>
 </head>
@@ -96,31 +147,140 @@
 
     <div class="header">
         <h1>Our Product Catalogue</h1>
-        <p>Premium Custom Designs & Prints</p>
+        <p>Premium Printing Tools, Custom Designs & Prints</p>
     </div>
 
     <div class="catalog-grid" id="catalog"></div>
 
     <script>
-        const totalProducts = 30; 
+        const products = [
+            { code: "PRNTLRY_01", title: "A4 Plain Paper Black and White Print", desc: "A4 Plain Paper Black and White Print", price: "₹5" },
+            { code: "PRNTLRY_02", title: "A4 Plain Paper Colour print", desc: "A4 Plain Paper Colour print", price: "₹10" },
+            { code: "PRNTLRY_03", title: "A4 Plain paper Photocopy BW", desc: "Black and White Xerox copies", price: "₹3" },
+            { code: "PRNTLRY_04", title: "Document Scan upto A4 size", desc: "Both Color and Black and white scanning of documents. Can be sent through Email / WhatsApp. Strictly no pendrive.", price: "₹5" },
+            { code: "PRNTLRY_05", title: "Passport size photo 30 copies", desc: "3.5 x 4.5 cm is standard dimensions for forms and application. For any other size, the number of copies may vary.", price: "₹100" },
+            { code: "PRNTLRY_06", title: "Passport size photos 8 copies", desc: "3.5 x 4.5 cm is standard dimensions for forms and application. For any other size, the number of copies may vary.", price: "₹40" },
+            { code: "PRNTLRY_07", title: "A4 size photo prints.", desc: "Glossy Photo prints of 180gsm on photo paper.", price: "₹25" },
+            { code: "PRNTLRY_08", title: "Micro square prints 2x2\" (20 pieces)", desc: "Glossy photo prints on photo paper", price: "₹30" },
+            { code: "PRNTLRY_09", title: "Mini Square print 3x3\" (Pack of 6)", desc: "Glossy photo prints on photo paper", price: "₹30" },
+            { code: "PRNTLRY_10", title: "A4 Craft Board print Black colour only", desc: "Brown colour hard board around 200gsm", price: "₹25" },
+            { code: "PRNTLRY_11", title: "A4 Sticker sheet prints", desc: "Adhesive with a peel off sheet. Ready to stick.", price: "₹25" },
+            { code: "PRNTLRY_12", title: "A4 art board print", desc: "Thick white sheet with 250-300 gsm thickness", price: "₹25" },
+            { code: "PRNTLRY_13", title: "Fridge Magnets", desc: "A4 Size (number of pieces can be decided based on the single piece size)", price: "₹150" },
+            { code: "PRNTLRY_14", title: "Magnetic sheet calendar", desc: "A5 size", price: "₹100" },
+            { code: "PRNTLRY_15", title: "Letterheads", desc: "Printed on high resolution A4 bond paper for the premium look.\nDesign charges extra.\nMin ordered qty 100 preferred", price: "₹12" },
+            { code: "PRNTLRY_16", title: "Visiting Cards", desc: "Price on request based on the quality opted (min price updated)", price: "₹100" },
+            { code: "PRNTLRY_17", title: "A4 size Lamnation", desc: "Lamination without print", price: "₹25" },
+            { code: "PRNTLRY_18", title: "Card size 55x91cm", desc: "Lamination without print", price: "₹10" },
+            { code: "PRNTLRY_19", title: "Customised 18x6\" daily Calendar", desc: "The given photo will be printed on the calendar. Shipping & Design charges extra", price: "₹299" },
+            { code: "PRNTLRY_20", title: "Die Cut Daily Calendars 11x17\"", desc: "Business details will be added as customisation. Business promotion give aways", price: "₹65" },
+            { code: "PRNTLRY_21", title: "Annual calendar poster A3 size", desc: "Annual calendar for business promotion. Business details will be printed and logos will be kept. 50 per piece. min order qty 25", price: "₹50" },
+            { code: "PRNTLRY_22", title: "Desk Calendar without stand", desc: "Upcoming (updating price soon)", price: "₹200" },
+            { code: "PRNTLRY_23", title: "Desk Calendar with stand", desc: "Upcoming (Updating the price soon)\nStand may vary upon availability.", price: "₹250" },
+            { code: "PRNTLRY_24", title: "Canvas board prints", desc: "Price on request as per size (dummy price updated)", price: "₹100" },
+            { code: "PRNTLRY_25", title: "Framed photo prints", desc: "Price on request as per size (dummy price updated)", price: "₹100" },
+            { code: "PRNTLRY_26", title: "Wall Posters", desc: "Price on request as per size (dummy price updated)", price: "₹100" },
+            { code: "PRNTLRY_27", title: "Play Currency", desc: "Rs.2 per set of 7 notes in each denomination.", price: "₹2" }
+        ];
+
         const catalogContainer = document.getElementById('catalog');
 
-        for (let i = 1; i <= totalProducts; i++) {
-            catalogContainer.innerHTML += `
+        products.forEach((prod, index) => {
+            const cardId = `card-${index}`;
+            const cardHTML = `
                 <div class="product-card">
-                    <div class="image-container">
-                        <img class="product-image" src="../images/prod${i}.jpg" alt="Product ${i}" onerror="this.src='https://placehold.co/600x400/075E54/white?text=Product+${i}'">
+                    <div class="image-container" id="${cardId}">
+                        <button class="slider-btn prev" onclick="moveSlide('${cardId}', -1)">&#10094;</button>
+                        <div class="slider-wrapper">
+                            <img class="product-image" src="../images/1_${prod.code}.jpg" data-index="0" onerror="handleImageError(this, '${prod.code}')">
+                        </div>
+                        <button class="slider-btn next" onclick="moveSlide('${cardId}', 1)">&#10095;</button>
                     </div>
                     <div class="product-details">
-                        <h3 class="product-title">Product Item ${i}</h3>
-                        <p class="product-desc">Premium quality custom item. Contact us directly for personalized sizing, bulk ordering, and custom options.</p>
+                        <div class="product-id">${prod.code}</div>
+                        <h3 class="product-title">${prod.title}</h3>
+                        <p class="product-desc">${prod.desc}</p>
                         <div class="action-row">
-                            <span class="price">Enquire</span>
-                            <a href="https://wa.me/918920755505?text=Hi, I am interested in Product Item ${i}" target="_blank" class="order-button">Order Now</a>
+                            <span class="price">${prod.price}</span>
+                            <a href="https://wa.me/918920755505?text=Hi, I am interested in ordering: ${encodeURIComponent(prod.title)} [ID: ${prod.code}] (${prod.price})" target="_blank" class="order-button">Order Now</a>
                         </div>
                     </div>
                 </div>
             `;
+            catalogContainer.innerHTML += cardHTML;
+        });
+
+        // Smart image resolver logic
+        function handleImageError(img, code) {
+            const currentIdx = parseInt(img.getAttribute('data-index') || "0");
+            
+            if (currentIdx === 0) {
+                // If 1_PRNTLRY_xx fails, fall back immediately to single layout: PRNTLRY_xx.jpg
+                img.setAttribute('data-index', "single");
+                img.src = `../images/${code}.jpg`;
+            } else if (img.getAttribute('data-index') === "single") {
+                // If single template fails too, fall back to text placeholder graphic
+                img.setAttribute('data-index', "failed");
+                img.src = `https://placehold.co/600x400/075E54/white?text=${encodeURIComponent(code)}`;
+            } else {
+                // End of multi-image track loop reached; clean up extra blank slide targets
+                img.remove();
+            }
+            
+            // Check if slider controls need adjustments
+            updateSliderControls(img.closest('.image-container'));
+        }
+
+        // Checks for sequential files (e.g., if 1_ exists, check for 2_ and 3_ dynamically)
+        document.querySelectorAll('.product-card').forEach((card, idx) => {
+            const code = products[idx].code;
+            const container = card.querySelector('.slider-wrapper');
+            const mainImg = container.querySelector('.product-image');
+            
+            // If it's using multi-image layout, probe for image #2
+            setTimeout(() => {
+                if (mainImg.getAttribute('data-index') === "0") {
+                    for (let i = 2; i <= 3; i++) {
+                        const newImg = document.createElement('img');
+                        newImg.className = 'product-image';
+                        newImg.setAttribute('data-index', i - 1);
+                        newImg.src = `../images/${i}_${code}.jpg`;
+                        newImg.onerror = function() { this.remove(); updateSliderControls(card.querySelector('.image-container')); };
+                        newImg.onload = function() { updateSliderControls(card.querySelector('.image-container')); };
+                        container.appendChild(newImg);
+                    }
+                }
+            }, 100);
+        });
+
+        function updateSliderControls(container) {
+            if (!container) return;
+            const imgs = container.querySelectorAll('.product-image');
+            const prevBtn = container.querySelector('.slider-btn.prev');
+            const nextBtn = container.querySelector('.slider-btn.next');
+            if (imgs.length > 1) {
+                prevBtn.style.display = 'block';
+                nextBtn.style.display = 'block';
+            } else {
+                prevBtn.style.display = 'none';
+                nextBtn.style.display = 'none';
+            }
+        }
+
+        // Slider Navigation Control Engine
+        function moveSlide(containerId, direction) {
+            const container = document.getElementById(containerId);
+            const wrapper = container.querySelector('.slider-wrapper');
+            const imgs = wrapper.querySelectorAll('.product-image');
+            
+            let currentSlide = parseInt(container.getAttribute('data-current-slide') || "0");
+            currentSlide += direction;
+            
+            if (currentSlide >= imgs.length) currentSlide = 0;
+            if (currentSlide < 0) currentSlide = imgs.length - 1;
+            
+            container.setAttribute('data-current-slide', currentSlide);
+            wrapper.style.transform = `translateX(-${currentSlide * 100}%)`;
         }
     </script>
 
