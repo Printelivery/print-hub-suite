@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Photo Circular Layout - Final Version</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" />
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; padding: 20px; background-color: #f0f2f5; }
+        .container { max-width: 1150px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+        .control-group { margin-bottom: 20px; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px; background: #fafafa; }
+        label { display: block; margin-bottom: 8px; font-weight: bold; color: #444; font-size: 0.85em; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; margin-bottom: 10px; box-sizing: border-box; }
+        .row { display: flex; gap: 15px; flex-wrap: wrap; align-items: flex-end; }
+        .flex-1 { flex: 1; min-width: 140px; }
+        button { padding: 12px 20px; background-color: #28a745; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        button:hover { background-color: #218838; }
+        .btn-info { background-color: #17a2b8; }
+        #workspace { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 15px; padding: 15px; border: 2px dashed #ccc; border-radius: 8px; background: #fff; min-height: 100px; }
+        .thumb-box { position: relative; width: 120px; height: 120px; border: 2px solid #007bff; border-radius: 8px; overflow: hidden; }
+        .thumb-box img { width: 100%; height: 100%; object-fit: cover; }
+        .crop-btn { position: absolute; bottom: 0; left: 0; width: 100%; background: rgba(0,0,0,0.8); color: #fff; border: none; font-size: 10px; padding: 8px 0; cursor: pointer; }
+        #outputLayoutPreview { margin: 20px auto; border: 1px solid #ddd; background-color: #fff; position: relative; overflow: hidden; }
+        .circle-container { position: absolute; box-sizing: border-box; overflow: hidden; border-radius: 50%; background: #fff; }
+        .modal { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); }
+        .modal-content { margin: 1% auto; padding: 20px; width: 90%; max-width: 800px; background: white; border-radius: 8px; }
+        .crop-container { height: 500px; background: #333; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>⭕ Circular Layout Pro</h1>
+
+    <div class="control-group">
+        <div class="row">
+            <div class="flex-1">
+                <label>Calculation Mode:</label>
+                <select id="calcMode">
+                    <option value="diameter">Auto Count (Set Diameter)</option>
+                    <option value="grid">Auto Size (Set Grid)</option>
+                    <option value="manual" selected>Manual (Set Both)</option>
+                </select>
+            </div>
+            <div class="flex-1" id="diameterGroup">
+                <label>Diameter (mm):</label>
+                <input type="number" id="targetDiameter" value="50">
+            </div>
+            <div class="flex-1" id="gridGroup">
+                <label>Grid (Cols x Rows):</label>
+                <div style="display: flex; gap: 5px;">
+                    <input type="number" id="gridCols" value="3">
+                    <input type="number" id="gridRows" value="4">
+                </div>
+            </div>
+            <div class="flex-1">
+                <label>Gap (mm):</label>
+                <input type="number" id="manualGap" value="5" step="0.5">
+            </div>
+            <div class="flex-1">
+                <label>Paper Size:</label>
+                <select id="outputSize">
+                    <option value="A4">A4 (210x297)</option>
+                    <option value="A5">A5 (148x210)</option>
+                    <option value="Maxi">Maxi (101x152)</option>
+                    <option value="Card">Card (55x91)</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="control-group">
+        <div class="row">
+            <div class="flex-1"><label>1. Foregrounds:</label><input type="file" id="imageUploader" multiple></div>
+            <div class="flex-1"><label>2. Background:</label><input type="file" id="bgUploader"></div>
+            <div class="flex-1"><label>Blur Intensity:</label><input type="range" id="blurIntensity" min="0" max="50" value="20"></div>
+            <div class="flex-1"><label>Brightness (%):</label><input type="range" id="bgBrightness" min="10" max="150" value="100"></div>
+        </div>
+        <div class="row" style="margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px;">
+            <div class="flex-1">
+                <label>Show Cut Outline:</label>
+                <select id="showOutline">
+                    <option value="yes">Yes (For Cutting)</option>
+                    <option value="no">No</option>
+                </select>
+            </div>
+            <div class="flex-1">
+                <label>Outline Color:</label>
+                <input type="color" id="outlineColor" value="#000000">
+            </div>
+            <div class="flex-1">
+                <label>Outline Weight (pt):</label>
+                <input type="number" id="outlineWeight" value="1" step="0.5" min="0.5">
+            </div>
+        </div>
+    </div>
+
+    <div id="workspace"></div>
+
+    <div style="text-align: center; margin: 25px 0; display: flex; justify-content: center; gap: 15px;">
+        <button id="generateButton">Update Preview</button>
+        <button id="downloadPNG" class="btn-info">Download PNG (Print Ready)</button>
+    </div>
+
+    <div id="outputLayoutPreview"></div>
+</div>
+
+<div id="croppingModal" class="modal">
+    <div class="modal-content">
+        <h3 id="modalTitle">Resize & Position</h3>
+        <p style="font-size: 0.8em; color: #666;">Position your image inside the circle.</p>
+        <div class="crop-container"><img id="cropImage"></div>
+        <div style="margin-top: 15px; text-align: right;">
+            <button id="confirmCrop">Apply Selection</button>
+            <button onclick="document.getElementById('croppingModal').style.display='none'">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+<script>
+    const SIZES = { 'A4': [210, 297], 'A5': [148, 210], 'Maxi': [101.6, 152.4], 'Card': [55, 91] };
+    let cropper = null, croppedImages = [], bgOriginalSrc = null, editingIndex = -1;
+
+    document.getElementById('calcMode').onchange = (e) => {
+        const val = e.target.value;
+        document.getElementById('diameterGroup').style.display = (val === 'grid') ? 'none' : 'block';
+        document.getElementById('gridGroup').style.display = (val === 'diameter') ? 'none' : 'block';
+    };
+
+    document.getElementById('imageUploader').onchange = (e) => {
+        Array.from(e.target.files).forEach(file => {
+            const reader = new FileReader();
+            reader.onload = (ev) => { croppedImages.push({ originalSrc: ev.target.result, croppedSrc: ev.target.result }); renderWorkspace(); };
+            reader.readAsDataURL(file);
+        });
+    };
+
+    document.getElementById('bgUploader').onchange = (e) => {
+        const reader = new FileReader();
+        reader.onload = (ev) => { bgOriginalSrc = ev.target.result; };
+        reader.readAsDataURL(e.target.files[0]);
+    };
+
+    function renderWorkspace() {
+        const ws = document.getElementById('workspace'); ws.innerHTML = '';
+        croppedImages.forEach((img, i) => {
+            const div = document.createElement('div'); div.className = 'thumb-box';
+            div.innerHTML = `<img src="${img.croppedSrc}"><button class="crop-btn" onclick="openCropTool(${i})">RESIZE</button>`;
+            ws.appendChild(div);
+        });
+    }
+
+    window.openCropTool = (i) => {
+        editingIndex = i; document.getElementById('croppingModal').style.display = 'block';
+        const img = document.getElementById('cropImage'); img.src = croppedImages[i].originalSrc;
+        if(cropper) cropper.destroy();
+        img.onload = () => { cropper = new Cropper(img, { aspectRatio: 1, viewMode: 0, dragMode: 'move' }); };
+    };
+
+    document.getElementById('confirmCrop').onclick = () => {
+        const canvas = cropper.getCroppedCanvas({ width: 800, height: 800, fillColor: 'transparent' });
+        croppedImages[editingIndex].croppedSrc = canvas.toDataURL('image/png');
+        document.getElementById('croppingModal').style.display = 'none';
+        renderWorkspace();
+    };
+
+    // Enhanced Blur logic including the thick outline
+    async function getBlurredImage(src, blurPx, brightness, outlineColor, outlineWeight, showOutline) {
+        return new Promise((resolve) => {
+            const img = new Image();
+            img.crossOrigin = "anonymous";
+            img.src = src;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                canvas.width = 600; canvas.height = 600; 
+
+                // Draw Blurred Background
+                ctx.save();
+                ctx.filter = `blur(${blurPx}px) brightness(${brightness}%)`;
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                ctx.restore();
+
+                // Draw Outline if requested
+                if (showOutline === 'yes') {
+                    ctx.beginPath();
+                    ctx.arc(canvas.width/2, canvas.height/2, (canvas.width/2) - (outlineWeight*2), 0, Math.PI * 2);
+                    ctx.strokeStyle = outlineColor;
+                    ctx.lineWidth = outlineWeight * 4; // Scaled for internal canvas size
+                    ctx.stroke();
+                }
+
+                resolve(canvas.toDataURL('image/png'));
+            };
+        });
+    }
+
+    document.getElementById('generateButton').onclick = async () => {
+        const preview = document.getElementById('outputLayoutPreview');
+        preview.innerHTML = '<div style="padding:40px; text-align:center;">Rendering High-Quality Circles...</div>';
+        
+        const [pW, pH] = SIZES[document.getElementById('outputSize').value];
+        const mode = document.getElementById('calcMode').value;
+        const gap = parseFloat(document.getElementById('manualGap').value) || 0;
+        const blur = document.getElementById('blurIntensity').value;
+        const bright = document.getElementById('bgBrightness').value;
+        const oColor = document.getElementById('outlineColor').value;
+        const oWeight = parseFloat(document.getElementById('outlineWeight').value);
+        const oShow = document.getElementById('showOutline').value;
+
+        let d, cols, rows;
+        if (mode === 'diameter') {
+            d = parseFloat(document.getElementById('targetDiameter').value);
+            cols = Math.floor(pW / (d + gap)); rows = Math.floor(pH / (d + gap));
+        } else if (mode === 'grid') {
+            cols = parseInt(document.getElementById('gridCols').value); rows = parseInt(document.getElementById('gridRows').value);
+            d = Math.min((pW - (cols + 1) * gap) / cols, (pH - (rows + 1) * gap) / rows);
+        } else {
+            d = parseFloat(document.getElementById('targetDiameter').value);
+            cols = parseInt(document.getElementById('gridCols').value); rows = parseInt(document.getElementById('gridRows').value);
+        }
+
+        const totalW = (cols * d) + ((cols - 1) * gap);
+        const totalH = (rows * d) + ((rows - 1) * gap);
+        const startX = (pW - totalW) / 2;
+        const startY = (pH - totalH) / 2;
+
+        const html = [];
+        for(let i=0; i < cols*rows; i++) {
+            const imgData = croppedImages[i % croppedImages.length];
+            if(!imgData) continue;
+            
+            const processedBg = await getBlurredImage(bgOriginalSrc || imgData.originalSrc, blur, bright, oColor, oWeight, oShow);
+            const x = startX + (i % cols) * (d + gap);
+            const y = startY + Math.floor(i / cols) * (d + gap);
+
+            html.push(`
+                <div class="circle-container" style="width:${d}mm; height:${d}mm; left:${x}mm; top:${y}mm; ${oShow === 'yes' ? 'border: '+oWeight+'pt solid '+oColor : ''}">
+                    <img src="${processedBg}" style="position:absolute; width:110%; height:110%; top:-5%; left:-5%; object-fit:cover; z-index:1;">
+                    <img src="${imgData.croppedSrc}" style="position:absolute; inset:0; width:100%; height:100%; object-fit:contain; z-index:2;">
+                </div>
+            `);
+        }
+        preview.style.width = pW + 'mm'; preview.style.height = pH + 'mm';
+        preview.innerHTML = html.join('');
+    };
+
+    document.getElementById('downloadPNG').onclick = async () => {
+        const canvas = await html2canvas(document.getElementById('outputLayoutPreview'), { scale: 3, useCORS: true, backgroundColor: '#ffffff' });
+        const link = document.createElement('a');
+        link.download = 'print_ready_layout.png';
+        link.href = canvas.toDataURL('image/png', 1.0);
+        link.click();
+    };
+</script>
+</body>
+</html>
