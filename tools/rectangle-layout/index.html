@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Print Layout Generator</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #0f172a;
+            --text-light: #64748b;
+            --border: #e2e8f0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 380px 1fr;
+            gap: 24px;
+        }
+
+        .controls-card {
+            background: var(--card-bg);
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            height: fit-content;
+        }
+
+        .preview-card {
+            background: var(--card-bg);
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h2 { margin-top: 0; margin-bottom: 20px; font-size: 1.25rem; }
+        
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 6px;
+            color: var(--text);
+        }
+
+        select, input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background-color: #fff;
+            color: var(--text);
+            font-size: 0.9rem;
+            box-sizing: border-box;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+
+        .btn:hover { background-color: var(--primary-hover); }
+        .btn-secondary { background-color: var(--text-light); margin-top: 12px; }
+        .btn-secondary:hover { background-color: #475569; }
+
+        /* Canvas rendering layout container */
+        #print-page {
+            background: white;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            position: relative;
+            transform-origin: top center;
+            margin-bottom: 20px;
+        }
+
+        .photo-cell {
+            position: absolute;
+            box-sizing: border-box;
+            overflow: hidden;
+            background: #f1f5f9;
+        }
+
+        .photo-cell img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        /* Cropper Modal styling */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.6);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .cropper-container-wrapper {
+            max-height: 400px;
+            margin-bottom: 16px;
+        }
+
+        .thumb-strip {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding: 8px 0;
+            margin-bottom: 12px;
+        }
+
+        .thumb-wrapper {
+            position: relative;
+            width: 60px;
+            height: 60px;
+            border: 2px solid var(--border);
+            border-radius: 4px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .thumb-wrapper.active { border-color: var(--primary); }
+        .thumb-wrapper img { width: 100%; height: 100%; object-fit: cover; }
+        .thumb-wrapper .remove-btn {
+            position: absolute; top: -4px; right: -4px;
+            background: red; color: white; border-radius: 50%;
+            width: 16px; height: 16px; font-size: 10px;
+            display: flex; align-items: center; justify-content: center;
+            border: none; cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="controls-card">
+        <h2>📏 Rectangle Layout Pro</h2>
+        
+        <div class="form-group">
+            <label>Paper Size</label>
+            <select id="paper-size">
+                <option value="A4">A4 (210 x 297 mm)</option>
+                <option value="A5">A5 (148 x 210 mm)</option>
+                <option value="4x6">4x6 in (101.6 x 152.4 mm)</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Orientation</label>
+            <select id="orientation">
+                <option value="portrait">Portrait</option>
+                <option value="landscape">Landscape</option>
+            </select>
+        </div>
+
+        <div class="grid-2">
+            <div class="form-group">
+                <label>Photo Width (mm)</label>
+                <input type="number" id="photo-w" value="35" min="10">
+            </div>
+            <div class="form-group">
+                <label>Photo Height (mm)</label>
+                <input type="number" id="photo-h" value="45" min="10">
+            </div>
+        </div>
+
+        <div class="grid-2">
+            <div class="form-group">
+                <label>Spacing / Gap (mm)</label>
+                <input type="number" id="gap" value="2" min="0">
+            </div>
+            <div class="form-group">
+                <label>Page Margin (mm)</label>
+                <input type="number" id="margin" value="5" min="0">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Upload Images</label>
+            <input type="file" id="file-input" multiple accept="image/*">
+        </div>
+
+        <div class="thumb-strip" id="thumb-strip"></div>
+
+        <button class="btn" id="generate-btn">Generate Layout</button>
+        <button class="btn btn-secondary" id="download-btn">Download High-Res PNG</button>
+    </div>
+
+    <div class="preview-card">
+        <div id="print-page"></div>
+    </div>
+</div>
+
+<div class="modal" id="crop-modal">
+    <div class="modal-content">
+        <h3>Crop Image to Target Aspect Ratio</h3>
+        <div class="cropper-container-wrapper">
+            <img id="cropper-image" src="" style="max-width: 100%;">
+        </div>
+        <div class="grid-2">
+            <button class="btn btn-secondary" onclick="closeCropModal()">Cancel</button>
+            <button class="btn" id="save-crop-btn">Apply Crop</button>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+<script>
+    // System Global Memory State Management Trackers
+    const paperDimensions = {
+        A4: { portrait: [210, 297], landscape: [297, 210] },
+        A5: { portrait: [148, 210], landscape: [210, 148] },
+        '4x6': { portrait: [101.6, 152.4], landscape: [152.4, 101.6] }
+    };
+
+    let uploadedImages = []; 
+    let activeImageIndex = null;
+    let cropperInstance = null;
+
+    // DOM Element Reference Points Mapping
+    const fileInput = document.getElementById('file-input');
+    const thumbStrip = document.getElementById('thumb-strip');
+    const printPage = document.getElementById('print-page');
+    const cropModal = document.getElementById('crop-modal');
+    const cropperImage = document.getElementById('cropper-image');
+
+    // Trigger File Upload Processing Thread Loop
+    fileInput.addEventListener('change', (e) => {
+        const files = Array.from(e.target.files);
+        files.forEach(file => {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                uploadedImages.push({
+                    original: event.target.result,
+                    cropped: event.target.result
+                });
+                renderThumbs();
+                triggerCropper(uploadedImages.length - 1);
+            };
+            reader.readAsDataURL(file);
+        });
+        fileInput.value = ''; 
+    });
+
+    function renderThumbs() {
+        thumbStrip.innerHTML = '';
+        uploadedImages.forEach((img, index) => {
+            const wrapper = document.createElement('div');
+            wrapper.className = `thumb-wrapper ${index === activeImageIndex ? 'active' : ''}`;
+            
+            const imageEl = document.createElement('img');
+            imageEl.src = img.cropped;
+            imageEl.onclick = () => triggerCropper(index);
+
+            const removeBtn = document.createElement('button');
+            removeBtn.className = 'remove-btn';
+            removeBtn.innerHTML = '×';
+            removeBtn.onclick = (e) => {
+                e.stopPropagation();
+                uploadedImages.splice(index, 1);
+                activeImageIndex = null;
+                renderThumbs();
+                generateLayoutMatrix();
+            };
+
+            wrapper.appendChild(imageEl);
+            wrapper.appendChild(removeBtn);
+            thumbStrip.appendChild(wrapper);
+        });
+    }
+
+    function triggerCropper(index) {
+        activeImageIndex = index;
+        renderThumbs();
+        
+        const targetW = parseFloat(document.getElementById('photo-w').value);
+        const targetH = parseFloat(document.getElementById('photo-h').value);
+        
+        cropperImage.src = uploadedImages[index].original;
+        cropModal.style.display = 'flex';
+
+        if(cropperInstance) cropperInstance.destroy();
+        
+        // Timeout ensures image initialization lifecycle is fully prepared
+        setTimeout(() => {
+            cropperInstance = new Cropper(cropperImage, {
+                aspectRatio: targetW / targetH,
+                viewMode: 1,
+                autoCropArea: 1
+            });
+        }, 50);
+    }
+
+    document.getElementById('save-crop-btn').addEventListener('click', () => {
+        if (!cropperInstance) return;
+        const canvas = cropperInstance.getCroppedCanvas();
+        uploadedImages[activeImageIndex].cropped = canvas.toDataURL();
+        renderThumbs();
+        closeCropModal();
+        generateLayoutMatrix();
+    });
+
+    function closeCropModal() {
+        cropModal.style.display = 'none';
+        if(cropperInstance) {
+            cropperInstance.destroy();
+            cropperInstance = null;
+        }
+    }
+
+    // Mathematical Matrix Positioning Mapping Pipeline Engine
+    function generateLayoutMatrix() {
+        printPage.innerHTML = '';
+        if (uploadedImages.length === 0) return;
+
+        const sizeSelection = document.getElementById('paper-size').value;
+        const orientation = document.getElementById('orientation').value;
+        const [pageW, pageH] = paperDimensions[sizeSelection][orientation];
+
+        const photoW = parseFloat(document.getElementById('photo-w').value);
+        const photoH = parseFloat(document.getElementById('photo-h').value);
+        const gap = parseFloat(document.getElementById('gap').value);
+        const margin = parseFloat(document.getElementById('margin').value);
+
+        // Preview Screen Space Scale Optimization Computations
+        const maxDisplayWidth = 650;
+        const scaleFactor = maxDisplayWidth / pageW;
+
+        printPage.style.width = `${pageW * scaleFactor}px`;
+        printPage.style.height = `${pageH * scaleFactor}px`;
+
+        // Calculate available print bounds boundaries
+        const canvasWidth = pageW - (2 * margin);
+        const canvasHeight = pageH - (2 * margin);
+
+        const cols = Math.floor((canvasWidth + gap) / (photoW + gap));
+        const rows = Math.floor((canvasHeight + gap) / (photoH + gap));
+
+        if (cols <= 0 || rows <= 0) return;
+
+        // Perfect balancing centered layout compensation metrics calculations
+        const gridWidth = (cols * photoW) + ((cols - 1) * gap);
+        const gridHeight = (rows * photoH) + ((rows - 1) * gap);
+        const centerOffsetX = margin + ((canvasWidth - gridWidth) / 2);
+        const centerOffsetY = margin + ((canvasHeight - gridHeight) / 2);
+
+        let totalCellElementsCount = cols * rows;
+        
+        for (let i = 0; i < totalCellElementsCount; i++) {
+            const currentColumn = i % cols;
+            const currentRow = Math.floor(i / cols);
+
+            const positionLeftMm = centerOffsetX + (currentColumn * (photoW + gap));
+            const positionTopMm = centerOffsetY + (currentRow * (photoH + gap));
+
+            const cellElement = document.createElement('div');
+            cellElement.className = 'photo-cell';
+            
+            // Apply scale sizing factors mapping layout dimensions values
+            cellElement.style.width = `${photoW * scaleFactor}px`;
+            cellElement.style.height = `${photoH * scaleFactor}px`;
+            cellElement.style.left = `${positionLeftMm * scaleFactor}px`;
+            cellElement.style.top = `${positionTopMm * scaleFactor}px`;
+
+            const imageSourceNode = document.createElement('img');
+            const cycleImageObject = uploadedImages[i % uploadedImages.length];
+            imageSourceNode.src = cycleImageObject.cropped;
+
+            cellElement.appendChild(imageSourceNode);
+            printPage.appendChild(cellElement);
+        }
+    }
+
+    document.getElementById('generate-btn').addEventListener('click', generateLayoutMatrix);
+
+    // Export Assembly Pipeline Frame Render Module
+    document.getElementById('download-btn').addEventListener('click', () => {
+        if (printPage.children.length === 0) {
+            alert('Please populate configuration assets before initiating file export.');
+            return;
+        }
+
+        const sizeSelection = document.getElementById('paper-size').value;
+        const orientation = document.getElementById('orientation').value;
+        const [pageW, pageH] = paperDimensions[sizeSelection][orientation];
+
+        // Reset scaling vector transformation map matrices to target full high-res specs
+        const currentStyleWidth = printPage.style.width;
+        const currentStyleHeight = printPage.style.height;
+
+        // Force raw structural 1:1 pixel grid calculation properties parameters map
+        const exportDpiScale = 4; // High production output pixel definition multiplier
+        printPage.style.width = `${pageW}mm`;
+        printPage.style.height = `${pageH}mm`;
+
+        const targetElementsArray = Array.from(printPage.querySelectorAll('.photo-cell'));
+        const photoW = parseFloat(document.getElementById('photo-w').value);
+        const photoH = parseFloat(document.getElementById('photo-h').value);
+        const gap = parseFloat(document.getElementById('gap').value);
+        const margin = parseFloat(document.getElementById('margin').value);
+
+        const canvasWidth = pageW - (2 * margin);
+        const canvasHeight = pageH - (2 * margin);
+        const cols = Math.floor((canvasWidth + gap) / (photoW + gap));
+
+        const gridWidth = (cols * photoW) + ((cols - 1) * gap);
+        const gridHeight = (Math.ceil(targetElementsArray.length / cols) * photoH) + ((Math.ceil(targetElementsArray.length / cols) - 1) * gap);
+        const centerOffsetX = margin + ((canvasWidth - gridWidth) / 2);
+        const centerOffsetY = margin + ((canvasHeight - gridHeight) / 2);
+
+        targetElementsArray.forEach((cell, index) => {
+            const colIdx = index % cols;
+            const rowIdx = Math.floor(index / cols);
+            const xMm = centerOffsetX + (colIdx * (photoW + gap));
+            const yMm = centerOffsetY + (rowIdx * (photoH + gap));
+
+            cell.style.width = `${photoW}mm`;
+            cell.style.height = `${photoH}mm`;
+            cell.style.left = `${xMm}mm`;
+            cell.style.top = `${yMm}mm`;
+        });
+
+        html2canvas(printPage, {
+            scale: exportDpiScale,
+            useCORS: true,
+            logging: false,
+            backgroundColor: '#ffffff'
+        }).then(canvas => {
+            // Restore structural fluid UI display parameters back safely
+            printPage.style.width = currentStyleWidth;
+            printPage.style.height = currentStyleHeight;
+            generateLayoutMatrix(); 
+
+            const downloadLinkAnchor = document.createElement('a');
+            downloadLinkAnchor.download = `Print_Layout_${sizeSelection}_${orientation}.png`;
+            downloadLinkAnchor.href = canvas.toDataURL('image/png', 1.0);
+            downloadLinkAnchor.click();
+        });
+    });
+</script>
+</body>
+</html>
