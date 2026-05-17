@@ -1,255 +1,128 @@
 <!DOCTYPE html>
-
 <html lang="en">
-
 <head>
-
     <meta charset="UTF-8">
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>Product Catalogue</title>
-
     <style>
-
         body {
-
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-
             background-color: #f8f9fa;
-
             margin: 0;
-
             padding: 20px;
-
             color: #2d3748;
-
         }
-
         .header {
-
             text-align: center;
-
             margin-bottom: 40px;
-
         }
-
         .header h1 {
-
             color: #075E54;
-
             font-size: 2.2rem;
-
             margin-bottom: 8px;
-
         }
-
         .header p {
-
             color: #718096;
-
             margin: 0;
-
         }
-
         .catalog-grid {
-
             display: grid;
-
             grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-
             gap: 25px;
-
             max-width: 1200px;
-
             margin: 0 auto;
-
         }
-
         .product-card {
-
             background: #ffffff;
-
             border-radius: 12px;
-
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-
             overflow: hidden;
-
             display: flex;
-
             flex-direction: column;
-
             border: 1px solid #e2e8f0;
-
         }
-
         .image-container {
-
             width: 100%;
-
             height: 220px;
-
             background-color: #edf2f7;
-
         }
-
         .product-image {
-
             width: 100%;
-
             height: 100%;
-
             object-fit: cover;
-
         }
-
         .product-details {
-
             padding: 20px;
-
             display: flex;
-
             flex-direction: column;
-
             flex-grow: 1;
-
         }
-
         .product-title {
-
             font-size: 1.15rem;
-
             font-weight: 700;
-
             margin: 0 0 8px 0;
-
             color: #1a202c;
-
         }
-
         .product-desc {
-
             font-size: 0.9rem;
-
             color: #4a5568;
-
             line-height: 1.4;
-
             margin: 0 0 20px 0;
-
             flex-grow: 1;
-
         }
-
         .action-row {
-
             display: flex;
-
             align-items: center;
-
             justify-content: space-between;
-
             margin-top: auto;
-
         }
-
         .price {
-
             font-weight: 800;
-
             color: #075E54;
-
             font-size: 1.1rem;
-
         }
-
         .order-button {
-
             background-color: #25D366;
-
             color: white;
-
             text-decoration: none;
-
             padding: 8px 14px;
-
             border-radius: 6px;
-
             font-weight: 600;
-
             font-size: 0.85rem;
-
         }
-
     </style>
-
 </head>
-
 <body>
 
-
-
     <div class="header">
-
         <h1>Our Product Catalogue</h1>
-
         <p>Premium Custom Designs & Prints</p>
-
     </div>
-
-
 
     <div class="catalog-grid" id="catalog"></div>
 
-
-
     <script>
-
         const totalProducts = 30; 
-
         const catalogContainer = document.getElementById('catalog');
 
-
-
         for (let i = 1; i <= totalProducts; i++) {
-
             catalogContainer.innerHTML += `
-
                 <div class="product-card">
-
                     <div class="image-container">
-
-                        <img class="product-image" src="../../images/prod${i}.jpg" alt="Product ${i}" onerror="this.src='https://placehold.co/600x400/075E54/white?text=Product+${i}'">
-
+                        <img class="product-image" src="../images/prod${i}.jpg" alt="Product ${i}" onerror="this.src='https://placehold.co/600x400/075E54/white?text=Product+${i}'">
                     </div>
-
                     <div class="product-details">
-
                         <h3 class="product-title">Product Item ${i}</h3>
-
                         <p class="product-desc">Premium quality custom item. Contact us directly for personalized sizing, bulk ordering, and custom options.</p>
-
                         <div class="action-row">
-
                             <span class="price">Enquire</span>
-
                             <a href="https://wa.me/918920755505?text=Hi, I am interested in Product Item ${i}" target="_blank" class="order-button">Order Now</a>
-
                         </div>
-
                     </div>
-
                 </div>
-
             `;
-
         }
-
     </script>
 
-
-
 </body>
-
 </html>
