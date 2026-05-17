@@ -185,6 +185,7 @@
 
         const catalogContainer = document.getElementById('catalog');
 
+        // Always load the base image directly
         products.forEach((prod, index) => {
             const cardId = `card-${index}`;
             const cardHTML = `
@@ -192,7 +193,7 @@
                     <div class="image-container" id="${cardId}">
                         <button class="slider-btn prev" onclick="moveSlide('${cardId}', -1)">&#10094;</button>
                         <div class="slider-wrapper">
-                            <img class="product-image" src="../images/${prod.code}.jpg" data-state="single" data-code="${prod.code}" onerror="handleImageError(this)">
+                            <img class="product-image" src="../images/${prod.code}.jpg" onerror="this.src='https://placehold.co/600x400/075E54/white?text=${encodeURIComponent(prod.code)}'">
                         </div>
                         <button class="slider-btn next" onclick="moveSlide('${cardId}', 1)">&#10095;</button>
                     </div>
@@ -210,38 +211,33 @@
             catalogContainer.innerHTML += cardHTML;
         });
 
-        function handleImageError(img) {
-            const code = img.getAttribute('data-code');
-            const state = img.getAttribute('data-state');
-            
-            if (state === "single") {
-                img.setAttribute('data-state', "multi-1");
-                img.src = `../images/1_${code}.jpg`;
-            } else if (state.startsWith("multi-")) {
-                img.setAttribute('data-state', "failed");
-                img.src = `https://placehold.co/600x400/075E54/white?text=${encodeURIComponent(code)}`;
-            }
-            updateSliderControls(img.closest('.image-container'));
-        }
-
+        // Background slider builder: Only triggers if multi-images actually exist
         document.querySelectorAll('.product-card').forEach((card, idx) => {
             const code = products[idx].code;
             const container = card.querySelector('.slider-wrapper');
             const mainImg = container.querySelector('.product-image');
             
-            const imgCheck = new Image();
-            imgCheck.src = `../images/1_${code}.jpg`;
-            imgCheck.onload = function() {
-                mainImg.src = `../images/1_${code}.jpg`;
-                mainImg.setAttribute('data-state', 'multi-1');
+            // Quietly test if a '1_' version exists in the background
+            const multiCheck = new Image();
+            multiCheck.src = `../images/1_${code}.jpg`;
+            
+            multiCheck.onload = function() {
+                // Multi-images exist! Rebuild the slider track layout safely
+                container.innerHTML = '';
                 
-                for (let i = 2; i <= 4; i++) {
+                for (let i = 1; i <= 4; i++) {
                     const extraImg = document.createElement('img');
                     extraImg.className = 'product-image';
-                    extraImg.setAttribute('data-state', `multi-${i}`);
                     extraImg.src = `../images/${i}_${code}.jpg`;
-                    extraImg.onerror = function() { this.remove(); updateSliderControls(card.querySelector('.image-container')); };
-                    extraImg.onload = function() { updateSliderControls(card.querySelector('.image-container')); };
+                    
+                    // If image 1 loaded but 3 or 4 don't exist, quietly remove them without crashing
+                    extraImg.onerror = function() { 
+                        this.remove(); 
+                        updateSliderControls(card.querySelector('.image-container')); 
+                    };
+                    extraImg.onload = function() { 
+                        updateSliderControls(card.querySelector('.image-container')); 
+                    };
                     container.appendChild(extraImg);
                 }
             };
