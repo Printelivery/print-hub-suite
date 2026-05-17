@@ -50,7 +50,14 @@
             font-size: 0.9rem;
             color: #4a5568;
         }
-        input[type="text"], textarea, input[type="password"] {
+        .id-hint {
+            font-size: 0.8rem;
+            color: #2b6cb0;
+            font-weight: 500;
+            margin-top: 4px;
+            display: block;
+        }
+        input[type="text"], textarea, input[type="password"], select {
             width: 100%;
             padding: 12px;
             border: 1px solid #cbd5e0;
@@ -58,8 +65,9 @@
             font-size: 1rem;
             box-sizing: border-box;
             transition: border-color 0.2s;
+            background-color: #fff;
         }
-        input:focus, textarea:focus {
+        input:focus, textarea:focus, select:focus {
             outline: none;
             border-color: var(--primary-color);
         }
@@ -112,17 +120,22 @@
 
 <div class="admin-container">
     <h2>Product Management Portal</h2>
-    <p class="subtitle">Add a new item or type an existing Product ID to overwrite details.</p>
+    <p class="subtitle">Add a new item or provide an existing Product ID to overwrite row data.</p>
     
     <form id="productForm">
         <div class="form-group">
-            <label for="productGroup">Product Group / Category</label>
-            <input type="text" id="productGroup" placeholder="e.g., Document Printing" required>
+            <label for="productGroupSelect">Product Group / Category</label>
+            <select id="productGroupSelect" onchange="toggleCustomGroupField()" required>
+                <option value="" disabled selected>Loading existing categories...</option>
+            </select>
+            
+            <input type="text" id="customGroupInput" placeholder="Type new category name here..." style="display: none; margin-top: 10px;" />
         </div>
 
         <div class="form-group">
             <label for="productId">Product ID (Matches Image File Name)</label>
-            <input type="text" id="productId" placeholder="e.g., PRNTLRY_01" required>
+            <input type="text" id="productId" placeholder="e.g., PRNTLRY_28" required>
+            <span class="id-hint" id="idTrackerHint">Fetching highest ID usage...</span>
         </div>
         
         <div class="form-group">
@@ -152,7 +165,87 @@
 </div>
 
 <script>
+    const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSZuJdNU_JDKhM9OSgx4yPa9rWGtL7PJ9dgbaoaWNJ4_0jZ-AUOKLEUiCCACjiHlOYwsvwNG1ftwCMG/pub?gid=0&single=true&output=csv";
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbybBHuz8qzyyrt5uZGwnMouIrY5Zbm1Hknab-pKBbAQyx5iExTMfiZDQuWPZZXntaEp/exec";
+
+    // Simple CSV parser logic to scan rows
+    function parseCSV(text) {
+        let p = '', r = []; let q = false; let row = [''];
+        for (let i=0; i<text.length; i++) {
+            let c = text[i]; let next = text[i+1];
+            if (c === '"') { if (q && next === '"') { row[row.length-1] += '"'; i++; } else { q = !q; } }
+            else if (c === ',' && !q) { row.push(''); }
+            else if ((c === '\r' || c === '\n') && !q) {
+                if (c === '\r' && next === '\n') { i++; }
+                r.push(row); row = [''];
+            } else { row[row.length-1] += c; }
+        }
+        if (row.length > 1 || row[0] !== '') { r.push(row); }
+        return r;
+    }
+
+    // Load setup configurations directly from your sheet live data stream on page startup
+    async function loadFormDynamics() {
+        try {
+            const response = await fetch(CSV_URL);
+            const dataText = await response.text();
+            const parsedRows = parseCSV(dataText);
+            parsedRows.shift(); // Drop headers row
+
+            const groups = new Set();
+            let maxNumId = 0;
+
+            parsedRows.forEach(row => {
+                const groupName = row[0]?.trim();
+                const idName = row[1]?.trim();
+
+                if (groupName) groups.add(groupName);
+                
+                // Track highest sequential ID number match (PRNTLRY_XX)
+                if (idName && idName.includes('_')) {
+                    const extractedNum = parseInt(idName.split('_')[1]);
+                    if (!isNaN(extractedNum) && extractedNum > maxNumId) {
+                        maxNumId = extractedNum;
+                    }
+                }
+            });
+
+            // Rebuild selection dropdown component structure
+            const selectEl = document.getElementById('productGroupSelect');
+            selectEl.innerHTML = '<option value="" disabled selected>Select a Product Group</option>';
+            
+            groups.forEach(g => {
+                selectEl.innerHTML += `<option value="${g}">${g}</option>`;
+            });
+            selectEl.innerHTML += `<option value="NEW_GROUP_OPTION">[ Add New Group... ]</option>`;
+
+            // Update ID placeholder indicator text live data hints
+            const hintEl = document.getElementById('idTrackerHint');
+            if(maxNumId > 0) {
+                hintEl.innerText = `Last ID Used: PRNTLRY_${maxNumId} (Next suggested sequence item: PRNTLRY_${maxNumId + 1})`;
+                document.getElementById('productId').placeholder = `e.g., PRNTLRY_${maxNumId + 1}`;
+            } else {
+                hintEl.innerText = "No IDs discovered yet. Starting base sequence formatting recommendation: PRNTLRY_01";
+            }
+
+        } catch (error) {
+            console.error("Initialization sync layer issue:", error);
+            document.getElementById('idTrackerHint').innerText = "Failed to synchronize highest identifier indices.";
+        }
+    }
+
+    function toggleCustomGroupField() {
+        const selectEl = document.getElementById('productGroupSelect');
+        const customField = document.getElementById('customGroupInput');
+        if (selectEl.value === "NEW_GROUP_OPTION") {
+            customField.style.display = "block";
+            customField.required = true;
+        } else {
+            customField.style.display = "none";
+            customField.required = false;
+            customField.value = "";
+        }
+    }
 
     document.getElementById('productForm').addEventListener('submit', async function(e) {
         e.preventDefault();
@@ -163,9 +256,15 @@
         submitBtn.disabled = true;
         submitBtn.innerText = "Processing update...";
         messageDiv.style.display = "none";
+
+        // Determine group value based on selection variant choice
+        const selectValue = document.getElementById('productGroupSelect').value;
+        const selectedGroup = selectValue === "NEW_GROUP_OPTION" 
+            ? document.getElementById('customGroupInput').value.trim() 
+            : selectValue;
         
         const payload = {
-            productGroup: document.getElementById('productGroup').value.trim(),
+            productGroup: selectedGroup,
             productId: document.getElementById('productId').value.trim(),
             productName: document.getElementById('productName').value.trim(),
             description: document.getElementById('description').value.trim(),
@@ -177,22 +276,23 @@
             await fetch(SCRIPT_URL, {
                 method: 'POST',
                 mode: 'no-cors',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
 
             messageDiv.className = "success";
-            messageDiv.innerText = "Request dispatched successfully! Check your Google Sheet to verify changes.";
+            messageDiv.innerText = "Request dispatched successfully! Refreshing dynamic dataset fields...";
             messageDiv.style.display = "block";
             
-            // Clear entry inputs safely
-            document.getElementById('productGroup').value = '';
+            // Clean inputs out
             document.getElementById('productId').value = '';
             document.getElementById('productName').value = '';
             document.getElementById('description').value = '';
             document.getElementById('price').value = '';
+            document.getElementById('customGroupInput').value = '';
+            
+            // Refresh dynamic options arrays on completion loop automatically
+            await loadFormDynamics();
 
         } catch (error) {
             console.error("Transmission error:", error);
@@ -204,6 +304,9 @@
             submitBtn.innerText = "Save Product Changes";
         }
     });
+
+    // Run setup query operations on system load
+    loadFormDynamics();
 </script>
 
 </body>
