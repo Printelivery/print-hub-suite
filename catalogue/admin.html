@@ -3,11 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Printelivery - Admin Portal</title>
+    <title>Printelivery - Advanced Bulk Admin Portal</title>
     <style>
         :root {
             --primary-color: #075E54;
-            --accent-color: #25D366;
             --bg-color: #f4f6f8;
             --text-dark: #2d3748;
         }
@@ -15,160 +14,157 @@
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background-color: var(--bg-color);
             margin: 0;
-            padding: 40px 20px;
+            padding: 30px 15px;
             color: var(--text-dark);
-            display: flex;
-            justify-content: center;
         }
         .admin-container {
             background: #ffffff;
-            padding: 35px;
-            border-radius: 16px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
-            width: 100%;
-            max-width: 500px;
-            border: 1px solid #e2e8f0;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            max-width: 1350px;
+            margin: 0 auto;
         }
-        h2 {
-            color: var(--primary-color);
-            margin-top: 0;
-            margin-bottom: 5px;
-            font-size: 1.75rem;
-        }
-        p.subtitle {
-            color: #718096;
-            margin-bottom: 25px;
-            font-size: 0.95rem;
-        }
-        .form-group {
+        h2 { color: var(--primary-color); margin: 0 0 20px 0; }
+        
+        /* Filter Section */
+        .filter-panel {
+            display: flex;
+            gap: 15px;
+            align-items: flex-end;
+            flex-wrap: wrap;
+            background: #edf2f7;
+            padding: 20px;
+            border-radius: 8px;
             margin-bottom: 20px;
         }
-        label {
-            display: block;
-            font-weight: 600;
-            margin-bottom: 8px;
-            font-size: 0.9rem;
-            color: #4a5568;
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            flex: 1;
+            min-width: 200px;
         }
-        .id-hint {
-            font-size: 0.8rem;
-            color: #2b6cb0;
-            font-weight: 500;
-            margin-top: 4px;
-            display: block;
-        }
-        input[type="text"], textarea, input[type="password"], select {
-            width: 100%;
-            padding: 12px;
+        label { font-weight: 600; font-size: 0.85rem; color: #4a5568; }
+        input[type="text"], select, input[type="password"] {
+            padding: 10px;
             border: 1px solid #cbd5e0;
-            border-radius: 8px;
-            font-size: 1rem;
-            box-sizing: border-box;
-            transition: border-color 0.2s;
+            border-radius: 6px;
+            font-size: 0.95rem;
             background-color: #fff;
-        }
-        input:focus, textarea:focus, select:focus {
-            outline: none;
-            border-color: var(--primary-color);
-        }
-        textarea {
-            resize: vertical;
-            height: 100px;
-            font-family: inherit;
-        }
-        .btn-submit {
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
             width: 100%;
-            padding: 14px;
-            border-radius: 8px;
-            font-size: 1rem;
+            box-sizing: border-box;
+        }
+        
+        /* Action Button Toolbar */
+        .toolbar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
             font-weight: 600;
             cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        .btn-submit:hover {
-            background-color: #05463e;
-        }
-        .btn-submit:disabled {
-            background-color: #a0aec0;
-            cursor: not-allowed;
-        }
-        #message {
-            margin-top: 20px;
-            padding: 12px;
-            border-radius: 8px;
             font-size: 0.95rem;
-            display: none;
-            font-weight: 500;
-            text-align: center;
+            transition: background 0.2s;
         }
-        .success {
-            background-color: #def7ec;
-            color: #03543f;
-            border: 1px solid #bcf0da;
+        .btn-primary { background-color: var(--primary-color); color: white; }
+        .btn-secondary { background-color: #718096; color: white; }
+        .btn-action { background-color: #2b6cb0; color: white; } /* New / Copy buttons */
+        .btn-success { background-color: #25D366; color: white; } /* Update button */
+        .btn:disabled { background-color: #a0aec0; cursor: not-allowed; }
+
+        /* Table Design */
+        .table-wrapper { overflow-x: auto; margin-bottom: 25px; border: 1px solid #e2e8f0; border-radius: 8px; }
+        table { width: 100%; border-collapse: collapse; text-align: left; background: #fff; font-size: 0.9rem; }
+        th, td { padding: 12px; border-bottom: 1px solid #e2e8f0; }
+        th { background-color: #f7fafc; color: #4a5568; font-weight: 700; }
+        
+        .locked-id { font-weight: 700; color: #4a5568; background: #e2e8f0; padding: 6px 10px; border-radius: 4px; display: inline-block; }
+        .table-input { border: 1px solid #e2e8f0; padding: 8px; border-radius: 4px; font-size: 0.9rem; width: 100%; box-sizing: border-box; }
+        textarea.table-input { height: 45px; resize: vertical; font-family: inherit; }
+        
+        .footer-panel {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
         }
-        .error {
-            background-color: #fde8e8;
-            color: #9b1c1c;
-            border: 1px solid #fbd5d5;
-        }
+        #message { padding: 12px; border-radius: 6px; font-weight: 500; display: none; text-align: center; flex: 1; min-width: 250px; }
+        .success { background-color: #def7ec; color: #03543f; border: 1px solid #bcf0da; }
+        .error { background-color: #fde8e8; color: #9b1c1c; border: 1px solid #fbd5d5; }
     </style>
 </head>
 <body>
 
 <div class="admin-container">
-    <h2>Product Management Portal</h2>
-    <p class="subtitle">Add a new item or provide an existing Product ID to overwrite row data.</p>
+    <h2>Product Management Bulk Portal</h2>
     
-    <form id="productForm">
-        <div class="form-group">
-            <label for="productGroupSelect">Product Group / Category</label>
-            <select id="productGroupSelect" onchange="toggleCustomGroupField()" required>
-                <option value="" disabled selected>Loading existing categories...</option>
+    <div class="filter-panel">
+        <div class="filter-group">
+            <label for="groupFilter">Product Group Filter</label>
+            <select id="groupFilter">
+                <option value="">All Groups</option>
             </select>
-            
-            <input type="text" id="customGroupInput" placeholder="Type new category name here..." style="display: none; margin-top: 10px;" />
         </div>
+        <div class="filter-group">
+            <label for="titleSearch">Product Name Search (Supports * wildcards)</label>
+            <input type="text" id="titleSearch" placeholder="e.g., *photo copy* or exact string">
+        </div>
+        <button class="btn btn-primary" onclick="applyFilters()">Apply Filter</button>
+        <button class="btn btn-secondary" onclick="clearFilters()">Clear</button>
+    </div>
 
-        <div class="form-group">
-            <label for="productId">Product ID (Matches Image File Name)</label>
-            <input type="text" id="productId" placeholder="e.g., PRNTLRY_28" required>
-            <span class="id-hint" id="idTrackerHint">Fetching highest ID usage...</span>
-        </div>
-        
-        <div class="form-group">
-            <label for="productName">Product Name / Title</label>
-            <input type="text" id="productName" placeholder="e.g., A4 Plain Paper Printing" required>
-        </div>
-        
-        <div class="form-group">
-            <label for="description">Product Description</label>
-            <textarea id="description" placeholder="Enter specifications, paper quality, options..." required></textarea>
-        </div>
-        
-        <div class="form-group">
-            <label for="price">Display Price</label>
-            <input type="text" id="price" placeholder="e.g., ₹5 or ₹10 per page" required>
-        </div>
+    <div class="toolbar">
+        <button class="btn btn-action" onclick="addNewRow()">+ New Product</button>
+        <button class="btn btn-action" onclick="copySelectedRow()">📋 Copy (Duplicate as New)</button>
+        <button class="btn btn-success" id="bulkUpdateBtn" onclick="submitBulkUpdates()">💾 Update Selected Rows</button>
+    </div>
 
-        <div class="form-group" style="margin-top: 30px; border-top: 1px solid #e2e8f0; padding-top: 20px;">
+    <div class="table-wrapper">
+        <table id="productTable">
+            <thead>
+                <tr>
+                    <th style="width: 40px;"><input type="checkbox" id="selectAllBox" onclick="toggleSelectAll(this)"></th>
+                    <th style="width: 180px;">ProductGroup</th>
+                    <th style="width: 140px;">ProductId</th>
+                    <th style="width: 240px;">ProductName</th>
+                    <th>Description</th>
+                    <th style="width: 120px;">Price</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+                <tr>
+                    <td colspan="6" style="text-align:center; color:#718096; padding: 30px;">Loading live database stream...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="footer-panel">
+        <div class="filter-group" style="max-width: 300px;">
             <label for="password">Admin Security Password</label>
-            <input type="password" id="password" placeholder="Enter your script password" required>
+            <input type="password" id="password" placeholder="Enter script password" required>
         </div>
-        
-        <button type="submit" class="btn-submit" id="submitBtn">Save Product Changes</button>
-    </form>
-
-    <div id="message"></div>
+        <div id="message"></div>
+    </div>
 </div>
 
 <script>
     const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSZuJdNU_JDKhM9OSgx4yPa9rWGtL7PJ9dgbaoaWNJ4_0jZ-AUOKLEUiCCACjiHlOYwsvwNG1ftwCMG/pub?gid=0&single=true&output=csv";
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbybBHuz8qzyyrt5uZGwnMouIrY5Zbm1Hknab-pKBbAQyx5iExTMfiZDQuWPZZXntaEp/exec";
 
-    // Simple CSV parser logic to scan rows
+    let dataset = [];
+    let uniqueGroups = new Set();
+    let highestNumericId = 0; // Tracks maximum sequential counter ID locally
+
     function parseCSV(text) {
         let p = '', r = []; let q = false; let row = [''];
         for (let i=0; i<text.length; i++) {
@@ -184,129 +180,237 @@
         return r;
     }
 
-    // Load setup configurations directly from your sheet live data stream on page startup
-    async function loadFormDynamics() {
+    async function initPortal() {
         try {
             const response = await fetch(CSV_URL);
             const dataText = await response.text();
             const parsedRows = parseCSV(dataText);
-            parsedRows.shift(); // Drop headers row
+            parsedRows.shift(); // Remove row matrix header label strings safely
 
-            const groups = new Set();
-            let maxNumId = 0;
-
-            parsedRows.forEach(row => {
-                const groupName = row[0]?.trim();
-                const idName = row[1]?.trim();
-
-                if (groupName) groups.add(groupName);
+            highestNumericId = 0;
+            dataset = parsedRows.map(row => {
+                const idName = row[1]?.trim() || "";
                 
-                // Track highest sequential ID number match (PRNTLRY_XX)
+                // Track max structural sequencing identifier integers
                 if (idName && idName.includes('_')) {
                     const extractedNum = parseInt(idName.split('_')[1]);
-                    if (!isNaN(extractedNum) && extractedNum > maxNumId) {
-                        maxNumId = extractedNum;
+                    if (!isNaN(extractedNum) && extractedNum > highestNumericId) {
+                        highestNumericId = extractedNum;
                     }
                 }
-            });
 
-            // Rebuild selection dropdown component structure
-            const selectEl = document.getElementById('productGroupSelect');
-            selectEl.innerHTML = '<option value="" disabled selected>Select a Product Group</option>';
-            
-            groups.forEach(g => {
-                selectEl.innerHTML += `<option value="${g}">${g}</option>`;
-            });
-            selectEl.innerHTML += `<option value="NEW_GROUP_OPTION">[ Add New Group... ]</option>`;
+                return {
+                    group: row[0]?.trim() || "",
+                    id: idName,
+                    name: row[2]?.trim() || "",
+                    desc: row[3]?.trim() || "",
+                    price: row[4]?.trim() || ""
+                };
+            }).filter(p => p.id !== "");
 
-            // Update ID placeholder indicator text live data hints
-            const hintEl = document.getElementById('idTrackerHint');
-            if(maxNumId > 0) {
-                hintEl.innerText = `Last ID Used: PRNTLRY_${maxNumId} (Next suggested sequence item: PRNTLRY_${maxNumId + 1})`;
-                document.getElementById('productId').placeholder = `e.g., PRNTLRY_${maxNumId + 1}`;
-            } else {
-                hintEl.innerText = "No IDs discovered yet. Starting base sequence formatting recommendation: PRNTLRY_01";
-            }
+            uniqueGroups.clear();
+            dataset.forEach(item => { if(item.group) uniqueGroups.add(item.group); });
 
+            populateGroupDropdown();
+            renderTable(dataset);
         } catch (error) {
-            console.error("Initialization sync layer issue:", error);
-            document.getElementById('idTrackerHint').innerText = "Failed to synchronize highest identifier indices.";
+            console.error("Core synchronization issue:", error);
+            document.getElementById('tableBody').innerHTML = `<tr><td colspan="6" style="text-align:center; color:#9b1c1c;">Error streaming dynamic dataset rows.</td></tr>`;
         }
     }
 
-    function toggleCustomGroupField() {
-        const selectEl = document.getElementById('productGroupSelect');
-        const customField = document.getElementById('customGroupInput');
-        if (selectEl.value === "NEW_GROUP_OPTION") {
-            customField.style.display = "block";
-            customField.required = true;
+    function populateGroupDropdown() {
+        const select = document.getElementById('groupFilter');
+        select.innerHTML = '<option value="">All Groups</option>';
+        uniqueGroups.forEach(g => {
+            select.innerHTML += `<option value="${g}">${g}</option>`;
+        });
+    }
+
+    function matchSearchTerm(title, term) {
+        if (!term) return true;
+        let cleanTitle = title.toLowerCase();
+        let cleanTerm = term.toLowerCase();
+
+        if (cleanTerm.startsWith('*') && cleanTerm.endsWith('*')) {
+            return cleanTitle.includes(cleanTerm.slice(1, -1));
+        } else if (cleanTerm.startsWith('*')) {
+            return cleanTitle.endsWith(cleanTerm.slice(1));
+        } else if (cleanTerm.endsWith('*')) {
+            return cleanTitle.startsWith(cleanTerm.slice(0, -1));
+        }
+        return cleanTitle === cleanTerm;
+    }
+
+    function applyFilters() {
+        const groupTarget = document.getElementById('groupFilter').value;
+        const searchTarget = document.getElementById('titleSearch').value.trim();
+
+        let filtered = dataset.filter(item => {
+            let matchesGroup = !groupTarget || item.group.toLowerCase() === groupTarget.toLowerCase();
+            let matchesTitle = matchSearchTerm(item.name, searchTarget);
+            return matchesGroup && matchesTitle;
+        });
+
+        renderTable(filtered);
+    }
+
+    function clearFilters() {
+        document.getElementById('groupFilter').value = "";
+        document.getElementById('titleSearch').value = "";
+        document.getElementById('selectAllBox').checked = false;
+        renderTable(dataset);
+    }
+
+    function renderTable(dataArray) {
+        const tbody = document.getElementById('tableBody');
+        tbody.innerHTML = '';
+
+        if(dataArray.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:20px; color:#718096;">No records matched.</td></tr>`;
+            return;
+        }
+
+        dataArray.forEach(item => {
+            appendRowMarkup(item.group, item.id, item.name, item.desc, item.price, false);
+        });
+    }
+
+    function appendRowMarkup(group, id, name, desc, price, isChecked = false) {
+        const tbody = document.getElementById('tableBody');
+        const rowHTML = `
+            <tr class="product-row" data-id="${id}">
+                <td><input type="checkbox" class="row-checkbox" ${isChecked ? 'checked' : ''} onclick="handleRowCheckbox()"></td>
+                <td><input type="text" class="table-input col-group" value="${group}" placeholder="Group name"></td>
+                <td><span class="locked-id">${id}</span></td>
+                <td><input type="text" class="table-input col-name" value="${name}" placeholder="Product title"></td>
+                <td><textarea class="table-input col-desc" placeholder="Specifications...">${desc}</textarea></td>
+                <td><input type="text" class="table-input col-price" value="${price}" placeholder="e.g., ₹5"></td>
+            </tr>
+        `;
+        
+        // When inserting fresh items, place them at the very top of the interactive table view panel
+        if(isChecked) {
+            tbody.insertAdjacentHTML('afterbegin', rowHTML);
         } else {
-            customField.style.display = "none";
-            customField.required = false;
-            customField.value = "";
+            tbody.innerHTML += rowHTML;
         }
     }
 
-    document.getElementById('productForm').addEventListener('submit', async function(e) {
-        e.preventDefault();
+    /* Command Action Button 1: Insert New Item Logic */
+    function addNewRow() {
+        highestNumericId++;
+        const generatedId = `PRNTLRY_${highestNumericId.toString().padStart(2, '0')}`;
         
-        const submitBtn = document.getElementById('submitBtn');
-        const messageDiv = document.getElementById('message');
-        
-        submitBtn.disabled = true;
-        submitBtn.innerText = "Processing update...";
-        messageDiv.style.display = "none";
+        // Append a blank active record row pre-checked at the top
+        appendRowMarkup('', generatedId, '', '', '', true);
+        handleRowCheckbox();
+    }
 
-        // Determine group value based on selection variant choice
-        const selectValue = document.getElementById('productGroupSelect').value;
-        const selectedGroup = selectValue === "NEW_GROUP_OPTION" 
-            ? document.getElementById('customGroupInput').value.trim() 
-            : selectValue;
-        
-        const payload = {
-            productGroup: selectedGroup,
-            productId: document.getElementById('productId').value.trim(),
-            productName: document.getElementById('productName').value.trim(),
-            description: document.getElementById('description').value.trim(),
-            price: document.getElementById('price').value.trim(),
-            password: document.getElementById('password').value
-        };
-
-        try {
-            await fetch(SCRIPT_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-
-            messageDiv.className = "success";
-            messageDiv.innerText = "Request dispatched successfully! Refreshing dynamic dataset fields...";
-            messageDiv.style.display = "block";
-            
-            // Clean inputs out
-            document.getElementById('productId').value = '';
-            document.getElementById('productName').value = '';
-            document.getElementById('description').value = '';
-            document.getElementById('price').value = '';
-            document.getElementById('customGroupInput').value = '';
-            
-            // Refresh dynamic options arrays on completion loop automatically
-            await loadFormDynamics();
-
-        } catch (error) {
-            console.error("Transmission error:", error);
-            messageDiv.className = "error";
-            messageDiv.innerText = "System error sending updates: " + error.toString();
-            messageDiv.style.display = "block";
-        } finally {
-            submitBtn.disabled = false;
-            submitBtn.innerText = "Save Product Changes";
+    /* Command Action Button 2: Copy/Clone Item Logic */
+    function copySelectedRow() {
+        const checkedRows = document.querySelectorAll('.row-checkbox:checked');
+        if (checkedRows.length !== 1) {
+            alert("Please select exactly one existing row to copy/duplicate.");
+            return;
         }
-    });
 
-    // Run setup query operations on system load
-    loadFormDynamics();
+        const sourceRow = checkedRows[0].closest('.product-row');
+        const groupVal = sourceRow.querySelector('.col-group').value;
+        const nameVal = sourceRow.querySelector('.col-name').value;
+        const descVal = sourceRow.querySelector('.col-desc').value;
+        const priceVal = sourceRow.querySelector('.col-price').value;
+
+        // Uncheck the source row to prevent double-submitting it accidentally
+        checkedRows[0].checked = false;
+
+        highestNumericId++;
+        const generatedId = `PRNTLRY_${highestNumericId.toString().padStart(2, '0')}`;
+
+        // Injects cloned data matrix metrics with next available ID tracking values
+        appendRowMarkup(groupVal, generatedId, nameVal + " (Copy)", descVal, priceVal, true);
+        handleRowCheckbox();
+    }
+
+    function toggleSelectAll(masterBox) {
+        const checkboxes = document.querySelectorAll('.row-checkbox');
+        checkboxes.forEach(box => box.checked = masterBox.checked);
+    }
+
+    function handleRowCheckbox() {
+        const allBoxes = document.querySelectorAll('.row-checkbox');
+        const checkedBoxes = document.querySelectorAll('.row-checkbox:checked');
+        const selectAllBox = document.getElementById('selectAllBox');
+        if (allBoxes.length > 0) {
+            selectAllBox.checked = (allBoxes.length === checkedBoxes.length);
+        } else {
+            selectAllBox.checked = false;
+        }
+    }
+
+    /* Command Action Button 3: Sequential Bulk Save Logic Pipeline Loop */
+    async function submitBulkUpdates() {
+        const password = document.getElementById('password').value;
+        const msgDiv = document.getElementById('message');
+        const btn = document.getElementById('bulkUpdateBtn');
+
+        if(!password) {
+            alert("Security management verification password is required.");
+            return;
+        }
+
+        const selectedRows = [];
+        document.querySelectorAll('.product-row').forEach(row => {
+            if(row.querySelector('.row-checkbox').checked) {
+                selectedRows.push({
+                    productId: row.getAttribute('data-id'),
+                    productGroup: row.querySelector('.col-group').value.trim(),
+                    productName: row.querySelector('.col-name').value.trim(),
+                    description: row.querySelector('.col-desc').value.trim(),
+                    price: row.querySelector('.col-price').value.trim(),
+                    password: password
+                });
+            }
+        });
+
+        if(selectedRows.length === 0) {
+            alert("No spreadsheet data targets selected. Check items before hitting update.");
+            return;
+        }
+
+        btn.disabled = true;
+        msgDiv.className = "";
+        msgDiv.style.display = "block";
+
+        let successCount = 0;
+
+        for(let i = 0; i < selectedRows.length; i++) {
+            msgDiv.innerText = `Syncing batch records to script database pipeline: (${i + 1}/${selectedRows.length})...`;
+            try {
+                await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(selectedRows[i])
+                });
+                successCount++;
+            } catch (err) {
+                console.error("Row connection failure index:", err);
+            }
+        }
+
+        msgDiv.className = "success";
+        msgDiv.innerText = `Successfully synced database records for ${successCount} entries! Refreshing views...`;
+        document.getElementById('selectAllBox').checked = false;
+        
+        // Fresh execution layout pull stream sync on close routine completion loop
+        await initPortal();
+        
+        btn.disabled = false;
+        setTimeout(() => { msgDiv.style.display = "none"; }, 5000);
+    }
+
+    initPortal();
 </script>
 
 </body>
