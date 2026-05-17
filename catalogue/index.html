@@ -57,14 +57,37 @@
             width: 100%;
             height: 260px;
             background-color: #edf2f7;
+            position: relative;
             overflow: hidden;
         }
-        .product-image {
+        .slider-wrapper {
+            display: flex;
             width: 100%;
             height: 100%;
-            object-fit: cover;
-            display: block;
+            transition: transform 0.3s ease-in-out;
         }
+        .product-image {
+            min-width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .slider-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-weight: bold;
+            display: none;
+            z-index: 10;
+        }
+        .slider-btn.prev { left: 10px; }
+        .slider-btn.next { right: 10px; }
         .product-details {
             padding: 24px;
             display: flex;
@@ -162,14 +185,16 @@
 
         const catalogContainer = document.getElementById('catalog');
 
-        products.forEach(prod => {
+        products.forEach((prod, index) => {
+            const cardId = `card-${index}`;
             const cardHTML = `
                 <div class="product-card">
-                    <div class="image-container">
-                        <img class="product-image" 
-                             src="../images/${prod.code}.jpg" 
-                             alt="${prod.title}" 
-                             onerror="this.src='https://placehold.co/600x400/075E54/white?text=${encodeURIComponent(prod.code)}'">
+                    <div class="image-container" id="${cardId}">
+                        <button class="slider-btn prev" onclick="moveSlide('${cardId}', -1)">&#10094;</button>
+                        <div class="slider-wrapper">
+                            <img class="product-image" src="../images/${prod.code}.jpg" data-state="single" data-code="${prod.code}" onerror="handleImageError(this)">
+                        </div>
+                        <button class="slider-btn next" onclick="moveSlide('${cardId}', 1)">&#10095;</button>
                     </div>
                     <div class="product-details">
                         <div class="product-id">${prod.code}</div>
@@ -184,6 +209,72 @@
             `;
             catalogContainer.innerHTML += cardHTML;
         });
+
+        function handleImageError(img) {
+            const code = img.getAttribute('data-code');
+            const state = img.getAttribute('data-state');
+            
+            if (state === "single") {
+                img.setAttribute('data-state', "multi-1");
+                img.src = `../images/1_${code}.jpg`;
+            } else if (state.startsWith("multi-")) {
+                img.setAttribute('data-state', "failed");
+                img.src = `https://placehold.co/600x400/075E54/white?text=${encodeURIComponent(code)}`;
+            }
+            updateSliderControls(img.closest('.image-container'));
+        }
+
+        document.querySelectorAll('.product-card').forEach((card, idx) => {
+            const code = products[idx].code;
+            const container = card.querySelector('.slider-wrapper');
+            const mainImg = container.querySelector('.product-image');
+            
+            const imgCheck = new Image();
+            imgCheck.src = `../images/1_${code}.jpg`;
+            imgCheck.onload = function() {
+                mainImg.src = `../images/1_${code}.jpg`;
+                mainImg.setAttribute('data-state', 'multi-1');
+                
+                for (let i = 2; i <= 4; i++) {
+                    const extraImg = document.createElement('img');
+                    extraImg.className = 'product-image';
+                    extraImg.setAttribute('data-state', `multi-${i}`);
+                    extraImg.src = `../images/${i}_${code}.jpg`;
+                    extraImg.onerror = function() { this.remove(); updateSliderControls(card.querySelector('.image-container')); };
+                    extraImg.onload = function() { updateSliderControls(card.querySelector('.image-container')); };
+                    container.appendChild(extraImg);
+                }
+            };
+        });
+
+        function updateSliderControls(container) {
+            if (!container) return;
+            const imgs = container.querySelectorAll('.product-image');
+            const prevBtn = container.querySelector('.slider-btn.prev');
+            const nextBtn = container.querySelector('.slider-btn.next');
+            if (imgs.length > 1) {
+                prevBtn.style.display = 'block';
+                nextBtn.style.display = 'block';
+            } else {
+                prevBtn.style.display = 'none';
+                nextBtn.style.display = 'none';
+            }
+        }
+
+        function moveSlide(containerId, direction) {
+            const container = document.getElementById(containerId);
+            const wrapper = container.querySelector('.slider-wrapper');
+            const imgs = wrapper.querySelectorAll('.product-image');
+            
+            let currentSlide = parseInt(container.getAttribute('data-current-slide') || "0");
+            currentSlide += direction;
+            
+            if (currentSlide >= imgs.length) currentSlide = 0;
+            if (currentSlide < 0) currentSlide = imgs.length - 1;
+            
+            container.setAttribute('data-current-slide', currentSlide);
+            wrapper.style.transform = `translateX(-${currentSlide * 100}%)`;
+        }
     </script>
 
 </body>
