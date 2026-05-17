@@ -94,13 +94,21 @@
             flex-direction: column;
             flex-grow: 1;
         }
-        .product-id {
-            font-size: 0.8rem;
+        .product-group-tag {
+            font-size: 0.75rem;
             font-weight: 700;
-            color: #718096;
+            color: var(--primary-color);
             text-transform: uppercase;
             letter-spacing: 0.05em;
-            margin-bottom: 4px;
+            margin-bottom: 2px;
+        }
+        .product-id {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #a0aec0;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 6px;
         }
         .product-title {
             font-size: 1.2rem;
@@ -141,6 +149,13 @@
         .order-button:hover {
             background-color: #20ba59;
         }
+        .loading {
+            text-align: center;
+            grid-column: 1 / -1;
+            font-size: 1.2rem;
+            color: #718096;
+            padding: 40px;
+        }
     </style>
 </head>
 <body>
@@ -150,98 +165,125 @@
         <p>Premium Printing Tools, Custom Designs & Prints</p>
     </div>
 
-    <div class="catalog-grid" id="catalog"></div>
+    <div class="catalog-grid" id="catalog">
+        <div class="loading">Loading products live...</div>
+    </div>
 
     <script>
-        const products = [
-            { code: "PRNTLRY_01", title: "A4 Plain Paper Black and White Print", desc: "A4 Plain Paper Black and White Print", price: "₹5" },
-            { code: "PRNTLRY_02", title: "A4 Plain Paper Colour print", desc: "A4 Plain Paper Colour print", price: "₹10" },
-            { code: "PRNTLRY_03", title: "A4 Plain paper Photocopy BW", desc: "Black and White Xerox copies", price: "₹3" },
-            { code: "PRNTLRY_04", title: "Document Scan upto A4 size", desc: "Both Color and Black and white scanning of documents. Can be sent through Email / WhatsApp. Strictly no pendrive.", price: "₹5" },
-            { code: "PRNTLRY_05", title: "Passport size photo 30 copies", desc: "3.5 x 4.5 cm is standard dimensions for forms and application. For any other size, the number of copies may vary.", price: "₹100" },
-            { code: "PRNTLRY_06", title: "Passport size photos 8 copies", desc: "3.5 x 4.5 cm is standard dimensions for forms and application. For any other size, the number of copies may vary.", price: "₹40" },
-            { code: "PRNTLRY_07", title: "A4 size photo prints.", desc: "Glossy Photo prints of 180gsm on photo paper.", price: "₹25" },
-            { code: "PRNTLRY_08", title: "Micro square prints 2x2\" (20 pieces)", desc: "Glossy photo prints on photo paper", price: "₹30" },
-            { code: "PRNTLRY_09", title: "Mini Square print 3x3\" (Pack of 6)", desc: "Glossy photo prints on photo paper", price: "₹30" },
-            { code: "PRNTLRY_10", title: "A4 Craft Board print Black colour only", desc: "Brown colour hard board around 200gsm", price: "₹25" },
-            { code: "PRNTLRY_11", title: "A4 Sticker sheet prints", desc: "Adhesive with a peel off sheet. Ready to stick.", price: "₹25" },
-            { code: "PRNTLRY_12", title: "A4 art board print", desc: "Thick white sheet with 250-300 gsm thickness", price: "₹25" },
-            { code: "PRNTLRY_13", title: "Fridge Magnets", desc: "A4 Size (number of pieces can be decided based on the single piece size)", price: "₹150" },
-            { code: "PRNTLRY_14", title: "Magnetic sheet calendar", desc: "A5 size", price: "₹100" },
-            { code: "PRNTLRY_15", title: "Letterheads", desc: "Printed on high resolution A4 bond paper for the premium look.\nDesign charges extra.\nMin ordered qty 100 preferred", price: "₹12" },
-            { code: "PRNTLRY_16", title: "Visiting Cards", desc: "Price on request based on the quality opted (min price updated)", price: "₹100" },
-            { code: "PRNTLRY_17", title: "A4 size Lamnation", desc: "Lamination without print", price: "₹25" },
-            { code: "PRNTLRY_18", title: "Card size 55x91cm", desc: "Lamination without print", price: "₹10" },
-            { code: "PRNTLRY_19", title: "Customised 18x6\" daily Calendar", desc: "The given photo will be printed on the calendar. Shipping & Design charges extra", price: "₹299" },
-            { code: "PRNTLRY_20", title: "Die Cut Daily Calendars 11x17\"", desc: "Business details will be added as customisation. Business promotion give aways", price: "₹65" },
-            { code: "PRNTLRY_21", title: "Annual calendar poster A3 size", desc: "Annual calendar for business promotion. Business details will be printed and logos will be kept. 50 per piece. min order qty 25", price: "₹50" },
-            { code: "PRNTLRY_22", title: "Desk Calendar without stand", desc: "Upcoming (updating price soon)", price: "₹200" },
-            { code: "PRNTLRY_23", title: "Desk Calendar with stand", desc: "Upcoming (Updating the price soon)\nStand may vary upon availability.", price: "₹250" },
-            { code: "PRNTLRY_24", title: "Canvas board prints", desc: "Price on request as per size (dummy price updated)", price: "₹100" },
-            { code: "PRNTLRY_25", title: "Framed photo prints", desc: "Price on request as per size (dummy price updated)", price: "₹100" },
-            { code: "PRNTLRY_26", title: "Wall Posters", desc: "Price on request as per size (dummy price updated)", price: "₹100" },
-            { code: "PRNTLRY_27", title: "Play Currency", desc: "Rs.2 per set of 7 notes in each denomination.", price: "₹2" }
-        ];
+        const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSZuJdNU_JDKhM9OSgx4yPa9rWGtL7PJ9dgbaoaWNJ4_0jZ-AUOKLEUiCCACjiHlOYwsvwNG1ftwCMG/pub?gid=0&single=true&output=csv";
 
-        const catalogContainer = document.getElementById('catalog');
+        // Accurate parser ensuring fields containing commas wrapped in quotes are safely retained
+        function parseCSV(text) {
+            let p = '', r = [];
+            let q = false;
+            let row = [''];
+            for (let i=0; i<text.length; i++) {
+                let c = text[i];
+                let next = text[i+1];
+                if (c === '"') { if (q && next === '"') { row[row.length-1] += '"'; i++; } else { q = !q; } }
+                else if (c === ',' && !q) { row.push(''); }
+                else if ((c === '\r' || c === '\n') && !q) {
+                    if (c === '\r' && next === '\n') { i++; }
+                    r.push(row);
+                    row = [''];
+                } else { row[row.length-1] += c; }
+            }
+            if (row.length > 1 || row[0] !== '') { r.push(row); }
+            return r;
+        }
 
-        // Always load the base image directly
-        products.forEach((prod, index) => {
-            const cardId = `card-${index}`;
-            const cardHTML = `
-                <div class="product-card">
-                    <div class="image-container" id="${cardId}">
-                        <button class="slider-btn prev" onclick="moveSlide('${cardId}', -1)">&#10094;</button>
-                        <div class="slider-wrapper">
-                            <img class="product-image" src="../images/${prod.code}.jpg" onerror="this.src='https://placehold.co/600x400/075E54/white?text=${encodeURIComponent(prod.code)}'">
-                        </div>
-                        <button class="slider-btn next" onclick="moveSlide('${cardId}', 1)">&#10095;</button>
-                    </div>
-                    <div class="product-details">
-                        <div class="product-id">${prod.code}</div>
-                        <h3 class="product-title">${prod.title}</h3>
-                        <p class="product-desc">${prod.desc}</p>
-                        <div class="action-row">
-                            <span class="price">${prod.price}</span>
-                            <a href="https://wa.me/918920755505?text=Hi, I am interested in ordering: ${encodeURIComponent(prod.title)} [ID: ${prod.code}] (${prod.price})" target="_blank" class="order-button">Order Now</a>
-                        </div>
-                    </div>
-                </div>
-            `;
-            catalogContainer.innerHTML += cardHTML;
-        });
-
-        // Background slider builder: Only triggers if multi-images actually exist
-        document.querySelectorAll('.product-card').forEach((card, idx) => {
-            const code = products[idx].code;
-            const container = card.querySelector('.slider-wrapper');
-            const mainImg = container.querySelector('.product-image');
-            
-            // Quietly test if a '1_' version exists in the background
-            const multiCheck = new Image();
-            multiCheck.src = `../images/1_${code}.jpg`;
-            
-            multiCheck.onload = function() {
-                // Multi-images exist! Rebuild the slider track layout safely
-                container.innerHTML = '';
+        async function fetchProducts() {
+            try {
+                const response = await fetch(CSV_URL);
+                const dataText = await response.text();
+                const parsedRows = parseCSV(dataText);
                 
-                for (let i = 1; i <= 4; i++) {
-                    const extraImg = document.createElement('img');
-                    extraImg.className = 'product-image';
-                    extraImg.src = `../images/${i}_${code}.jpg`;
-                    
-                    // If image 1 loaded but 3 or 4 don't exist, quietly remove them without crashing
-                    extraImg.onerror = function() { 
-                        this.remove(); 
-                        updateSliderControls(card.querySelector('.image-container')); 
-                    };
-                    extraImg.onload = function() { 
-                        updateSliderControls(card.querySelector('.image-container')); 
-                    };
-                    container.appendChild(extraImg);
-                }
-            };
-        });
+                // Drop database headers row safely
+                parsedRows.shift();
+                
+                // Map out elements using your 5 custom columns layout
+                const products = parsedRows.map(row => ({
+                    group: row[0]?.trim() || "",
+                    id: row[1]?.trim() || "",
+                    name: row[2]?.trim() || "",
+                    desc: row[3]?.trim() || "",
+                    price: row[4]?.trim() || ""
+                })).filter(p => p.id !== "");
+
+                renderCatalog(products);
+            } catch (error) {
+                console.error("Error connecting to data layer:", error);
+                document.getElementById('catalog').innerHTML = `<div class="loading" style="color: #9b1c1c;">Failed to load data stream dynamically.</div>`;
+            }
+        }
+
+        function renderCatalog(productsList) {
+            const catalogContainer = document.getElementById('catalog');
+            catalogContainer.innerHTML = '';
+
+            if (productsList.length === 0) {
+                catalogContainer.innerHTML = '<div class="loading">No products discovered in your data sheets.</div>';
+                return;
+            }
+
+            productsList.forEach((prod, index) => {
+                const cardId = `card-${index}`;
+                const cardHTML = `
+                    <div class="product-card">
+                        <div class="image-container" id="${cardId}">
+                            <button class="slider-btn prev" onclick="moveSlide('${cardId}', -1)">&#10094;</button>
+                            <div class="slider-wrapper">
+                                <img class="product-image" src="../images/${prod.id}.jpg" onerror="this.src='https://placehold.co/600x400/075E54/white?text=${encodeURIComponent(prod.id)}'">
+                            </div>
+                            <button class="slider-btn next" onclick="moveSlide('${cardId}', 1)">&#10095;</button>
+                        </div>
+                        <div class="product-details">
+                            <div class="product-group-tag">${prod.group}</div>
+                            <div class="product-id">ID: ${prod.id}</div>
+                            <h3 class="product-title">${prod.name}</h3>
+                            <p class="product-desc">${prod.desc}</p>
+                            <div class="action-row">
+                                <span class="price">${prod.price}</span>
+                                <a href="https://wa.me/918920755505?text=Hi, I am interested in ordering: ${encodeURIComponent(prod.name)} [ID: ${prod.id}] (${prod.price})" target="_blank" class="order-button">Order Now</a>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                catalogContainer.innerHTML += cardHTML;
+                
+                // Track multislide images using ProductId structure references
+                checkMultiImages(prod.id, cardId);
+            });
+        }
+
+        function checkMultiImages(productId, cardId) {
+            setTimeout(() => {
+                const card = document.getElementById(cardId);
+                if (!card) return;
+                const container = card.querySelector('.slider-wrapper');
+                
+                const multiCheck = new Image();
+                multiCheck.src = `../images/1_${productId}.jpg`;
+                
+                multiCheck.onload = function() {
+                    container.innerHTML = '';
+                    for (let i = 1; i <= 4; i++) {
+                        const extraImg = document.createElement('img');
+                        extraImg.className = 'product-image';
+                        extraImg.src = `../images/${i}_${productId}.jpg`;
+                        
+                        extraImg.onerror = function() { 
+                            this.remove(); 
+                            updateSliderControls(card); 
+                        };
+                        extraImg.onload = function() { 
+                            updateSliderControls(card); 
+                        };
+                        container.appendChild(extraImg);
+                    }
+                };
+            }, 50);
+        }
 
         function updateSliderControls(container) {
             if (!container) return;
@@ -271,7 +313,9 @@
             container.setAttribute('data-current-slide', currentSlide);
             wrapper.style.transform = `translateX(-${currentSlide * 100}%)`;
         }
-    </script>
 
+        // Run data parsing routine live
+        fetchProducts();
+    </script>
 </body>
 </html>
