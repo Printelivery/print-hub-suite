@@ -74,8 +74,8 @@
         }
         .btn-primary { background-color: var(--primary-color); color: white; }
         .btn-secondary { background-color: #718096; color: white; }
-        .btn-action { background-color: #2b6cb0; color: white; } /* New / Copy buttons */
-        .btn-success { background-color: #25D366; color: white; } /* Update button */
+        .btn-action { background-color: #2b6cb0; color: white; }
+        .btn-success { background-color: #25D366; color: white; }
         .btn:disabled { background-color: #a0aec0; cursor: not-allowed; }
 
         /* Table Design */
@@ -163,7 +163,7 @@
 
     let dataset = [];
     let uniqueGroups = new Set();
-    let highestNumericId = 0; // Tracks maximum sequential counter ID locally
+    let highestNumericId = 0;
 
     function parseCSV(text) {
         let p = '', r = []; let q = false; let row = [''];
@@ -185,13 +185,12 @@
             const response = await fetch(CSV_URL);
             const dataText = await response.text();
             const parsedRows = parseCSV(dataText);
-            parsedRows.shift(); // Remove row matrix header label strings safely
+            parsedRows.shift();
 
             highestNumericId = 0;
             dataset = parsedRows.map(row => {
                 const idName = row[1]?.trim() || "";
                 
-                // Track max structural sequencing identifier integers
                 if (idName && idName.includes('_')) {
                     const extractedNum = parseInt(idName.split('_')[1]);
                     if (!isNaN(extractedNum) && extractedNum > highestNumericId) {
@@ -289,7 +288,6 @@
             </tr>
         `;
         
-        // When inserting fresh items, place them at the very top of the interactive table view panel
         if(isChecked) {
             tbody.insertAdjacentHTML('afterbegin', rowHTML);
         } else {
@@ -297,17 +295,13 @@
         }
     }
 
-    /* Command Action Button 1: Insert New Item Logic */
     function addNewRow() {
         highestNumericId++;
         const generatedId = `PRNTLRY_${highestNumericId.toString().padStart(2, '0')}`;
-        
-        // Append a blank active record row pre-checked at the top
         appendRowMarkup('', generatedId, '', '', '', true);
         handleRowCheckbox();
     }
 
-    /* Command Action Button 2: Copy/Clone Item Logic */
     function copySelectedRow() {
         const checkedRows = document.querySelectorAll('.row-checkbox:checked');
         if (checkedRows.length !== 1) {
@@ -321,13 +315,11 @@
         const descVal = sourceRow.querySelector('.col-desc').value;
         const priceVal = sourceRow.querySelector('.col-price').value;
 
-        // Uncheck the source row to prevent double-submitting it accidentally
         checkedRows[0].checked = false;
 
         highestNumericId++;
         const generatedId = `PRNTLRY_${highestNumericId.toString().padStart(2, '0')}`;
 
-        // Injects cloned data matrix metrics with next available ID tracking values
         appendRowMarkup(groupVal, generatedId, nameVal + " (Copy)", descVal, priceVal, true);
         handleRowCheckbox();
     }
@@ -348,7 +340,6 @@
         }
     }
 
-    /* Command Action Button 3: Sequential Bulk Save Logic Pipeline Loop */
     async function submitBulkUpdates() {
         const password = document.getElementById('password').value;
         const msgDiv = document.getElementById('message');
@@ -383,27 +374,40 @@
         msgDiv.style.display = "block";
 
         let successCount = 0;
+        let errorsOccurred = false;
 
         for(let i = 0; i < selectedRows.length; i++) {
             msgDiv.innerText = `Syncing batch records to script database pipeline: (${i + 1}/${selectedRows.length})...`;
             try {
-                await fetch(SCRIPT_URL, {
+                // 🛟 FIX: Removed mode: 'no-cors' to let headers and response streams function naturally
+                const response = await fetch(SCRIPT_URL, {
                     method: 'POST',
-                    mode: 'no-cors',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body: JSON.stringify(selectedRows[i])
                 });
-                successCount++;
+                
+                const result = await response.json();
+                if (result.status === "success") {
+                    successCount++;
+                } else {
+                    console.error("Script returned error:", result.message);
+                    errorsOccurred = true;
+                }
             } catch (err) {
                 console.error("Row connection failure index:", err);
+                errorsOccurred = true;
             }
         }
 
-        msgDiv.className = "success";
-        msgDiv.innerText = `Successfully synced database records for ${successCount} entries! Refreshing views...`;
-        document.getElementById('selectAllBox').checked = false;
+        if (errorsOccurred && successCount === 0) {
+            msgDiv.className = "error";
+            msgDiv.innerText = "Failed to update records. Check password or script permissions.";
+        } else {
+            msgDiv.className = "success";
+            msgDiv.innerText = `Successfully synced database records for ${successCount} entries! Refreshing views...`;
+        }
         
-        // Fresh execution layout pull stream sync on close routine completion loop
+        document.getElementById('selectAllBox').checked = false;
         await initPortal();
         
         btn.disabled = false;
