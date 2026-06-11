@@ -170,8 +170,8 @@
     </div>
 
     <script>
-        const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSZuJdNU_JDKhM9OSgx4yPa9rWGtL7PJ9dgbaoaWNJ4 _0jZ-AUOKLEUiCCACjiHlOYwsvwNG1ftwCMG/pubhtml";
-        const response = await fetch(CSV_URL + "&cachebuster=" + new Date().getTime());
+        // Changed to /pub?output=csv format to deliver raw array content streams properly
+        const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSZuJdNU_JDKhM9OSgx4yPa9rWGtL7PJ9dgbaoaWNJ4_0jZ-AUOKLEUiCCACjiHlOYwsvwNG1ftwCMG/pub?output=csv";
 
         // Accurate parser ensuring fields containing commas wrapped in quotes are safely retained
         function parseCSV(text) {
@@ -195,7 +195,6 @@
 
         async function fetchProducts() {
             try {
-                //const response = await fetch(CSV_URL);
                 const response = await fetch(CSV_URL + "&cachebuster=" + new Date().getTime());
                 const dataText = await response.text();
                 const parsedRows = parseCSV(dataText);
@@ -233,11 +232,11 @@
                 const cardHTML = `
                     <div class="product-card">
                         <div class="image-container" id="${cardId}">
-                            <button class="slider-btn prev" onclick="moveSlide('${cardId}', -1)">&#10094;</button>
+                            <button class="slider-btn prev" onclick="moveSlide('${cardId}', -1); event.stopPropagation();">&#10094;</button>
                             <div class="slider-wrapper">
                                 <img class="product-image" src="../images/${prod.id}.jpg" onerror="this.src='https://placehold.co/600x400/075E54/white?text=${encodeURIComponent(prod.id)}'">
                             </div>
-                            <button class="slider-btn next" onclick="moveSlide('${cardId}', 1)">&#10095;</button>
+                            <button class="slider-btn next" onclick="moveSlide('${cardId}', 1); event.stopPropagation();">&#10095;</button>
                         </div>
                         <div class="product-details">
                             <div class="product-group-tag">${prod.group}</div>
