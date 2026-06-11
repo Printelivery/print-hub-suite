@@ -159,7 +159,7 @@
 
 <script>
     const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSZuJdNU_JDKhM9OSgx4yPa9rWGtL7PJ9dgbaoaWNJ4_0jZ-AUOKLEUiCCACjiHlOYwsvwNG1ftwCMG/pub?output=csv";
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby6gqNulcGoOcIPbVlXXkQQhgKw6-UhingyVZ5vFzNEJLcryy99hRkgaEVcVQG43-qw/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyC62NH2Yd8JLcHC2d3HV1D9eMiCHAs1QtLe2sA9i_6qHqM61uJwXdB-N85ASuMq5Uf/exec";
 
     let dataset = [];
     let uniqueGroups = new Set();
@@ -374,32 +374,30 @@
         msgDiv.style.display = "block";
 
         let successCount = 0;
+        let errorsOccurred = false;
 
         for(let i = 0; i < selectedRows.length; i++) {
             msgDiv.innerText = `Syncing batch records to script database pipeline: (${i + 1}/${selectedRows.length})...`;
             try {
-                // Send raw text parameters to guarantee zero browser CORS blocking drops
-                await fetch(SCRIPT_URL, {
+                // 🛟 FIX: Removed mode: 'no-cors' to let headers and response streams function naturally
+                const response = await fetch(SCRIPT_URL, {
                     method: 'POST',
-                    mode: 'no-cors',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: new URLSearchParams(selectedRows[i]).toString()
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify(selectedRows[i])
                 });
-                successCount++;
+                
+                const result = await response.json();
+                if (result.status === "success") {
+                    successCount++;
+                } else {
+                    console.error("Script returned error:", result.message);
+                    errorsOccurred = true;
+                }
             } catch (err) {
                 console.error("Row connection failure index:", err);
+                errorsOccurred = true;
             }
         }
-
-        msgDiv.className = "success";
-        msgDiv.innerText = `Successfully synced database records for ${successCount} entries! Refreshing views...`;
-        
-        document.getElementById('selectAllBox').checked = false;
-        await initPortal();
-        
-        btn.disabled = false;
-        setTimeout(() => { msgDiv.style.display = "none"; }, 5000);
-    }
 
         if (errorsOccurred && successCount === 0) {
             msgDiv.className = "error";
