@@ -180,6 +180,17 @@
         return r;
     }
 
+    // Direct string decoder function to safely normalize legacy "+" strings from the spreadsheet cells back into text spaces
+    function cleanIncomingValue(val) {
+        if (!val) return "";
+        let trimmed = val.trim();
+        // If the cell contains legacy "+" dividers, transform them back into readable standard spaces
+        if (trimmed.includes('+') && !trimmed.includes(' ')) {
+            return trimmed.replace(/\+/g, ' ');
+        }
+        return trimmed;
+    }
+
     async function initPortal() {
         try {
             const response = await fetch(CSV_URL);
@@ -199,11 +210,11 @@
                 }
 
                 return {
-                    group: row[0]?.trim() || "",
+                    group: cleanIncomingValue(row[0]),
                     id: idName,
-                    name: row[2]?.trim() || "",
-                    desc: row[3]?.trim() || "",
-                    price: row[4]?.trim() || ""
+                    name: cleanIncomingValue(row[2]),
+                    desc: cleanIncomingValue(row[3]),
+                    price: cleanIncomingValue(row[4])
                 };
             }).filter(p => p.id !== "");
 
@@ -378,16 +389,21 @@
         for(let i = 0; i < selectedRows.length; i++) {
             msgDiv.innerText = `Syncing batch records to script database pipeline: (${i + 1}/${selectedRows.length})...`;
             try {
-                // Secure text stream format submission to guarantee seamless zero-CORS block execution
+                // Generates standard form parameter body configuration
+                const standardUrlParams = new URLSearchParams(selectedRows[i]).toString();
+                
+                // CRITICAL FIX: Explicitly intercept and substitute '+' tokens with standard clean web-escaped '%20' blocks
+                // This ensures Google Apps Script receives parameters that resolve directly to actual spaces
+                const cleanFormPayload = standardUrlParams.replace(/\+/g, '%20');
+
                 await fetch(SCRIPT_URL, {
                     method: 'POST',
                     mode: 'no-cors',
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: new URLSearchParams(selectedRows[i]).toString()
+                    body: cleanFormPayload
                 });
                 successCount++;
 
-                // Give Google Sheet engine a 1.5-second break to cycle cleanly without locking rows
                 if (i < selectedRows.length - 1) {
                     await new Promise(resolve => setTimeout(resolve, 1500));
                 }
@@ -401,7 +417,6 @@
         
         document.getElementById('selectAllBox').checked = false;
         
-        // Let Google's cache build before requesting the raw data stream again
         setTimeout(async () => {
             await initPortal();
             btn.disabled = false;
