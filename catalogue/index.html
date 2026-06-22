@@ -64,7 +64,6 @@
         }
         .cart-badge { background: var(--accent-color); color: white; border-radius: 50%; padding: 2px 8px; font-size: 0.8rem; }
 
-        /* Dynamic Catalog Grid Layouts */
         .catalog-grid { display: grid; gap: 30px; max-width: 1200px; margin: 0 auto; transition: all 0.3s ease; }
         .cols-1 { grid-template-columns: repeat(1, 1fr); }
         .cols-2 { grid-template-columns: repeat(2, 1fr); }
@@ -101,35 +100,29 @@
         .product-title { font-size: 1.2rem; font-weight: 700; margin: 0 0 10px 0; color: #1a202c; line-height: 1.4; }
         .product-desc { font-size: 0.9rem; color: #4a5568; line-height: 1.5; margin: 0 0 20px 0; flex-grow: 1; white-space: pre-line; }
         
-        /* Action Button Layouts */
         .action-row { display: flex; align-items: center; justify-content: space-between; margin-top: auto; height: 42px; }
         .price { font-size: 1.25rem; font-weight: 800; color: var(--primary-color); }
         .order-button { background-color: var(--accent-color); color: white; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 600; font-size: 0.9rem; cursor: pointer; transition: background-color 0.2s ease; height: 100%; box-sizing: border-box; }
         .order-button:hover { background-color: #20ba59; }
         
-        /* Inline Qty Controls */
         .inline-qty-control { display: flex; align-items: center; gap: 8px; background: #edf2f7; border-radius: 8px; padding: 4px 8px; height: 100%; box-sizing: border-box; }
         .inline-qty-btn { background: white; border: 1px solid #cbd5e0; width: 32px; height: 32px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; }
         .inline-qty-val { font-weight: 700; width: 25px; text-align: center; font-size: 1rem; }
 
-        /* Pagination Styling */
         .pagination-container { display: flex; justify-content: center; align-items: center; gap: 5px; margin: 40px auto 0 auto; max-width: 1200px; flex-wrap: wrap; }
         .page-btn { padding: 8px 14px; border: 1px solid #cbd5e0; background: white; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.9rem; transition: all 0.2s; }
         .page-btn:hover:not(:disabled) { background: #edf2f7; border-color: #a0aec0; }
         .page-btn.active { background: var(--primary-color); color: white; border-color: var(--primary-color); }
         .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
-        /* Overlay Modals Frame */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 20px; box-sizing: border-box; }
         .modal-body { background: white; padding: 30px; border-radius: 16px; max-width: 600px; width: 100%; position: relative; max-height: 90vh; overflow-y: auto; }
         .close-modal { position: absolute; top: 15px; right: 20px; font-size: 1.8rem; cursor: pointer; color: #a0aec0; }
         .close-modal:hover { color: #2d3748; }
 
-        /* Media View Modal Frame */
         #mediaViewModal .modal-body { background: transparent; box-shadow: none; padding: 0; max-width: 85vw; display: flex; justify-content: center; }
         #mediaViewModal img { max-width: 100%; max-height: 85vh; border-radius: 8px; object-fit: contain; }
 
-        /* Cart Overview Elements */
         .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #edf2f7; }
         .cart-item-meta h4 { margin: 0 0 4px 0; color: #1a202c; }
         .cart-item-meta p { margin: 0; color: #718096; font-size: 0.9rem; }
@@ -146,17 +139,45 @@
         .checkout-btn:hover { background-color: #20ba59; }
         .loading { text-align: center; grid-column: 1 / -1; font-size: 1.2rem; color: #718096; padding: 40px; }
 
-        /* Hidden Invoice Container for PDF generation */
-        #invoiceRenderCanvas { display: none; font-family: Arial, sans-serif; padding: 40px; color: #333; }
-        .inv-header { display: flex; justify-content: space-between; border-bottom: 2px solid #075E54; padding-bottom: 15px; margin-bottom: 20px; }
-        .inv-title { color: #075E54; font-size: 24px; font-weight: bold; margin: 0; }
-        .inv-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; font-size: 13px; }
-        .inv-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 13px; }
-        .inv-table th, .inv-table td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-        .inv-table th { background-color: #f2f2f2; }
-        .inv-summary { margin-left: auto; width: 40%; font-size: 13px; }
-        .inv-summary-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #eee; }
-        .inv-summary-row.bold { font-weight: bold; border-top: 1px solid #075E54; color: #075E54; }
+        /* FIXED: Render Container configuration setup prevents blank/empty captures */
+        #invoiceRenderCanvas { 
+            position: absolute; 
+            left: -9999px; 
+            top: 0; 
+            display: block; 
+            width: 790px; 
+            padding: 40px; 
+            color: #333; 
+            background-color: #ffffff;
+            box-sizing: border-box;
+        }
+        .invoice-bg-wrapper {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+        /* LOGO.jpg layered flawlessly centered behind contents */
+        .invoice-bg-wrapper::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: url('../images/LOGO_.jpg');
+            background-repeat: no-repeat;
+            background-position: center 250px;
+            background-size: 450px auto;
+            opacity: 0.08;
+            z-index: -1;
+        }
+        .inv-header { display: flex; justify-content: space-between; border-bottom: 3px solid #075E54; padding-bottom: 15px; margin-bottom: 25px; }
+        .inv-title { color: #075E54; font-size: 28px; font-weight: 900; margin: 0; letter-spacing: 0.5px; }
+        .inv-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 35px; font-size: 14px; line-height: 1.5; }
+        .inv-table { width: 100%; border-collapse: collapse; margin-bottom: 30px; font-size: 13px; background: transparent; }
+        .inv-table th { background-color: #075E54; color: white; font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; padding: 12px; border: 1px solid #075E54; }
+        .inv-table td { border: 1px solid #e2e8f0; padding: 12px; text-align: left; background: rgba(255,255,255,0.7); }
+        .inv-summary { margin-left: auto; width: 45%; font-size: 14px; margin-top: 20px; }
+        .inv-summary-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #edf2f7; }
+        .inv-summary-row.bold { font-weight: 800; border-top: 2px solid #075E54; border-bottom: 2px solid #075E54; color: #075E54; padding: 10px 0; font-size: 16px; }
     </style>
 </head>
 <body>
@@ -249,12 +270,12 @@
 
     <script>
         const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSZuJdNU_JDKhM9OSgx4yPa9rWGtL7PJ9dgbaoaWNJ4_0jZ-AUOKLEUiCCACjiHlOYwsvwNG1ftwCMG/pub?output=csv";
-        const APPS_SCRIPT_API_URL = "https://script.google.com/macros/s/YOUR_DEPLOYED_SCRIPT_ID/exec"; 
+        
+        // Target endpoint configuration for backend execution pipelines
+        const BACKEND_API_ENDPOINT = "https://script.google.com/macros/s/YOUR_DEPLOYED_GAPPS_SCRIPT_ID/exec"; 
 
         let localProductsRegistry = [];
         let shoppingCartState = {};
-        
-        // Pagination States
         let currentPage = 1;
         let pageSize = 10;
 
@@ -315,7 +336,6 @@
                 return;
             }
 
-            // Calculation Boundaries
             const startIndex = (currentPage - 1) * pageSize;
             const endIndex = startIndex + pageSize;
             const paginatedItems = localProductsRegistry.slice(startIndex, endIndex);
@@ -324,7 +344,6 @@
                 const cardId = `card-${startIndex + index}`;
                 const cartItem = shoppingCartState[prod.id];
                 
-                // Dynamic Button / Qty Control state selection implementation
                 let actionWidgetHTML = `<button class="order-button" onclick="addItemToCart('${prod.id}')">Add to Cart</button>`;
                 if (cartItem && cartItem.qty > 0) {
                     actionWidgetHTML = `
@@ -371,7 +390,6 @@
             const totalPages = Math.ceil(localProductsRegistry.length / pageSize);
             if(totalPages <= 1) return;
 
-            // Navigation Execution elements mapping arrays
             container.innerHTML += `<button class="page-btn" onclick="jumpToPage(1)" ${currentPage === 1 ? 'disabled' : ''} title="First Page"><<</button>`;
             container.innerHTML += `<button class="page-btn" onclick="jumpToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} title="Previous"><</button>`;
 
@@ -448,7 +466,6 @@
 
         function closeMediaViewModal() { document.getElementById('mediaViewModal').style.display = 'none'; }
 
-        // Core Cart Engine Logic mapping
         function addItemToCart(productId) {
             const targetProduct = localProductsRegistry.find(p => p.id === productId);
             if (!targetProduct) return;
@@ -550,64 +567,65 @@
         function openAddressCollectionModal() { closeCartViewModal(); document.getElementById('addressCaptureModal').style.display = 'flex'; }
         function closeAddressCollectionModal() { document.getElementById('addressCaptureModal').style.display = 'none'; }
 
-        // PDF Generation Layout Mapping
         function generateInvoiceHTMLCanvasMarkup(customerDetails, itemsList, net, tax, gross) {
             const canvas = document.getElementById('invoiceRenderCanvas');
             const dateString = new Date().toLocaleDateString('en-IN', { dateStyle: 'long' });
-            const invoiceId = `INV-${Date.now().toString().slice(-6)}`;
+            const invoiceId = `PRNT-${Date.now().toString().slice(-6)}`;
 
             let itemsRowsHTML = '';
             itemsList.forEach(item => {
                 itemsRowsHTML += `
                     <tr>
-                        <td>${item.name}</td>
-                        <td>${item.id}</td>
+                        <td style="font-weight: 600; color: #1a202c;">${item.name}</td>
+                        <td style="color: #4a5568;">${item.id}</td>
                         <td>₹${cleanNumericPricing(item.price).toFixed(2)}</td>
-                        <td>${item.qty}</td>
-                        <td>₹${(cleanNumericPricing(item.price) * item.qty).toFixed(2)}</td>
+                        <td style="text-align: center; font-weight: 600;">${item.qty}</td>
+                        <td style="font-weight: 600; color: #075E54;">₹${(cleanNumericPricing(item.price) * item.qty).toFixed(2)}</td>
                     </tr>
                 `;
             });
 
             canvas.innerHTML = `
-                <div class="inv-header">
-                    <div>
-                        <h2 class="inv-title">PRINTELIVERY</h2>
-                        <p style="font-size:12px; margin:4px 0; color:#718096;">Premium Printing & Custom Designs</p>
+                <div class="invoice-bg-wrapper">
+                    <div class="inv-header">
+                        <div>
+                            <h2 class="inv-title">PRINTELIVERY</h2>
+                            <p style="font-size:13px; margin:6px 0 0 0; color:#4a5568; font-weight:600;">Premium Printing & Custom Designs</p>
+                        </div>
+                        <div style="text-align:right; font-size:13px; line-height: 1.4;">
+                            <p style="margin:0;"><strong>Invoice No:</strong> ${invoiceId}</p>
+                            <p style="margin:4px 0 0 0;"><strong>Date:</strong> ${dateString}</p>
+                        </div>
                     </div>
-                    <div style="text-align:right; font-size:12px;">
-                        <p style="margin:0;"><strong>Invoice No:</strong> ${invoiceId}</p>
-                        <p style="margin:4px 0;"><strong>Date:</strong> ${dateString}</p>
+                    <div class="inv-grid">
+                        <div>
+                            <span style="color:#075E54; font-weight:700; text-transform:uppercase; font-size:11px; letter-spacing:0.5px;">Customer Details:</span>
+                            <p style="margin:6px 0 0 0;"><strong>${customerDetails.name}</strong><br>Phone: ${customerDetails.phone}</p>
+                        </div>
+                        <div>
+                            <span style="color:#075E54; font-weight:700; text-transform:uppercase; font-size:11px; letter-spacing:0.5px;">Shipping Destination:</span>
+                            <p style="margin:6px 0 0 0;">${customerDetails.flat},<br>${customerDetails.address}<br><strong>PIN: ${customerDetails.pin}</strong></p>
+                        </div>
                     </div>
-                </div>
-                <div class="inv-grid">
-                    <div>
-                        <strong style="color:#075E54;">Invoiced To:</strong>
-                        <p style="margin:5px 0;">${customerDetails.name}<br>Phone: ${customerDetails.phone}</p>
+                    <table class="inv-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 45%;">Item Description</th>
+                                <th style="width: 20%;">Product ID</th>
+                                <th style="width: 12%;">Price</th>
+                                <th style="width: 8%; text-align: center;">Qty</th>
+                                <th style="width: 15%;">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${itemsRowsHTML}
+                        </tbody>
+                    </table>
+                    <div class="inv-summary">
+                        <div class="inv-summary-row"><span>Net Taxable Value:</span><span>₹${net}</span></div>
+                        <div class="inv-summary-row"><span>Integrated GST (18%):</span><span>₹${tax}</span></div>
+                        <div class="inv-summary-row bold"><span>Gross Payable Total:</span><span>₹${gross}</span></div>
                     </div>
-                    <div>
-                        <strong style="color:#075E54;">Delivery Destination:</strong>
-                        <p style="margin:5px 0;">${customerDetails.flat},<br>${customerDetails.address}<br>PIN: ${customerDetails.pin}</p>
-                    </div>
-                </div>
-                <table class="inv-table">
-                    <thead>
-                        <tr>
-                            <th>Item Description</th>
-                            <th>Product ID</th>
-                            <th>Unit Price</th>
-                            <th>Qty</th>
-                            <th>Total Gross</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${itemsRowsHTML}
-                    </tbody>
-                </table>
-                <div class="inv-summary">
-                    <div class="inv-summary-row"><span>Taxable Net Amount:</span><span>₹${net}</span></div>
-                    <div class="inv-summary-row"><span>Integrated GST (18%):</span><span>₹${tax}</span></div>
-                    <div class="inv-summary-row bold"><span>Gross Total:</span><span>₹${gross}</span></div>
                 </div>
             `;
         }
@@ -646,35 +664,48 @@
 
             txtMessage += `\n🧾 *Tax Invoice Summary:*\nNet Taxable Value: ₹${baseTaxableAmount}\nIntegrated GST Value (18%): ₹${calculatedGstSlice}\n*Gross Payable Total: ₹${grossValueStr}* (Inclusive of GST)\n`;
 
-            // 1. Generate & Trigger Download of local PDF Invoice
+            // Compile the layout to hidden target canvas
             generateInvoiceHTMLCanvasMarkup(customerDetails, flatItemsArray, baseTaxableAmount, calculatedGstSlice, grossValueStr);
             const canvasElement = document.getElementById('invoiceRenderCanvas');
-            canvasElement.style.display = "block";
             
-            const pdfOptions = { margin: 10, filename: `Printelivery_${customerDetails.name.replace(/\s+/g, '_')}_Invoice.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } };
+            const pdfOptions = { 
+                margin: 0, 
+                filename: `Printelivery_${customerDetails.name.replace(/\s+/g, '_')}_Invoice.pdf`, 
+                image: { type: 'jpeg', quality: 1.0 }, 
+                html2canvas: { scale: 2, useCORS: true, logging: false }, 
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } 
+            };
             
-            await html2pdf().from(canvasElement).set(pdfOptions).save();
-            canvasElement.style.display = "none";
+            // Generate PDF internal raw data payload
+            const pdfWorker = html2pdf().from(canvasElement).set(pdfOptions);
+            
+            // Trigger browser downloading action
+            await pdfWorker.save();
+            
+            // Generate base64 string for direct messaging/mailing transmission
+            const pdfBase64 = await pdfWorker.outputPdf('datauristring');
+            const base64CleanPayload = pdfBase64.split(',')[1];
 
-            // 2. Direct Background execution fallback for silent Delivery Notifications (WhatsApp + Email APIs)
+            // 1. Direct Background execution route payload to backend endpoint
             try {
-                await fetch(APPS_SCRIPT_API_URL, {
+                await fetch(BACKEND_API_ENDPOINT, {
                     method: 'POST',
                     mode: 'no-cors',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         customer: customerDetails,
-                        items: flatItemsArray,
                         textSummary: txtMessage,
-                        emailTarget: "printelivery@gmail.com"
+                        emailTarget: "printelivery@gmail.com",
+                        pdfAttachmentData: base64CleanPayload,
+                        pdfFileName: `Invoice_${customerDetails.name.replace(/\s+/g, '_')}.pdf`
                     })
                 });
-            } catch(e) { console.warn("API background push pipeline skipped configuration:", e); }
+            } catch(e) { console.warn("Background notification fallback executed:", e); }
 
-            // Fallback application launch routing window context
+            // 2. Open WhatsApp Web client fallback interface fallback
             window.open(`https://wa.me/918920755505?text=${encodeURIComponent(txtMessage)}`, '_blank');
 
-            // Reset state
+            // Clear configuration state
             shoppingCartState = {};
             synchronizeCartBadgeUI();
             closeAddressCollectionModal();
