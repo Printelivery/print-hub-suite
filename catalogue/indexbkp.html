@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Product Catalogue - Printelivery</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         :root {
             --primary-color: #075E54;
@@ -21,24 +22,58 @@
         .header {
             text-align: center;
             margin-bottom: 50px;
-        }
-        .header h1 {
-            color: var(--primary-color);
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-        }
-        .header p {
-            color: #718096;
-            font-size: 1.1rem;
-            margin: 0;
-        }
-        .catalog-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 30px;
+            position: relative;
             max-width: 1200px;
-            margin: 0 auto;
+            margin-left: auto;
+            margin-right: auto;
         }
+        .header h1 { color: var(--primary-color); font-size: 2.5rem; margin-bottom: 10px; }
+        .header p { color: #718096; font-size: 1.1rem; margin: 0; }
+        
+        .controls-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto 30px auto;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .selectors-group { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+        .control-item { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+        .custom-select {
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid #cbd5e0;
+            font-size: 0.95rem;
+            background: #fff;
+            cursor: pointer;
+        }
+        .cart-toggle-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.95rem;
+        }
+        .cart-badge { background: var(--accent-color); color: white; border-radius: 50%; padding: 2px 8px; font-size: 0.8rem; }
+
+        .catalog-grid { display: grid; gap: 30px; max-width: 1200px; margin: 0 auto; transition: all 0.3s ease; }
+        .cols-1 { grid-template-columns: repeat(1, 1fr); }
+        .cols-2 { grid-template-columns: repeat(2, 1fr); }
+        .cols-3 { grid-template-columns: repeat(3, 1fr); }
+        .cols-4 { grid-template-columns: repeat(4, 1fr); }
+        .cols-5 { grid-template-columns: repeat(5, 1fr); }
+
+        @media (max-width: 1024px) { .catalog-grid { grid-template-columns: repeat(2, 1fr) !important; } }
+        @media (max-width: 650px) { .catalog-grid { grid-template-columns: repeat(1, 1fr) !important; } }
+
         .product-card {
             background: #ffffff;
             border-radius: 16px;
@@ -48,114 +83,88 @@
             flex-direction: column;
             border: 1px solid #e2e8f0;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-        .product-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
-        }
-        .image-container {
-            width: 100%;
-            height: 260px;
-            background-color: #edf2f7;
-            position: relative;
-            overflow: hidden;
-        }
-        .slider-wrapper {
-            display: flex;
-            width: 100%;
-            height: 100%;
-            transition: transform 0.3s ease-in-out;
-        }
-        .product-image {
-            min-width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        .slider-btn {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            background: rgba(0, 0, 0, 0.5);
-            color: white;
-            border: none;
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
             cursor: pointer;
-            font-weight: bold;
-            display: none;
-            z-index: 10;
+        }
+        .product-card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1); }
+        .image-container { width: 100%; height: 260px; background-color: #edf2f7; position: relative; overflow: hidden; }
+        .slider-wrapper { display: flex; width: 100%; height: 100%; transition: transform 0.3s ease-in-out; }
+        .product-image { min-width: 100%; height: 100%; object-fit: cover; }
+        
+        .slider-btn {
+            position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0, 0, 0, 0.5);
+            color: white; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-weight: bold; display: none; z-index: 10;
         }
         .slider-btn.prev { left: 10px; }
         .slider-btn.next { right: 10px; }
-        .product-details {
-            padding: 24px;
-            display: flex;
-            flex-direction: column;
-            flex-grow: 1;
+        
+        .product-details { padding: 24px; display: flex; flex-direction: column; flex-grow: 1; }
+        .product-group-tag { font-size: 0.75rem; font-weight: 700; color: var(--primary-color); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px; }
+        .product-id { font-size: 0.8rem; font-weight: 600; color: #a0aec0; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+        .product-title { font-size: 1.2rem; font-weight: 700; margin: 0 0 10px 0; color: #1a202c; line-height: 1.4; }
+        .product-desc { font-size: 0.9rem; color: #4a5568; line-height: 1.5; margin: 0 0 20px 0; flex-grow: 1; white-space: pre-line; }
+        
+        .action-row { display: flex; align-items: center; justify-content: space-between; margin-top: auto; height: 42px; }
+        .price { font-size: 1.25rem; font-weight: 800; color: var(--primary-color); }
+        .order-button { background-color: var(--accent-color); color: white; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 600; font-size: 0.9rem; cursor: pointer; transition: background-color 0.2s ease; height: 100%; box-sizing: border-box; }
+        .order-button:hover { background-color: #20ba59; }
+        
+        .inline-qty-control { display: flex; align-items: center; gap: 8px; background: #edf2f7; border-radius: 8px; padding: 4px 8px; height: 100%; box-sizing: border-box; }
+        .inline-qty-btn { background: white; border: 1px solid #cbd5e0; width: 32px; height: 32px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; }
+        .inline-qty-val { font-weight: 700; width: 25px; text-align: center; font-size: 1rem; }
+
+        .pagination-container { display: flex; justify-content: center; align-items: center; gap: 5px; margin: 40px auto 0 auto; max-width: 1200px; flex-wrap: wrap; }
+        .page-btn { padding: 8px 14px; border: 1px solid #cbd5e0; background: white; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.9rem; transition: all 0.2s; }
+        .page-btn:hover:not(:disabled) { background: #edf2f7; border-color: #a0aec0; }
+        .page-btn.active { background: var(--primary-color); color: white; border-color: var(--primary-color); }
+        .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.75); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 20px; box-sizing: border-box; overflow: hidden; }
+        .modal-body { background: white; padding: 30px; border-radius: 16px; max-width: 600px; width: 100%; position: relative; max-height: 90vh; overflow-y: auto; }
+        .close-modal { position: absolute; top: 20px; right: 25px; font-size: 2.5rem; cursor: pointer; color: #ffffff; z-index: 1050; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+        .close-modal:hover { color: var(--accent-color); }
+
+        .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #edf2f7; }
+        .cart-item-meta h4 { margin: 0 0 4px 0; color: #1a202c; }
+        .cart-item-meta p { margin: 0; color: #718096; font-size: 0.9rem; }
+        .qty-controls { display: flex; align-items: center; gap: 8px; }
+        .qty-btn { background: #edf2f7; border: 1px solid #cbd5e0; width: 28px; height: 28px; border-radius: 4px; font-weight: bold; cursor: pointer; }
+        .cart-summary { margin-top: 20px; border-top: 2px solid #edf2f7; padding-top: 15px; }
+        .summary-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.95rem; }
+        .summary-row.total { font-size: 1.2rem; font-weight: 800; color: var(--primary-color); border-top: 1px dashed #cbd5e0; padding-top: 8px; }
+        
+        .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+        .form-group label { font-weight: 600; font-size: 0.85rem; color: #4a5568; }
+        .form-group input, .form-group textarea { padding: 10px; border: 1px solid #cbd5e0; border-radius: 6px; font-size: 0.95rem; }
+        .checkout-btn { background-color: var(--accent-color); color: white; border: none; width: 100%; padding: 12px; border-radius: 8px; font-weight: 700; font-size: 1rem; cursor: pointer; margin-top: 10px; }
+        .checkout-btn:hover { background-color: #20ba59; }
+        .loading { text-align: center; grid-column: 1 / -1; font-size: 1.2rem; color: #718096; padding: 40px; }
+
+        #invoiceRenderCanvas { 
+            position: absolute; 
+            left: -9999px; 
+            top: 0; 
+            display: block; 
+            width: 790px; 
+            color: #333; 
+            background-color: #ffffff;
+            box-sizing: border-box;
         }
-        .product-group-tag {
-            font-size: 0.75rem;
-            font-weight: 700;
-            color: var(--primary-color);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin-bottom: 2px;
+        .invoice-pdf-container {
+            position: relative;
+            width: 100%;
+            padding: 45px;
+            box-sizing: border-box;
+            background: #ffffff;
         }
-        .product-id {
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: #a0aec0;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin-bottom: 6px;
-        }
-        .product-title {
-            font-size: 1.2rem;
-            font-weight: 700;
-            margin: 0 0 10px 0;
-            color: #1a202c;
-            line-height: 1.4;
-        }
-        .product-desc {
-            font-size: 0.9rem;
-            color: #4a5568;
-            line-height: 1.5;
-            margin: 0 0 20px 0;
-            flex-grow: 1;
-            white-space: pre-line;
-        }
-        .action-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-top: auto;
-        }
-        .price {
-            font-size: 1.25rem;
-            font-weight: 800;
-            color: var(--primary-color);
-        }
-        .order-button {
-            background-color: var(--accent-color);
-            color: white;
-            text-decoration: none;
-            padding: 10px 18px;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 0.9rem;
-            transition: background-color 0.2s ease;
-        }
-        .order-button:hover {
-            background-color: #20ba59;
-        }
-        .loading {
-            text-align: center;
-            grid-column: 1 / -1;
-            font-size: 1.2rem;
-            color: #718096;
-            padding: 40px;
-        }
+        .inv-header { display: flex; justify-content: space-between; border-bottom: 3px solid #075E54; padding-bottom: 15px; margin-bottom: 25px; }
+        .inv-title { color: #075E54; font-size: 28px; font-weight: 900; margin: 0; letter-spacing: 0.5px; }
+        .inv-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 35px; font-size: 14px; line-height: 1.5; }
+        .inv-table { width: 100%; border-collapse: collapse; margin-bottom: 30px; font-size: 13px; background: transparent; }
+        .inv-table th { background-color: #075E54; color: white; font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; padding: 12px; border: 1px solid #075E54; }
+        .inv-table td { border: 1px solid #e2e8f0; padding: 12px; text-align: left; background: rgba(255,255,255,0.7); }
+        .inv-summary { margin-left: auto; width: 45%; font-size: 14px; margin-top: 20px; }
+        .inv-summary-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #edf2f7; }
+        .inv-summary-row.bold { font-weight: 800; border-top: 2px solid #075E54; border-bottom: 2px solid #075E54; color: #075E54; padding: 10px 0; font-size: 16px; }
     </style>
 </head>
 <body>
@@ -165,28 +174,106 @@
         <p>Premium Printing Tools, Custom Designs & Prints</p>
     </div>
 
-    <div class="catalog-grid" id="catalog">
+    <div class="controls-bar">
+        <div class="selectors-group">
+            <div class="control-item">
+                <label for="colSelect">Items per row:</label>
+                <select id="colSelect" class="custom-select" onchange="alterGridLayout(this.value)">
+                    <option value="1">1 Product</option>
+                    <option value="2">2 Products</option>
+                    <option value="3" selected>3 Products</option>
+                    <option value="4">4 Products</option>
+                    <option value="5">5 Products</option>
+                </select>
+            </div>
+            <div class="control-item">
+                <label for="pageSizeSelect">Items per page:</label>
+                <select id="pageSizeSelect" class="custom-select" onchange="alterPageSize(this.value)">
+                    <option value="1">1</option>
+                    <option value="5">5</option>
+                    <option value="10" selected>10</option>
+                    <option value="20">20</option>
+                </select>
+            </div>
+        </div>
+        <button class="cart-toggle-btn" onclick="openCartViewModal()">
+            🛒 View Cart <span id="cartCountBadge" class="cart-badge">0</span>
+        </button>
+    </div>
+
+    <div class="catalog-grid cols-3" id="catalog">
         <div class="loading">Loading products live...</div>
     </div>
 
-    <script>
-        // Changed to /pub?output=csv format to deliver raw array content streams properly
-        const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSZuJdNU_JDKhM9OSgx4yPa9rWGtL7PJ9dgbaoaWNJ4_0jZ-AUOKLEUiCCACjiHlOYwsvwNG1ftwCMG/pub?output=csv";
+    <div id="pagination" class="pagination-container"></div>
 
-        // Accurate parser ensuring fields containing commas wrapped in quotes are safely retained
+    <div id="cartDrawerModal" class="modal-overlay" onclick="closeCartViewModal()">
+        <div class="modal-body" onclick="event.stopPropagation()">
+            <span class="close-modal" style="color:#a0aec0;" onclick="closeCartViewModal()">&times;</span>
+            <h3>Your Shopping Cart</h3>
+            <div id="cartItemsContainer"></div>
+            <div id="cartSummaryBlock" class="cart-summary"></div>
+            <button id="proceedCheckoutActionBtn" class="checkout-btn" onclick="openAddressCollectionModal()">Proceed to Delivery Details</button>
+        </div>
+    </div>
+
+    <div id="addressCaptureModal" class="modal-overlay" onclick="closeAddressCollectionModal()">
+        <div class="modal-body" onclick="event.stopPropagation()">
+            <span class="close-modal" style="color:#a0aec0;" onclick="closeAddressCollectionModal()">&times;</span>
+            <h3>Delivery Details</h3>
+            <form id="shippingAddressForm" onsubmit="compileFinalInvoiceAndSend(event)">
+                <div class="form-group">
+                    <label for="custName">Full Name</label>
+                    <input type="text" id="custName" required placeholder="Vijayakumar Periyasamy">
+                </div>
+                <div class="form-group">
+                    <label for="custPhone">Phone Number</label>
+                    <input type="tel" id="custPhone" required placeholder="09891462248">
+                </div>
+                <div class="form-group">
+                    <label for="custFlat">Flat No. / Building / Company</label>
+                    <input type="text" id="custFlat" required placeholder="Printelivery, L107, L Block">
+                </div>
+                <div class="form-group">
+                    <label for="custAddress">Street Address / Area</label>
+                    <textarea id="custAddress" rows="3" required placeholder="KG Earth Homes MK, Stalin St. Thazhambur"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="custPin">Pin Code</label>
+                    <input type="text" id="custPin" required placeholder="600130">
+                </div>
+                <button type="submit" class="checkout-btn">Confirm Order, Download Invoice & Send</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="invoiceRenderCanvas"></div>
+
+    <script>
+        const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSZuJdNU_JDKhM9OSgx4yPa9rWGtL7PJ9dgbaoaWNJ4_0jZ-AUOKLEUiCCACjiHlOYwsvwNG1ftwCMG/pub?output=csv";
+        const BACKEND_API_ENDPOINT = "https://script.google.com/macros/s/YOUR_DEPLOYED_GAPPS_SCRIPT_ID/exec"; 
+
+        let localProductsRegistry = [];
+        let shoppingCartState = {};
+        let currentPage = 1;
+        let pageSize = 10;
+
+        window.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape' || event.keyCode === 27) {
+                closeCartViewModal();
+                closeAddressCollectionModal();
+            }
+        });
+
         function parseCSV(text) {
-            let p = '', r = [];
-            let q = false;
-            let row = [''];
+            let p = '', r = []; let q = false; let row = [''];
             for (let i=0; i<text.length; i++) {
-                let c = text[i];
-                let next = text[i+1];
+                let c = text[i]; let next = text[i+1];
                 if (c === '"') { if (q && next === '"') { row[row.length-1] += '"'; i++; } else { q = !q; } }
                 else if (c === ',' && !q) { row.push(''); }
                 else if ((c === '\r' || c === '\n') && !q) {
                     if (c === '\r' && next === '\n') { i++; }
-                    r.push(row);
-                    row = [''];
+                    r.push(row); row = [''];
                 } else { row[row.length-1] += c; }
             }
             if (row.length > 1 || row[0] !== '') { r.push(row); }
@@ -198,12 +285,9 @@
                 const response = await fetch(CSV_URL + "&cachebuster=" + new Date().getTime());
                 const dataText = await response.text();
                 const parsedRows = parseCSV(dataText);
-                
-                // Drop database headers row safely
                 parsedRows.shift();
                 
-                // Map out elements using your 5 custom columns layout
-                const products = parsedRows.map(row => ({
+                localProductsRegistry = parsedRows.map(row => ({
                     group: row[0]?.trim() || "",
                     id: row[1]?.trim() || "",
                     name: row[2]?.trim() || "",
@@ -211,24 +295,53 @@
                     price: row[4]?.trim() || ""
                 })).filter(p => p.id !== "");
 
-                renderCatalog(products);
+                currentPage = 1;
+                renderCatalogViewEngine();
             } catch (error) {
                 console.error("Error connecting to data layer:", error);
                 document.getElementById('catalog').innerHTML = `<div class="loading" style="color: #9b1c1c;">Failed to load data stream dynamically.</div>`;
             }
         }
 
-        function renderCatalog(productsList) {
+        function alterGridLayout(columnsNumber) {
+            document.getElementById('catalog').className = `catalog-grid cols-${columnsNumber}`;
+        }
+
+        function alterPageSize(size) {
+            pageSize = parseInt(size);
+            currentPage = 1;
+            renderCatalogViewEngine();
+        }
+
+        function renderCatalogViewEngine() {
             const catalogContainer = document.getElementById('catalog');
             catalogContainer.innerHTML = '';
 
-            if (productsList.length === 0) {
+            if (localProductsRegistry.length === 0) {
                 catalogContainer.innerHTML = '<div class="loading">No products discovered in your data sheets.</div>';
                 return;
             }
 
-            productsList.forEach((prod, index) => {
-                const cardId = `card-${index}`;
+            const startIndex = (currentPage - 1) * pageSize;
+            const endIndex = startIndex + pageSize;
+            const paginatedItems = localProductsRegistry.slice(startIndex, endIndex);
+
+            paginatedItems.forEach((prod, index) => {
+                const globalIndex = startIndex + index;
+                const cardId = `card-${prod.id}`;
+                const cartItem = shoppingCartState[prod.id];
+                
+                let actionWidgetHTML = `<button class="order-button" onclick="addItemToCart('${prod.id}'); event.stopPropagation();">Add to Cart</button>`;
+                if (cartItem && cartItem.qty > 0) {
+                    actionWidgetHTML = `
+                        <div class="inline-qty-control" onclick="event.stopPropagation()">
+                            <button class="inline-qty-btn" onclick="alterItemQuantity('${prod.id}', -1)">-</button>
+                            <span class="inline-qty-val">${cartItem.qty}</span>
+                            <button class="inline-qty-btn" onclick="alterItemQuantity('${prod.id}', 1)">+</button>
+                        </div>
+                    `;
+                }
+
                 const cardHTML = `
                     <div class="product-card">
                         <div class="image-container" id="${cardId}">
@@ -245,16 +358,16 @@
                             <p class="product-desc">${prod.desc}</p>
                             <div class="action-row">
                                 <span class="price">${prod.price}</span>
-                                <a href="https://wa.me/918920755505?text=Hi, I am interested in ordering: ${encodeURIComponent(prod.name)} [ID: ${prod.id}] (${prod.price})" target="_blank" class="order-button">Order Now</a>
+                                <div id="action-wrapper-${prod.id}">${actionWidgetHTML}</div>
                             </div>
                         </div>
                     </div>
                 `;
                 catalogContainer.innerHTML += cardHTML;
-                
-                // Track multislide images using ProductId structure references
                 checkMultiImages(prod.id, cardId);
             });
+
+            buildPaginationControlsUI();
         }
 
         function checkMultiImages(productId, cardId) {
@@ -315,7 +428,293 @@
             wrapper.style.transform = `translateX(-${currentSlide * 100}%)`;
         }
 
-        // Run data parsing routine live
+        function buildPaginationControlsUI() {
+            const container = document.getElementById('pagination');
+            container.innerHTML = '';
+            
+            const totalPages = Math.ceil(localProductsRegistry.length / pageSize);
+            if(totalPages <= 1) return;
+
+            container.innerHTML += `<button class="page-btn" onclick="jumpToPage(1)" ${currentPage === 1 ? 'disabled' : ''}><<</button>`;
+            container.innerHTML += `<button class="page-btn" onclick="jumpToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}><</button>`;
+
+            let rangeStart = Math.max(1, currentPage - 2);
+            let rangeEnd = Math.min(totalPages, rangeStart + 4);
+            if (rangeEnd - rangeStart < 4) rangeStart = Math.max(1, rangeEnd - 4);
+
+            for (let i = rangeStart; i <= rangeEnd; i++) {
+                container.innerHTML += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="jumpToPage(${i})">${i}</button>`;
+            }
+
+            container.innerHTML += `<button class="page-btn" onclick="jumpToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>></button>`;
+            container.innerHTML += `<button class="page-btn" onclick="jumpToPage(${totalPages})" ${currentPage === totalPages ? 'disabled' : ''}>>></button>`;
+        }
+
+        function jumpToPage(targetPageNumber) {
+            currentPage = targetPageNumber;
+            renderCatalogViewEngine();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function addItemToCart(productId) {
+            const targetProduct = localProductsRegistry.find(p => p.id === productId);
+            if (!targetProduct) return;
+
+            shoppingCartState[productId] = { metadata: targetProduct, qty: 1 };
+            synchronizeCartBadgeUI();
+            updateCardActionWidget(productId);
+        }
+
+        function alterItemQuantity(productId, modificationDelta) {
+            if (!shoppingCartState[productId]) return;
+            
+            shoppingCartState[productId].qty += modificationDelta;
+            if (shoppingCartState[productId].qty <= 0) {
+                delete shoppingCartState[productId];
+            }
+            
+            synchronizeCartBadgeUI();
+            updateCardActionWidget(productId);
+            if (document.getElementById('cartDrawerModal').style.display === 'flex') {
+                rebuildCartContentsMarkup();
+            }
+        }
+
+        function updateCardActionWidget(productId) {
+            const wrapper = document.getElementById(`action-wrapper-${productId}`);
+            if (!wrapper) return;
+
+            const cartItem = shoppingCartState[productId];
+            if (cartItem && cartItem.qty > 0) {
+                wrapper.innerHTML = `
+                    <div class="inline-qty-control" onclick="event.stopPropagation()">
+                        <button class="inline-qty-btn" onclick="alterItemQuantity('${productId}', -1)">-</button>
+                        <span class="inline-qty-val">${cartItem.qty}</span>
+                        <button class="inline-qty-btn" onclick="alterItemQuantity('${productId}', 1)">+</button>
+                    </div>
+                `;
+            } else {
+                wrapper.innerHTML = `<button class="order-button" onclick="addItemToCart('${productId}'); event.stopPropagation();">Add to Cart</button>`;
+            }
+        }
+
+        function synchronizeCartBadgeUI() {
+            let runningCount = 0;
+            for (const id in shoppingCartState) {
+                runningCount += shoppingCartState[id].qty;
+            }
+            document.getElementById('cartCountBadge').innerText = runningCount;
+        }
+
+        function openCartViewModal() {
+            rebuildCartContentsMarkup();
+            document.getElementById('cartDrawerModal').style.display = 'flex';
+        }
+
+        function closeCartViewModal() {
+            document.getElementById('cartDrawerModal').style.display = 'none';
+        }
+
+        function rebuildCartContentsMarkup() {
+            const container = document.getElementById('cartItemsContainer');
+            const summaryBlock = document.getElementById('cartSummaryBlock');
+            container.innerHTML = '';
+            
+            let accumulatedTotal = 0;
+            let totalItemsCount = 0;
+
+            const itemKeys = Object.keys(shoppingCartState);
+
+            if (itemKeys.length === 0) {
+                container.innerHTML = '<p style="text-align:center; color:#718096; padding: 20px 0;">Your cart is empty.</p>';
+                summaryBlock.innerHTML = '';
+                document.getElementById('proceedCheckoutActionBtn').style.display = 'none';
+                return;
+            }
+
+            document.getElementById('proceedCheckoutActionBtn').style.display = 'block';
+
+            itemKeys.forEach(id => {
+                const item = shoppingCartState[id];
+                const cleanPrice = parseFloat(item.metadata.price.replace(/[^\d.]/g, '')) || 0;
+                const extendedCost = cleanPrice * item.qty;
+                accumulatedTotal += extendedCost;
+                totalItemsCount += item.qty;
+
+                container.innerHTML += `
+                    <div class="cart-item">
+                        <div class="cart-item-meta">
+                            <h4>${item.metadata.name}</h4>
+                            <p>${item.metadata.price} × ${item.qty}</p>
+                        </div>
+                        <div class="qty-controls">
+                            <button class="qty-btn" onclick="alterItemQuantity('${id}', -1)">-</button>
+                            <span style="font-weight:700; width:20px; text-align:center;">${item.qty}</span>
+                            <button class="qty-btn" onclick="alterItemQuantity('${id}', 1)">+</button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            summaryBlock.innerHTML = `
+                <div class="summary-row"><span>Total Selected Items:</span> <strong>${totalItemsCount}</strong></div>
+                <div class="summary-row total"><span>Total Estimated Cost:</span> <span>₹ ${accumulatedTotal.toFixed(2)}</span></div>
+            `;
+        }
+
+        function openAddressCollectionModal() {
+            closeCartViewModal();
+            document.getElementById('addressCaptureModal').style.display = 'flex';
+        }
+
+        function closeAddressCollectionModal() {
+            document.getElementById('addressCaptureModal').style.display = 'none';
+        }
+
+        function compileFinalInvoiceAndSend(event) {
+            event.preventDefault();
+
+            const name = document.getElementById('custName').value.trim();
+            const phone = document.getElementById('custPhone').value.trim();
+            const flat = document.getElementById('custFlat').value.trim();
+            const address = document.getElementById('custAddress').value.trim();
+            const pin = document.getElementById('custPin').value.trim();
+
+            const canvas = document.getElementById('invoiceRenderCanvas');
+            const uniqueInvoiceNo = 'INV-' + Date.now().toString().slice(-6);
+            const currentDate = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+
+            let tableRowsHTML = '';
+            let subtotalSum = 0;
+            let whatsappMessageText = `*New Order - Printelivery*\n\n*Invoice No:* ${uniqueInvoiceNo}\n*Date:* ${currentDate}\n\n*Customer Details:*\nName: ${name}\nPhone: ${phone}\nAddress: ${flat}, ${address}, PIN: ${pin}\n\n*Items Ordered:*\n`;
+
+            for (const id in shoppingCartState) {
+                const item = shoppingCartState[id];
+                const itemPriceRaw = parseFloat(item.metadata.price.replace(/[^\d.]/g, '')) || 0;
+                const rowTotal = itemPriceRaw * item.qty;
+                subtotalSum += rowTotal;
+
+                tableRowsHTML += `
+                    <tr>
+                        <td style="font-weight:600;">${item.metadata.name}<br><span style="color:#718096; font-size:11px; font-weight:normal;">ID: ${item.metadata.id} | ${item.metadata.group}</span></td>
+                        <td style="text-align: center;">₹ ${itemPriceRaw.toFixed(2)}</td>
+                        <td style="text-align: center;">${item.qty}</td>
+                        <td style="text-align: right; font-weight:600;">₹ ${rowTotal.toFixed(2)}</td>
+                    </tr>
+                `;
+                
+                whatsappMessageText += `- ${item.metadata.name} (Qty: ${item.qty}) [₹${itemPriceRaw.toFixed(2)}]\n`;
+            }
+
+            whatsappMessageText += `\n*Grand Total:* ₹ ${subtotalSum.toFixed(2)}`;
+
+            canvas.innerHTML = `
+                <div class="invoice-pdf-container">
+                    <div class="invoice-content-layer">
+                        <div class="inv-header">
+                            <div>
+                                <h1 class="inv-title">PRINTELIVERY</h1>
+                                <p style="margin:4px 0 0 0; color:#4a5568; font-size:12px; font-weight:600; letter-spacing:0.5px;">Premium Printing Custom Solutions</p>
+                            </div>
+                            <div style="text-align: right;">
+                                <span style="background:#075E54; color:white; padding:4px 10px; border-radius:4px; font-size:11px; font-weight:700; letter-spacing:0.5px;">ORDER INVOICE</span>
+                                <p style="margin:8px 0 0 0; font-size:12px; color:#4a5568;">Invoice No: <strong>${uniqueInvoiceNo}</strong><br>Date: ${currentDate}</p>
+                            </div>
+                        </div>
+
+                        <div class="inv-grid">
+                            <div>
+                                <h4 style="color:#075E54; margin:0 0 8px 0; text-transform:uppercase; font-size:12px; letter-spacing:0.5px;">Delivery Address</h4>
+                                <p style="margin:0; color:#2d3748; font-weight:600;">${name}</p>
+                                <p style="margin:2px 0; color:#4a5568;">${flat}, ${address}<br>PIN Code: <strong>${pin}</strong></p>
+                                <p style="margin:4px 0 0 0; color:#2d3748;">Phone: <strong>${phone}</strong></p>
+                            </div>
+                            <div style="text-align: right; border-left: 1px solid #e2e8f0; padding-left:30px;">
+                                <h4 style="color:#075E54; margin:0 0 8px 0; text-transform:uppercase; font-size:12px; letter-spacing:0.5px;">Fulfillment Centre</h4>
+                                <p style="margin:0; color:#2d3748; font-weight:600;">Printelivery Hub</p>
+                                <p style="margin:2px 0; color:#4a5568;">Siruseri-Navalur Corporate Belt<br>Chennai, Tamil Nadu</p>
+                            </div>
+                        </div>
+
+                        <table class="inv-table">
+                            <thead>
+                                <tr>
+                                    <th style="text-align: left; width: 50%;">Product Details</th>
+                                    <th style="text-align: center; width: 15%;">Unit Price</th>
+                                    <th style="text-align: center; width: 15%;">Qty</th>
+                                    <th style="text-align: right; width: 20%;">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${tableRowsHTML}
+                            </tbody>
+                        </table>
+
+                        <div class="inv-summary">
+                            <div class="inv-summary-row">
+                                <span style="color:#4a5568;">Subtotal Amount:</span>
+                                <span style="font-weight:600;">₹ ${subtotalSum.toFixed(2)}</span>
+                            </div>
+                            <div class="inv-summary-row">
+                                <span style="color:#4a5568;">Estimated CGST/SGST:</span>
+                                <span style="font-weight:600; color:#718096;">₹ 0.00</span>
+                            </div>
+                            <div class="inv-summary-row inv-summary-row.bold">
+                                <span>Grand Total:</span>
+                                <span>₹ ${subtotalSum.toFixed(2)}</span>
+                            </div>
+                        </div>
+
+                        <div style="margin-top:60px; border-top:1px solid #e2e8f0; padding-top:15px; text-align:center; color:#a0aec0; font-size:11px;">
+                            This is an automated system generated layout order invoice acknowledgement.
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            const pdfOptions = {
+                margin: 0,
+                filename: `Printelivery_${name.replace(/\s+/g, '_')}_Invoice.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, logging: false },
+                jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+            };
+
+            html2pdf().from(canvas).set(pdfOptions).toPdf().outputPdf('datauristring').then(function(pdfBase64Str) {
+                html2pdf().from(canvas).set(pdfOptions).save();
+
+                const cleanBase64Payload = pdfBase64Str.split(',')[1];
+                
+                const transmissionFormParameters = new URLSearchParams();
+                transmissionFormParameters.append('pdfData', cleanBase64Payload);
+                transmissionFormParameters.append('customerName', name);
+                transmissionFormParameters.append('customerPhone', phone);
+                transmissionFormParameters.append('customerAddress', `${flat}, ${address}, PIN: ${pin}`);
+                transmissionFormParameters.append('invoiceNum', uniqueInvoiceNo);
+
+                fetch(BACKEND_API_ENDPOINT, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: transmissionFormParameters.toString()
+                })
+                .then(() => {
+                    // Modern background workflow directly routes to WhatsApp message confirmation
+                    const formattedWhatsAppUrl = `https://wa.me/918920755505?text=${encodeURIComponent(whatsappMessageText)}`;
+                    window.open(formattedWhatsAppUrl, '_blank');
+
+                    shoppingCartState = {};
+                    synchronizeCartBadgeUI();
+                    closeAddressCollectionModal();
+                    renderCatalogViewEngine();
+                })
+                .catch(err => {
+                    console.error('Data pipeline error:', err);
+                    alert('Local pipeline encountered an unexpected sync failure.');
+                });
+            });
+        }
+
         fetchProducts();
     </script>
 </body>
