@@ -325,7 +325,7 @@
         let activeModalPhotoIndex = 0;
         let selectedProductInDetailView = null;
 
-        // Unified Keyboard Controller mapping arrow slide updates and clear Escape closures
+        // Key handlers for modal closing and image slider switching
         window.addEventListener('keydown', function(event) {
             if (event.key === 'Escape' || event.keyCode === 27) {
                 if (document.getElementById('mediaViewModal').style.display === 'flex') {
@@ -498,17 +498,17 @@
                             foundPhotos.push(this.src);
                         }
                         checksCompleted++;
-                        if(checksCompleted === 4) saveTrackedPhotos(product, foundPhotos, productId);
+                        if(checksCompleted === 4) saveTrackedPhotos(product, foundPhotos);
                     };
                     extraImg.onerror = function() {
                         checksCompleted++;
-                        if(checksCompleted === 4) saveTrackedPhotos(product, foundPhotos, productId);
+                        if(checksCompleted === 4) saveTrackedPhotos(product, foundPhotos);
                     };
                 }
             }, 50);
         }
 
-        function saveTrackedPhotos(product, photos, productId) {
+        function saveTrackedPhotos(product, photos) {
             if(photos.length > 1) {
                 product.loadedImages = photos;
             }
@@ -520,7 +520,16 @@
 
             selectedProductInDetailView = targetProduct;
 
-            document.getElementById('detailPaneImg').src = `../images/${productId}.jpg`;
+            // Use matching layout logic image string explicitly
+            const fallbackSrcString = `https://placehold.co/600x400/075E54/white?text=${encodeURIComponent(targetProduct.name)}`;
+            const detailPaneImageElement = document.getElementById('detailPaneImg');
+            
+            detailPaneImageElement.src = `../images/${productId}.jpg`;
+            detailPaneImageElement.onerror = function() {
+                this.onerror = null;
+                this.src = fallbackSrcString;
+            };
+
             document.getElementById('detailPaneGroup').innerText = targetProduct.group;
             document.getElementById('detailPaneId').innerText = `ID: ${targetProduct.id}`;
             document.getElementById('detailPaneTitle').innerText = targetProduct.name;
@@ -568,7 +577,13 @@
             activeModalPhotoIndex = 0;
 
             const frame = document.getElementById('expandedMediaFrame');
+            const fallbackSrcString = `https://placehold.co/600x400/075E54/white?text=${encodeURIComponent(targetProduct.name)}`;
+            
             frame.src = activeModalProductPhotos[activeModalPhotoIndex];
+            frame.onerror = function() {
+                this.onerror = null;
+                this.src = fallbackSrcString;
+            };
             
             const prevArrow = document.getElementById('modalPrevBtn');
             const nextArrow = document.getElementById('modalNextBtn');
@@ -591,7 +606,8 @@
             if (activeModalPhotoIndex >= activeModalProductPhotos.length) activeModalPhotoIndex = 0;
             if (activeModalPhotoIndex < 0) activeModalPhotoIndex = activeModalProductPhotos.length - 1;
             
-            document.getElementById('expandedMediaFrame').src = activeModalProductPhotos[activeModalPhotoIndex];
+            const frame = document.getElementById('expandedMediaFrame');
+            frame.src = activeModalProductPhotos[activeModalPhotoIndex];
         }
 
         function closeMediaViewModal() { 
@@ -710,7 +726,6 @@
         function compileFinalInvoiceAndSend(event) {
             event.preventDefault();
 
-            // Prevent double submission spamming
             const actionSubmitBtn = document.getElementById('submitOrderActionBtn');
             actionSubmitBtn.disabled = true;
             actionSubmitBtn.innerText = "Compiling Statement & Broadcasting Emails...";
@@ -822,25 +837,16 @@
                 margin: 0,
                 filename: `${orderId}_Printelivery.pdf`,
                 image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { 
-                    scale: 2, 
-                    useCORS: true, 
-                    allowTaint: true,
-                    logging: false 
-                },
+                html2canvas: { scale: 2, useCORS: true, allowTaint: true, logging: false },
                 jsPDF: { unit: 'pt', format: 'a4', orientation: 'portrait' }
             };
 
-            // Execution delay ensures DOM attachment and asset loading before PDF print extraction
             window.setTimeout(() => {
                 const pdfWorkerObject = html2pdf().from(canvas).set(pdfConfigurationOptions);
                 
-                // Track internal raw binary output to extract Base64 data stream
                 pdfWorkerObject.outputPdf('datauristring').then((dataUriStringStr) => {
-                    // Strip header metadata out of the base64 string
                     const rawBase64DataString = dataUriStringStr.split(',')[1];
 
-                    // Prepare payload package for the Google Apps Script Web App
                     const backendPayloadBundle = {
                         name: name,
                         phone: phone,
@@ -851,18 +857,15 @@
                         pdfBase64: rawBase64DataString
                     };
 
-                    // Broadcast asynchronous payload package to Google Apps Script Endpoint
                     return fetch(BACKEND_API_ENDPOINT, {
                         method: "POST",
-                        mode: "no-cors", // Bypass browser CORS pre-flight blocks cleanly
+                        mode: "no-cors", 
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify(backendPayloadBundle)
                     });
                 }).then(() => {
-                    // Trigger the client-side download sequence to save the invoice copy locally
                     return pdfWorkerObject.save();
                 }).then(() => {
-                    // Compile message text bundle for the WhatsApp interface redirection handoff
                     let whatsappTextMsg = `*New Order Confirmed - Printelivery*\n\n`;
                     whatsappTextMsg += `*Order ID:* ${orderId}\n`;
                     whatsappTextMsg += `*Date:* ${currentDateStamp}\n\n`;
@@ -879,7 +882,6 @@
                     const targetWhatsAppContactPhone = "919891462248";
                     const baseWhatsAppLinkString = `https://api.whatsapp.com/send?phone=${targetWhatsAppContactPhone}&text=${encodedMessageURL}`;
 
-                    // Reset state configurations completely upon successful processing execution
                     shoppingCartState = {};
                     synchronizeCartBadgeUI();
                     renderCatalogViewEngine();
