@@ -29,7 +29,7 @@
         h2 { color: var(--primary-color); margin: 0 0 20px 0; }
         h3 { color: var(--git-blue); margin: 0 0 15px 0; border-bottom: 2px solid #edf2f7; padding-bottom: 8px; }
         
-        /* Dedicated Panels */
+        /* Panels */
         .git-panel {
             background: #ffffff;
             padding: 20px;
@@ -50,7 +50,7 @@
         }
         .panel-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 15px;
             margin-bottom: 15px;
         }
@@ -72,7 +72,7 @@
             box-sizing: border-box;
         }
         
-        /* Drag & Drop Upload Zone */
+        /* Upload Area */
         .drop-zone {
             border: 2px dashed #cbd5e0;
             background: #f7fafc;
@@ -88,7 +88,7 @@
             border-color: var(--git-blue);
         }
         
-        /* Action Button Toolbar */
+        /* Buttons */
         .toolbar {
             display: flex;
             gap: 12px;
@@ -111,7 +111,7 @@
         .btn-git { background-color: var(--git-blue); color: white; width: 100%; }
         .btn:disabled { background-color: #a0aec0; cursor: not-allowed; }
 
-        /* Table Design */
+        /* Table */
         .table-wrapper { overflow-x: auto; margin-bottom: 25px; border: 1px solid #e2e8f0; border-radius: 8px; }
         table { width: 100%; border-collapse: collapse; text-align: left; background: #fff; font-size: 0.9rem; }
         th, td { padding: 12px; border-bottom: 1px solid #e2e8f0; }
@@ -149,10 +149,6 @@
             <div class="filter-group">
                 <label for="gitHubPatToken">GitHub Access Token (PAT)</label>
                 <input type="password" id="gitHubPatToken" placeholder="Paste ghp_... token here">
-            </div>
-            <div class="filter-group">
-                <label for="gitHubRepoPath">Repository Path (owner/repo)</label>
-                <input type="text" id="gitHubRepoPath" placeholder="username/repository-name">
             </div>
             <div class="filter-group">
                 <label for="gitHubProductId">Target Product ID</label>
@@ -485,7 +481,7 @@
     }
 
     // ==========================================
-    // DECOUPLED GITHUB IMAGE UPLOAD MODULE LOGIC
+    // SEPARATE GITHUB IMAGE UPLOAD MODULE LOGIC
     // ==========================================
     function updateSelectedImageLabel() {
         const fileSelector = document.getElementById('gitImageFileInput');
@@ -499,13 +495,16 @@
 
     async function executeDirectGitImageUpload() {
         const token = document.getElementById('gitHubPatToken').value.trim();
-        const repo = document.getElementById('gitHubRepoPath').value.trim();
         const productId = document.getElementById('gitHubProductId').value.trim();
         const fileSelector = document.getElementById('gitImageFileInput');
         const actionBtn = document.getElementById('gitImageUploadButton');
 
-        if (!token || !repo || !productId) {
-            renderGitConsole("Error: Token, Repository Path, and Product ID fields are mandatory.", "error");
+        // FIXED USER SPECIFICATIONS
+        const repo = "print-hub-suite"; 
+        const folderPath = "images"; 
+
+        if (!token || !productId) {
+            renderGitConsole("Error: Access Token and Target Product ID fields are mandatory.", "error");
             return;
         }
         if (fileSelector.files.length === 0) {
@@ -515,7 +514,7 @@
 
         const activeFile = fileSelector.files[0];
         const fileExtension = activeFile.name.split('.').pop();
-        const destinationPath = `images/${productId}.${fileExtension}`;
+        const destinationPath = `${folderPath}/${productId}.${fileExtension}`;
         const apiTargetUrl = `https://api.github.com/repos/${repo}/contents/${destinationPath}`;
 
         actionBtn.disabled = true;
