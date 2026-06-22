@@ -151,8 +151,8 @@
                 <input type="password" id="gitHubPatToken" placeholder="Paste ghp_... token here">
             </div>
             <div class="filter-group">
-                <label for="gitHubProductId">Target Product ID</label>
-                <input type="text" id="gitHubProductId" placeholder="e.g., PRNTLRY_04">
+                <label for="gitHubProductId">Filename</label>
+                <input type="text" id="gitHubProductId" placeholder="Enter file name (e.g., PRNTLRY_04)">
             </div>
         </div>
 
@@ -504,7 +504,7 @@
         const folderPath = "images"; 
 
         if (!token || !productId) {
-            renderGitConsole("Error: Access Token and Target Product ID fields are mandatory.", "error");
+            renderGitConsole("Error: Access Token and Filename fields are mandatory.", "error");
             return;
         }
         if (fileSelector.files.length === 0) {
