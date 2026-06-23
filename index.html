@@ -1,22 +1,95 @@
-<div class="grid">
-    <a href="catalogue/index.html" class="card">
-        <div class="icon">📋</div>
-        <h2>Product Catalogue</h2>
-        <p>Browse our 30+ premium custom designs, frames, prints, and canvases with direct WhatsApp ordering.</p>
-    </a>
-    
-    <div class="card">
-        <div class="icon">🛠️</div>
-        <h2>Layout Tools</h2>
-        <p style="margin-bottom: 15px;">Professional photo preparation utilities:</p>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Printelivery</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #f8fafc;
+            color: #0f172a;
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 8px;
+            color: #1e1b4b;
+        }
+        p {
+            color: #64748b;
+            font-size: 1.1rem;
+            margin-bottom: 40px;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+            max-width: 800px;
+            width: 100%;
+        }
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+            text-decoration: none;
+            color: inherit;
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: 1px solid #e2e8f0;
+            display: flex;
+            flex-direction: column;
+        }
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+            border-color: #cbd5e1;
+        }
+        .icon {
+            font-size: 2.5rem;
+            margin-bottom: 16px;
+        }
+        .card h2 {
+            margin: 0 0 10px 0;
+            font-size: 1.35rem;
+            color: #1e293b;
+        }
+        .card p {
+            font-size: 0.95rem;
+            color: #64748b;
+            margin: 0;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Printelivery</h1>
+    <p>Select a layout utility to prepare your photos for printing</p>
+
+    <div class="grid">
+        <a href="catalogue/index.html" class="card">
+             <div class="icon">📋</div>
+            <h2>Product Catalogue</h2>
+            <p>Browse our 30+ premium custom designs, frames, prints, and canvases with direct WhatsApp ordering.</p>
+        </a>
         
-        <div style="display: flex; flex-direction: column; gap: 10px;">
-            <a href="tools/circular-layout/index.html" style="text-decoration: none; color: #3b82f6; font-weight: 600;">
-                &rarr; Circular Layout Pro
-            </a>
-            <a href="tools/rectangle-layout/index.html" style="text-decoration: none; color: #3b82f6; font-weight: 600;">
-                &rarr; Rectangle Layout Pro
-            </a>
-        </div>
+        <a href="tools/circular-layout/index.html" class="card">
+            <div class="icon">⭕</div>
+            <h2>Circular Layout Pro</h2>
+            <p>Generate precise circular photo arrangements with custom blurred backgrounds and cutting guides.</p>
+        </a>
+
+        <a href="tools/rectangle-layout/index.html" class="card">
+            <div class="icon">📏</div>
+            <h2>Rectangle Layout Pro</h2>
+            <p>Configure grid spacing, crop aspect ratios, and export clean rectangular rows on standard paper sizes.</p>
+        </a>
     </div>
-</div>
+
+</body>
+</html>
