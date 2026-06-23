@@ -3,92 +3,176 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Printelivery</title>
+    <title>Printelivery Dashboard</title>
     <style>
+        /* --- 100% MAXIMUM VISIBILITY BACKGROUND --- */
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: #f8fafc;
-            color: #0f172a;
             margin: 0;
-            padding: 40px 20px;
+            padding: 40px;
+            display: flex;
+            
+            /* Shifts the entire control interface to the right side of the desktop window */
+            justify-content: flex-end; 
+            align-items: flex-start; /* CARD VERTICAL POSITIONING Moves content to the top */
+			padding-top: 60px;        /* CARD HORIZONTAL POSITIONING Higher number pushes it down; lower number pulls it up */
+            
+            min-height: 100vh;
+            box-sizing: border-box;
+            
+            /* Your exact live background URL asset */
+            background: url('https://i.postimg.cc/pTMWbJsP/vecteezy-vibrant-office-printing-highquality-printer-in-action-69641328.jpg') no-repeat center center fixed;
+            background-size: cover;
+        }
+
+        /* --- THE ALIGNED LAYOUT WRAPPER CONTROLLER --- */
+        .panel-container {
+            width: 100%;
+            max-width: 540px; /* CARD WIDTH Perfect compact width for side-by-side split cards */ 
             display: flex;
             flex-direction: column;
             align-items: center;
+            
+            /* CARD HORIZONTAL POSITIONING Shifts content 16% inwards from the absolute edge for clean framing */
+            margin-right: 16%; / 
         }
+
+        /* --- RIGID HIGH-CONTRAST TYPOGRAPHY --- */
         h1 {
-            font-size: 2.5rem;
-            margin-bottom: 8px;
+            font-size: 2.8rem;
+            margin: 0 0 6px 0;
             color: #1e1b4b;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            text-align: center;
+            text-shadow: 0 2px 12px #ffffff, 0 4px 24px #ffffff, 0 0 4px #ffffff;
         }
-        p {
-            color: #64748b;
+
+        p.subtitle {
+            color: #1e293b;
             font-size: 1.1rem;
-            margin-bottom: 40px;
+            margin: 0 0 32px 0;
+            text-align: center;
+            font-weight: 600;
+            text-shadow: 0 2px 10px #ffffff, 0 0 4px #ffffff;
+            max-width: 480px;
+            line-height: 1.4;
         }
+
+        /* --- HALF-SIZED MATRIX SPLIT GRID --- */
         .grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 24px;
-            max-width: 800px;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 18px;
             width: 100%;
         }
+
+        /* --- PREMIUM COMPACT ULTRA-READABILITY CARDS --- */
         .card {
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+            background: rgba(255, 255, 255, 0.86);
+            backdrop-filter: blur(10px) saturate(140%);
+            -webkit-backdrop-filter: blur(10px) saturate(140%);
+            position: relative;
+            overflow: hidden;
+            padding: 24px 18px;
+            border-radius: 18px;
+            box-shadow: 
+                0 10px 30px rgba(15, 23, 42, 0.15),
+                inset 0 0 0 1px rgba(255, 255, 255, 0.6);
             text-decoration: none;
-            color: inherit;
-            transition: transform 0.2s, box-shadow 0.2s;
-            border: 1px solid #e2e8f0;
+            color: #0f172a;
+            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), 
+                        box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1), 
+                        background 0.2s ease;
             display: flex;
             flex-direction: column;
+            align-items: center;
+            text-align: center;
+            box-sizing: border-box;
+            border: 1px solid rgba(255, 255, 255, 0.4);
         }
+
+        /* Aesthetic identity trim tags */
+        .card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+        }
+        .card-catalogue::after { background: linear-gradient(90deg, #0ea5e9, #06b6d4); }
+        .card-tools::after { background: linear-gradient(90deg, #ec4899, #eab308); }
+
         .card:hover {
             transform: translateY(-4px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
-            border-color: #cbd5e1;
+            background: rgba(255, 255, 255, 0.96);
+            box-shadow: 0 16px 35px rgba(15, 23, 42, 0.22);
         }
+
         .icon {
-            font-size: 2.5rem;
-            margin-bottom: 16px;
+            font-size: 2rem;
+            margin-bottom: 12px;
         }
+
         .card h2 {
-            margin: 0 0 10px 0;
-            font-size: 1.35rem;
-            color: #1e293b;
+            margin: 0 0 8px 0;
+            font-size: 1.15rem;
+            color: #0f172a;
+            font-weight: 700;
+            letter-spacing: -0.01em;
         }
+
         .card p {
-            font-size: 0.95rem;
-            color: #64748b;
+            font-size: 0.85rem;
+            color: #475569;
             margin: 0;
             line-height: 1.5;
+            font-weight: 500;
+        }
+
+        /* --- MOBILE SCREEN ADAPTATION RESPONSIVENESS --- */
+        @media (max-width: 900px) {
+            body {
+                justify-content: center; /* Shifts back to center on small monitors/tablets */
+                padding: 40px 20px;
+            }
+            .panel-container {
+                margin-right: 0; 
+                max-width: 500px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .grid {
+                grid-template-columns: 1fr; /* Stacks vertically strictly on mobile screens */
+            }
         }
     </style>
 </head>
 <body>
 
-    <h1>Printelivery</h1>
-    <p>Select a layout utility to prepare your photos for printing</p>
-
-    <div class="grid">
-        <a href="catalogue/index.html" class="card">
-             <div class="icon">📋</div>
-            <h2>Product Catalogue</h2>
-            <p>Browse our 30+ premium custom designs, frames, prints, and canvases with direct WhatsApp ordering.</p>
-        </a>
+    <div class="panel-container">
         
-        <a href="tools/circular-layout/index.html" class="card">
-            <div class="icon">⭕</div>
-            <h2>Circular Layout Pro</h2>
-            <p>Generate precise circular photo arrangements with custom blurred backgrounds and cutting guides.</p>
-        </a>
+        <h1>Printelivery</h1>
+        <p class="subtitle">Select a utility workspace to prepare your project</p>
 
-        <a href="tools/rectangle-layout/index.html" class="card">
-            <div class="icon">📏</div>
-            <h2>Rectangle Layout Pro</h2>
-            <p>Configure grid spacing, crop aspect ratios, and export clean rectangular rows on standard paper sizes.</p>
-        </a>
+        <div class="grid">
+            
+            <a href="catalogue/index.html" target="_blank" class="card card-catalogue">
+                <div class="icon">📋</div>
+                <h2>Product Catalogue</h2>
+                <p>Browse our 30+ premium custom designs, frames, and canvases with direct ordering.</p>
+            </a>
+            
+            <a href="tools/tools.html" target="_blank" class="card card-tools">
+                <div class="icon">🛠️</div>
+                <h2>Layout Tools Pro</h2>
+                <p>Configure layouts and scaling dimensions precisely for your custom print assets.</p>
+            </a>
+
+        </div>
+
     </div>
 
 </body>
