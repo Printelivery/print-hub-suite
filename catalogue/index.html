@@ -744,180 +744,79 @@
         }
 
         function compileFinalInvoiceAndSend(event) {
-            event.preventDefault();
+    event.preventDefault();
 
-            const actionSubmitBtn = document.getElementById('submitOrderActionBtn');
-            actionSubmitBtn.disabled = true;
-            actionSubmitBtn.innerText = "Compiling Statement & Broadcasting Emails...";
+    const actionSubmitBtn = document.getElementById('submitOrderActionBtn');
+    actionSubmitBtn.disabled = true;
+    actionSubmitBtn.innerText = "Generating Invoice...";
 
-            const name = document.getElementById('custName').value.trim();
-            const phone = document.getElementById('custPhone').value.trim();
-            const flat = document.getElementById('custFlat').value.trim();
-            const address = document.getElementById('custAddress').value.trim();
-            const pin = document.getElementById('custPin').value.trim();
+    const name = document.getElementById('custName').value.trim();
+    const phone = document.getElementById('custPhone').value.trim();
+    const flat = document.getElementById('custFlat').value.trim();
+    const address = document.getElementById('custAddress').value.trim();
+    const pin = document.getElementById('custPin').value.trim();
 
-            const orderId = "INV-" + Math.floor(100000 + Math.random() * 900000);
-            const currentDateStamp = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' });
+    const orderId = "INV-" + Math.floor(100000 + Math.random() * 900000);
+    const currentDateStamp = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' });
 
-            let itemsTableRows = '';
-            let grandTotal = 0;
-            let totalQty = 0;
-            let emailSummaryString = '';
-            let whatsappProductsString = '';
+    let itemsTableRows = '';
+    let grandTotal = 0;
+    
+    Object.values(shoppingCartState).forEach((item, index) => {
+        let numericPrice = parseFloat(item.metadata.price.replace(/[^0-9.]/g, '')) || 0;
+        let costSum = numericPrice * item.qty;
+        grandTotal += costSum;
+        itemsTableRows += `
+            <tr>
+                <td style="padding:10px; border:1px solid #ddd;">${index + 1}</td>
+                <td style="padding:10px; border:1px solid #ddd;">${item.metadata.name}</td>
+                <td style="padding:10px; border:1px solid #ddd;">${item.qty}</td>
+                <td style="padding:10px; border:1px solid #ddd;">₹${costSum.toFixed(2)}</td>
+            </tr>`;
+    });
 
-            Object.values(shoppingCartState).forEach((item, index) => {
-                let numericPrice = parseFloat(item.metadata.price.replace(/[^0-9.]/g, '')) || 0;
-                let costSum = numericPrice * item.qty;
-                grandTotal += costSum;
-                totalQty += item.qty;
-
-                itemsTableRows += `
-                    <tr>
-                        <td style="text-align: center;">${index + 1}</td>
-                        <td><strong>[${item.metadata.id}]</strong> ${item.metadata.name}</td>
-                        <td style="text-align: center;">${item.qty}</td>
-                        <td style="text-align: right;">₹${numericPrice.toFixed(2)}</td>
-                        <td style="text-align: right; font-weight: bold;">₹${costSum.toFixed(2)}</td>
+    const canvas = document.getElementById('invoiceRenderCanvas');
+    // CLEAN TEMPLATE: No images, simple structure
+    canvas.innerHTML = `
+        <div style="padding: 40px; font-family: sans-serif; color: #333;">
+            <h1 style="color: #075E54;">PRINTELIVERY INVOICE</h1>
+            <p><strong>Order ID:</strong> ${orderId}</p>
+            <p><strong>Customer:</strong> ${name}</p>
+            <p><strong>Address:</strong> ${flat}, ${address}, ${pin}</p>
+            <table style="width:100%; border-collapse: collapse; margin-top:20px;">
+                <thead>
+                    <tr style="background:#075E54; color:white;">
+                        <th style="padding:10px;">#</th>
+                        <th style="padding:10px;">Item</th>
+                        <th style="padding:10px;">Qty</th>
+                        <th style="padding:10px;">Total</th>
                     </tr>
-                `;
+                </thead>
+                <tbody>${itemsTableRows}</tbody>
+            </table>
+            <h3 style="text-align:right;">Grand Total: ₹${grandTotal.toFixed(2)}</h3>
+        </div>
+    `;
 
-                emailSummaryString += `${index + 1}. [${item.metadata.id}] ${item.metadata.name} x ${item.qty} = ₹${costSum.toFixed(2)}\n`;
-                whatsappProductsString += `${index + 1}. [${item.metadata.id}] ${item.metadata.name} x ${item.qty} = ₹${costSum.toFixed(2)}\n`;
-            });
+    const pdfOptions = {
+        margin: 10,
+        filename: `${orderId}.pdf`,
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
 
-            const shippingStructuredText = `${flat},\n${address},\nPIN: ${pin}`;
-
-            const canvas = document.getElementById('invoiceRenderCanvas');
-            canvas.innerHTML = `
-                <div class="invoice-pdf-container">
-                    <div class="invoice-content-layer">
-                        <div class="inv-header">
-                            <div>
-                                <h2 class="inv-title">PRINTELIVERY</h2>
-                                <p style="margin: 4px 0 0 0; font-size: 12px; color: #718096;">Premium Custom Printing Hub</p>
-                            </div>
-                            <div style="text-align: right;">
-                                <span style="font-size: 12px; text-transform: uppercase; letter-spacing:1px; color:#718096; font-weight:700;">Invoice Reference</span>
-                                <p style="margin: 2px 0 0 0; font-size: 16px; font-weight: 800; color: #075E54;">${orderId}</p>
-                            </div>
-                        </div>
-
-                        <div class="inv-grid">
-                            <div>
-                                <h4 style="margin: 0 0 8px 0; color: #075E54; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px;">Billed To / Delivery Location:</h4>
-                                <strong style="font-size: 15px; color: #1a202c;">${name}</strong><br>
-                                ${flat},<br>
-                                ${address}<br>
-                                <strong>PIN: ${pin}</strong><br>
-                                Contact: ${phone}
-                            </div>
-                            <div style="text-align: right;">
-                                <h4 style="margin: 0 0 8px 0; color: #075E54; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px;">Statement Details:</h4>
-                                <strong>Date of Issue:</strong> ${currentDateStamp}<br>
-                                <strong>Payment Method:</strong> Cash on Delivery (COD)<br>
-                                <strong>Order Status:</strong> Pending Fulfillment
-                            </div>
-                        </div>
-
-                        <table class="inv-table">
-                            <thead>
-                                <tr>
-                                    <th style="width: 8%; text-align: center;">Sl.No</th>
-                                    <th style="width: 52%; text-align: left;">Item & Description</th>
-                                    <th style="width: 10%; text-align: center;">Qty</th>
-                                    <th style="width: 15%; text-align: right;">Rate</th>
-                                    <th style="width: 15%; text-align: right;">Amount</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${itemsTableRows}
-                            </tbody>
-                        </table>
-
-                        <div class="inv-summary">
-                            <div class="inv-summary-row">
-                                <span>Total Item Quantities:</span>
-                                <span>${totalQty}</span>
-                            </div>
-                            <div class="inv-summary-row bold">
-                                <span>Grand Total:</span>
-                                <span>₹${grandTotal.toFixed(2)}</span>
-                            </div>
-                        </div>
-
-                        <div style="margin-top: 60px; border-top: 1px solid #e2e8f0; padding-top: 15px; text-align: center; font-size: 11px; color: #a0aec0;">
-                            Thank you for partnering with Printelivery. If you have any inquiries regarding this dispatch statement, please reach out via WhatsApp immediately.
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            const pdfConfigurationOptions = {
-                margin: 0,
-                filename: `${orderId}_Printelivery.pdf`,
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, useCORS: true, allowTaint: true, logging: false },
-                jsPDF: { unit: 'pt', format: 'a4', orientation: 'portrait' }
-            };
-
-            window.setTimeout(() => {
-                const pdfWorkerObject = html2pdf().from(canvas).set(pdfConfigurationOptions);
-                
-                pdfWorkerObject.outputPdf('datauristring').then((dataUriStringStr) => {
-                    const rawBase64DataString = dataUriStringStr.split(',')[1];
-
-                    const backendPayloadBundle = {
-                        name: name,
-                        phone: phone,
-                        orderId: orderId,
-                        itemsText: emailSummaryString,
-                        grandTotal: grandTotal.toFixed(2),
-                        addressBlock: shippingStructuredText,
-                        pdfBase64: rawBase64DataString
-                    };
-
-                    return fetch(BACKEND_API_ENDPOINT, {
-                        method: "POST",
-                        mode: "no-cors", 
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify(backendPayloadBundle)
-                    });
-                }).then(() => {
-                    return pdfWorkerObject.save();
-                }).then(() => {
-                    let whatsappTextMsg = `*New Order Confirmed - Printelivery*\n\n`;
-                    whatsappTextMsg += `*Order ID:* ${orderId}\n`;
-                    whatsappTextMsg += `*Date:* ${currentDateStamp}\n\n`;
-                    whatsappTextMsg += `*Customer Information:*\n`;
-                    whatsappTextMsg += `Name: ${name}\n`;
-                    whatsappTextMsg += `Phone: ${phone}\n\n`;
-                    whatsappTextMsg += `*Delivery Address:*\n`;
-                    whatsappTextMsg += `${flat}, ${address}, PIN: ${pin}\n\n`;
-                    whatsappTextMsg += `*Items Ordered:*\n${whatsappProductsString}\n`;
-                    whatsappTextMsg += `*Grand Total Amount:* ₹${grandTotal.toFixed(2)}\n\n`;
-                    whatsappTextMsg += `Thank you! Your invoice copy has been downloaded automatically. Please look over the details.`;
-
-                    const encodedMessageURL = encodeURIComponent(whatsappTextMsg);
-                    const targetWhatsAppContactPhone = "918920755505";
-                    const baseWhatsAppLinkString = `https://api.whatsapp.com/send?phone=${targetWhatsAppContactPhone}&text=${encodedMessageURL}`;
-
-                    shoppingCartState = {};
-                    synchronizeCartBadgeUI();
-                    renderCatalogViewEngine();
-                    
-                    actionSubmitBtn.disabled = false;
-                    actionSubmitBtn.innerText = "Confirm Order, Download Invoice & Send";
-                    
-                    closeAddressCollectionModal();
-                    window.open(baseWhatsAppLinkString, '_blank');
-                }).catch(err => {
-                    console.error("Pipeline breakdown encountered:", err);
-                    alert("An error occurred during order routing processing.");
-                    actionSubmitBtn.disabled = false;
-                    actionSubmitBtn.innerText = "Confirm Order, Download Invoice & Send";
-                });
-            }, 500);
-        }
+    // Use html2pdf to generate
+    html2pdf().from(canvas).set(pdfOptions).save().then(() => {
+        actionSubmitBtn.disabled = false;
+        actionSubmitBtn.innerText = "Confirm Order & Download";
+        closeAddressCollectionModal();
+        alert("Invoice generated!");
+    }).catch(err => {
+        console.error(err);
+        alert("Failed to generate PDF.");
+        actionSubmitBtn.disabled = false;
+    });
+}
 
         fetchProducts();
     </script>
