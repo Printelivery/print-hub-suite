@@ -158,14 +158,14 @@
         .loading { text-align: center; grid-column: 1 / -1; font-size: 1.2rem; color: #718096; padding: 40px; }
 
         #invoiceRenderCanvas { 
-            position: absolute; 
+            position: fixed; 
 			top: 0; 
-			left: 0;
-			width: 790px;
-			opacity: 0;          /* Makes it invisible to the user */
-			pointer-events: none; /* Prevents user interaction */
-			z-index: -1000;      /* Moves it behind other elements */
-			overflow: hidden;    /* Keeps it from affecting layout */
+			left: 0; 
+			width: 790px; 
+			opacity: 0;          /* Makes it invisible to the human eye */
+			pointer-events: none; /* Prevents interaction */
+			z-index: -9999;      /* Pushes it behind everything */
+			background: #ffffff; /* Ensures it has a background to capture */
         }
         .invoice-pdf-container {
             position: relative;
@@ -744,80 +744,90 @@
         }
 
         function compileFinalInvoiceAndSend(event) {
-    event.preventDefault();
+			event.preventDefault();
 
-    const actionSubmitBtn = document.getElementById('submitOrderActionBtn');
-    actionSubmitBtn.disabled = true;
-    actionSubmitBtn.innerText = "Generating Invoice...";
+			const actionSubmitBtn = document.getElementById('submitOrderActionBtn');
+			actionSubmitBtn.disabled = true;
+			actionSubmitBtn.innerText = "Generating Invoice...";
 
-    const name = document.getElementById('custName').value.trim();
-    const phone = document.getElementById('custPhone').value.trim();
-    const flat = document.getElementById('custFlat').value.trim();
-    const address = document.getElementById('custAddress').value.trim();
-    const pin = document.getElementById('custPin').value.trim();
+			const name = document.getElementById('custName').value.trim();
+			const phone = document.getElementById('custPhone').value.trim();
+			const flat = document.getElementById('custFlat').value.trim();
+			const address = document.getElementById('custAddress').value.trim();
+			const pin = document.getElementById('custPin').value.trim();
 
-    const orderId = "INV-" + Math.floor(100000 + Math.random() * 900000);
-    const currentDateStamp = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' });
+			const orderId = "INV-" + Math.floor(100000 + Math.random() * 900000);
+			const currentDateStamp = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' });
 
-    let itemsTableRows = '';
-    let grandTotal = 0;
-    
-    Object.values(shoppingCartState).forEach((item, index) => {
-        let numericPrice = parseFloat(item.metadata.price.replace(/[^0-9.]/g, '')) || 0;
-        let costSum = numericPrice * item.qty;
-        grandTotal += costSum;
-        itemsTableRows += `
-            <tr>
-                <td style="padding:10px; border:1px solid #ddd;">${index + 1}</td>
-                <td style="padding:10px; border:1px solid #ddd;">${item.metadata.name}</td>
-                <td style="padding:10px; border:1px solid #ddd;">${item.qty}</td>
-                <td style="padding:10px; border:1px solid #ddd;">₹${costSum.toFixed(2)}</td>
-            </tr>`;
-    });
+			let itemsTableRows = '';
+			let grandTotal = 0;
+			
+			Object.values(shoppingCartState).forEach((item, index) => {
+				let numericPrice = parseFloat(item.metadata.price.replace(/[^0-9.]/g, '')) || 0;
+				let costSum = numericPrice * item.qty;
+				grandTotal += costSum;
+				itemsTableRows += `
+					<tr>
+						<td style="padding:10px; border:1px solid #ddd;">${index + 1}</td>
+						<td style="padding:10px; border:1px solid #ddd;">${item.metadata.name}</td>
+						<td style="padding:10px; border:1px solid #ddd;">${item.qty}</td>
+						<td style="padding:10px; border:1px solid #ddd;">₹${costSum.toFixed(2)}</td>
+					</tr>`;
+			});
 
-    const canvas = document.getElementById('invoiceRenderCanvas');
-    // CLEAN TEMPLATE: No images, simple structure
-    canvas.innerHTML = `
-        <div style="padding: 40px; font-family: sans-serif; color: #333;">
-            <h1 style="color: #075E54;">PRINTELIVERY INVOICE</h1>
-            <p><strong>Order ID:</strong> ${orderId}</p>
-            <p><strong>Customer:</strong> ${name}</p>
-            <p><strong>Address:</strong> ${flat}, ${address}, ${pin}</p>
-            <table style="width:100%; border-collapse: collapse; margin-top:20px;">
-                <thead>
-                    <tr style="background:#075E54; color:white;">
-                        <th style="padding:10px;">#</th>
-                        <th style="padding:10px;">Item</th>
-                        <th style="padding:10px;">Qty</th>
-                        <th style="padding:10px;">Total</th>
-                    </tr>
-                </thead>
-                <tbody>${itemsTableRows}</tbody>
-            </table>
-            <h3 style="text-align:right;">Grand Total: ₹${grandTotal.toFixed(2)}</h3>
-        </div>
-    `;
+			const canvas = document.getElementById('invoiceRenderCanvas');
+			// CLEAN TEMPLATE: No images, simple structure
+			canvas.innerHTML = `
+				<div style="padding: 40px; font-family: sans-serif; color: #333;">
+					<h1 style="color: #075E54;">PRINTELIVERY INVOICE</h1>
+					<p><strong>Order ID:</strong> ${orderId}</p>
+					<p><strong>Customer:</strong> ${name}</p>
+					<p><strong>Address:</strong> ${flat}, ${address}, ${pin}</p>
+					<table style="width:100%; border-collapse: collapse; margin-top:20px;">
+						<thead>
+							<tr style="background:#075E54; color:white;">
+								<th style="padding:10px;">#</th>
+								<th style="padding:10px;">Item</th>
+								<th style="padding:10px;">Qty</th>
+								<th style="padding:10px;">Total</th>
+							</tr>
+						</thead>
+						<tbody>${itemsTableRows}</tbody>
+					</table>
+					<h3 style="text-align:right;">Grand Total: ₹${grandTotal.toFixed(2)}</h3>
+				</div>
+			`;
 
-    const pdfOptions = {
-        margin: 10,
-        filename: `${orderId}.pdf`,
-        html2canvas: { scale: 2, useCORS: true },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    };
+			const pdfOptions = {
+				margin: 10,
+				filename: `${orderId}.pdf`,
+				html2canvas: { scale: 2, useCORS: true },
+				jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+			};
+			window.setTimeout(() => {
+				const canvas = document.getElementById('invoiceRenderCanvas');
+				
+				// DEBUG: Check height
+				console.log("Canvas content height:", canvas.offsetHeight); 
 
-    // Use html2pdf to generate
-    html2pdf().from(canvas).set(pdfOptions).save().then(() => {
-        actionSubmitBtn.disabled = false;
-        actionSubmitBtn.innerText = "Confirm Order & Download";
-        closeAddressCollectionModal();
-        alert("Invoice generated!");
-    }).catch(err => {
-        console.error(err);
-        alert("Failed to generate PDF.");
-        actionSubmitBtn.disabled = false;
-    });
-}
+				if (canvas.offsetHeight === 0) {
+					alert("CRITICAL ERROR: Canvas has 0 height. The CSS is still blocking it from rendering.");
+					return; // Stop here if it's broken
+				}
 
+				// Use a single, clean instance of html2pdf
+				html2pdf().from(canvas).set(pdfOptions).save().then(() => {
+					actionSubmitBtn.disabled = false;
+					actionSubmitBtn.innerText = "Confirm Order & Download";
+					closeAddressCollectionModal();
+					alert("Invoice generated!");
+				}).catch(err => {
+					console.error(err);
+					alert("Failed to generate PDF.");
+					actionSubmitBtn.disabled = false;
+				});
+			}, 1000); // 1000ms is safer for loading
+	}
         fetchProducts();
     </script>
 </body>
