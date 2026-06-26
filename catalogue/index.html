@@ -377,7 +377,7 @@
                         name: row[2]?.trim() || "",
                         desc: row[3]?.trim() || "",
                         price: row[4]?.trim() || "",
-                        loadedImages: [`../images/${productId}.jpg`]
+                        loadedImages: [] // Initialized empty, will be populated by checkMultiImages dynamically
                     };
                 }).filter(p => p.id !== "");
 
@@ -427,10 +427,14 @@
                     `;
                 }
 
+                // Determine display source (fallback to placehold.co initially if not yet loaded)
+                const fallbackSrcString = `https://placehold.co/600x400/075E54/white?text=${encodeURIComponent(prod.name)}`;
+                const displaySrc = (prod.loadedImages && prod.loadedImages.length > 0) ? prod.loadedImages[0] : fallbackSrcString;
+
                 const cardHTML = `
                     <div class="product-card" onclick="launchProductDetailModal('${prod.id}')">
                         <div class="image-container">
-                            <img id="card-img-${prod.id}" class="product-image" src="../images/${prod.id}.jpg" onerror="this.onerror=null; this.src='https://placehold.co/600x400/075E54/white?text=${encodeURIComponent(prod.name)}'">
+                            <img id="card-img-${prod.id}" class="product-image" src="${displaySrc}" onerror="this.onerror=null; this.src='${fallbackSrcString}'">
                         </div>
                         <div class="product-details">
                             <div class="product-group-tag">${prod.group}</div>
@@ -483,35 +487,60 @@
             setTimeout(() => {
                 const product = localProductsRegistry[globalIndex];
                 if (!product) return;
-                
-                const baseImage = `../images/${productId}.jpg`;
-                let foundPhotos = [baseImage];
-                let checksCompleted = 0;
-                
-                for (let i = 1; i <= 4; i++) {
-                    const extraImg = new Image();
-                    const alternatePath = `../images/${i}_${productId}.jpg`;
-                    extraImg.src = alternatePath;
-                    
-                    extraImg.onload = function() {
-                        if (!foundPhotos.includes(this.src)) {
-                            foundPhotos.push(this.src);
-                        }
-                        checksCompleted++;
-                        if(checksCompleted === 4) saveTrackedPhotos(product, foundPhotos);
-                    };
-                    extraImg.onerror = function() {
-                        checksCompleted++;
-                        if(checksCompleted === 4) saveTrackedPhotos(product, foundPhotos);
-                    };
-                }
-            }, 50);
-        }
 
-        function saveTrackedPhotos(product, photos) {
-            if(photos.length > 1) {
-                product.loadedImages = photos;
-            }
+                // If images are already found (e.g., during pagination revisit), ensure the card displays the first one.
+                if (product.loadedImages && product.loadedImages.length > 0) {
+                     const cardImgElement = document.getElementById(`card-img-${productId}`);
+                     if (cardImgElement && cardImgElement.src.includes('placehold.co')) {
+                         cardImgElement.src = product.loadedImages[0];
+                     }
+                     return;
+                }
+
+                // Probe for the multiple images pattern first (1_productId.jpg)
+                const firstMultiImage = new Image();
+                firstMultiImage.src = `../images/1_${productId}.jpg`;
+
+                firstMultiImage.onload = function() {
+                    // Multiple images exist
+                    let foundPhotos = [this.src];
+                    let checksCompleted = 1;
+                    const maxChecks = 4; // Check up to 4 images total (1_ to 4_)
+
+                    const cardImgElement = document.getElementById(`card-img-${productId}`);
+                    if (cardImgElement) cardImgElement.src = this.src;
+
+                    for (let i = 2; i <= maxChecks; i++) {
+                        const extraImg = new Image();
+                        extraImg.src = `../images/${i}_${productId}.jpg`;
+                        extraImg.onload = function() {
+                            foundPhotos.push(this.src);
+                            foundPhotos.sort(); // Keeps 1_, 2_ in order
+                            checksCompleted++;
+                            if (checksCompleted === maxChecks) product.loadedImages = foundPhotos;
+                        };
+                        extraImg.onerror = function() {
+                            checksCompleted++;
+                            if (checksCompleted === maxChecks) product.loadedImages = foundPhotos;
+                        };
+                    }
+                };
+
+                firstMultiImage.onerror = function() {
+                    // Multiple images not found, fallback to single image pattern (productId.jpg)
+                    const singleImagePath = `../images/${productId}.jpg`;
+                    const singleImg = new Image();
+                    singleImg.src = singleImagePath;
+                    
+                    singleImg.onload = function() {
+                        product.loadedImages = [this.src];
+                        const cardImgElement = document.getElementById(`card-img-${productId}`);
+                        if (cardImgElement) cardImgElement.src = this.src;
+                    };
+                    
+                    // We let the original <img> onerror handle the completely missing image fallback if singleImg also fails
+                };
+            }, 50);
         }
 
         function launchProductDetailModal(productId) {
@@ -520,11 +549,12 @@
 
             selectedProductInDetailView = targetProduct;
 
-            // Use matching layout logic image string explicitly
             const fallbackSrcString = `https://placehold.co/600x400/075E54/white?text=${encodeURIComponent(targetProduct.name)}`;
             const detailPaneImageElement = document.getElementById('detailPaneImg');
             
-            detailPaneImageElement.src = `../images/${productId}.jpg`;
+            // Set source dynamically based on the verified loaded images
+            detailPaneImageElement.src = (targetProduct.loadedImages && targetProduct.loadedImages.length > 0) ? targetProduct.loadedImages[0] : fallbackSrcString;
+            
             detailPaneImageElement.onerror = function() {
                 this.onerror = null;
                 this.src = fallbackSrcString;
@@ -579,7 +609,7 @@
             const frame = document.getElementById('expandedMediaFrame');
             const fallbackSrcString = `https://placehold.co/600x400/075E54/white?text=${encodeURIComponent(targetProduct.name)}`;
             
-            frame.src = activeModalProductPhotos[activeModalPhotoIndex];
+            frame.src = activeModalProductPhotos[activeModalPhotoIndex] || fallbackSrcString;
             frame.onerror = function() {
                 this.onerror = null;
                 this.src = fallbackSrcString;
