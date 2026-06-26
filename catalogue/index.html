@@ -174,17 +174,7 @@
             box-sizing: border-box;
             background: #ffffff;
         }
-        .invoice-watermark {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 420px;
-            height: auto;
-            opacity: 0.07;
-            z-index: 0;
-            pointer-events: none;
-        }
+
         .invoice-content-layer {
             position: relative;
             z-index: 1;
@@ -800,7 +790,6 @@
             const canvas = document.getElementById('invoiceRenderCanvas');
             canvas.innerHTML = `
                 <div class="invoice-pdf-container">
-                    <img class="invoice-watermark" src="https://i.postimg.cc/zfDgrfRp/LOGO.gif">
                     <div class="invoice-content-layer">
                         <div class="inv-header">
                             <div>
@@ -909,7 +898,7 @@
                     whatsappTextMsg += `Thank you! Your invoice copy has been downloaded automatically. Please look over the details.`;
 
                     const encodedMessageURL = encodeURIComponent(whatsappTextMsg);
-                    const targetWhatsAppContactPhone = "919891462248";
+                    const targetWhatsAppContactPhone = "918920755505";
                     const baseWhatsAppLinkString = `https://api.whatsapp.com/send?phone=${targetWhatsAppContactPhone}&text=${encodedMessageURL}`;
 
                     shoppingCartState = {};
