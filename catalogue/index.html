@@ -159,13 +159,13 @@
 
         #invoiceRenderCanvas { 
             position: absolute; 
-            left: -9999px; 
-            top: 0; 
-            display: block; 
-            width: 790px; 
-            color: #333; 
-            background-color: #ffffff;
-            box-sizing: border-box;
+			top: 0; 
+			left: 0;
+			width: 790px;
+			opacity: 0;          /* Makes it invisible to the user */
+			pointer-events: none; /* Prevents user interaction */
+			z-index: -1000;      /* Moves it behind other elements */
+			overflow: hidden;    /* Keeps it from affecting layout */
         }
         .invoice-pdf-container {
             position: relative;
@@ -927,7 +927,7 @@
                     actionSubmitBtn.disabled = false;
                     actionSubmitBtn.innerText = "Confirm Order, Download Invoice & Send";
                 });
-            }, 300);
+            }, 500);
         }
 
         fetchProducts();
