@@ -159,35 +159,14 @@
 
         #invoiceRenderCanvas { 
             position: fixed; 
-			top: 0; 
-			left: 0; 
-			width: 790px; 
-			opacity: 0;          /* Makes it invisible to the human eye */
-			pointer-events: none; /* Prevents interaction */
-			z-index: -9999;      /* Pushes it behind everything */
-			background: #ffffff; /* Ensures it has a background to capture */
+            top: 0; 
+            left: 0; 
+            width: 790px; 
+            opacity: 0;          
+            pointer-events: none; 
+            z-index: -9999;      
+            background: #ffffff; 
         }
-        .invoice-pdf-container {
-            position: relative;
-            width: 100%;
-            padding: 45px;
-            box-sizing: border-box;
-            background: #ffffff;
-        }
-
-        .invoice-content-layer {
-            position: relative;
-            z-index: 1;
-        }
-        .inv-header { display: flex; justify-content: space-between; border-bottom: 3px solid #075E54; padding-bottom: 15px; margin-bottom: 25px; }
-        .inv-title { color: #075E54; font-size: 28px; font-weight: 900; margin: 0; letter-spacing: 0.5px; }
-        .inv-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 35px; font-size: 14px; line-height: 1.5; }
-        .inv-table { width: 100%; border-collapse: collapse; margin-bottom: 30px; font-size: 13px; background: transparent; }
-        .inv-table th { background-color: #075E54; color: white; font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; padding: 12px; border: 1px solid #075E54; }
-        .inv-table td { border: 1px solid #e2e8f0; padding: 12px; text-align: left; background: rgba(255,255,255,0.7); }
-        .inv-summary { margin-left: auto; width: 45%; font-size: 14px; margin-top: 20px; }
-        .inv-summary-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #edf2f7; }
-        .inv-summary-row.bold { font-weight: 800; border-top: 2px solid #075E54; border-bottom: 2px solid #075E54; color: #075E54; padding: 10px 0; font-size: 16px; }
     </style>
 </head>
 <body>
@@ -302,20 +281,16 @@
 
     <script>
         const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSZuJdNU_JDKhM9OSgx4yPa9rWGtL7PJ9dgbaoaWNJ4_0jZ-AUOKLEUiCCACjiHlOYwsvwNG1ftwCMG/pub?output=csv";
-        
-        // PASTE YOUR DEPLOYED GOOGLE APPS SCRIPT WEB APP URL HERE Completely
         const BACKEND_API_ENDPOINT = "https://script.google.com/macros/s/AKfycbzFrz5m7mIulqzCNahiEVORwvIsO0TeD5IAKk-YJbfHyEoO0nx-_yU838TVFCTIXS0/exec"; 
 
         let localProductsRegistry = [];
         let shoppingCartState = {};
         let currentPage = 1;
         let pageSize = 10;
-
         let activeModalProductPhotos = [];
         let activeModalPhotoIndex = 0;
         let selectedProductInDetailView = null;
 
-        // Key handlers for modal closing and image slider switching
         window.addEventListener('keydown', function(event) {
             if (event.key === 'Escape' || event.keyCode === 27) {
                 if (document.getElementById('mediaViewModal').style.display === 'flex') {
@@ -367,7 +342,7 @@
                         name: row[2]?.trim() || "",
                         desc: row[3]?.trim() || "",
                         price: row[4]?.trim() || "",
-                        loadedImages: [] // Initialized empty, will be populated by checkMultiImages dynamically
+                        loadedImages: [] 
                     };
                 }).filter(p => p.id !== "");
 
@@ -417,7 +392,6 @@
                     `;
                 }
 
-                // Determine display source (fallback to placehold.co initially if not yet loaded)
                 const fallbackSrcString = `https://placehold.co/600x400/075E54/white?text=${encodeURIComponent(prod.name)}`;
                 const displaySrc = (prod.loadedImages && prod.loadedImages.length > 0) ? prod.loadedImages[0] : fallbackSrcString;
 
@@ -478,7 +452,6 @@
                 const product = localProductsRegistry[globalIndex];
                 if (!product) return;
 
-                // If images are already found (e.g., during pagination revisit), ensure the card displays the first one.
                 if (product.loadedImages && product.loadedImages.length > 0) {
                      const cardImgElement = document.getElementById(`card-img-${productId}`);
                      if (cardImgElement && cardImgElement.src.includes('placehold.co')) {
@@ -487,15 +460,13 @@
                      return;
                 }
 
-                // Probe for the multiple images pattern first (1_productId.jpg)
                 const firstMultiImage = new Image();
                 firstMultiImage.src = `../images/1_${productId}.jpg`;
 
                 firstMultiImage.onload = function() {
-                    // Multiple images exist
                     let foundPhotos = [this.src];
                     let checksCompleted = 1;
-                    const maxChecks = 4; // Check up to 4 images total (1_ to 4_)
+                    const maxChecks = 4; 
 
                     const cardImgElement = document.getElementById(`card-img-${productId}`);
                     if (cardImgElement) cardImgElement.src = this.src;
@@ -505,7 +476,7 @@
                         extraImg.src = `../images/${i}_${productId}.jpg`;
                         extraImg.onload = function() {
                             foundPhotos.push(this.src);
-                            foundPhotos.sort(); // Keeps 1_, 2_ in order
+                            foundPhotos.sort(); 
                             checksCompleted++;
                             if (checksCompleted === maxChecks) product.loadedImages = foundPhotos;
                         };
@@ -517,7 +488,6 @@
                 };
 
                 firstMultiImage.onerror = function() {
-                    // Multiple images not found, fallback to single image pattern (productId.jpg)
                     const singleImagePath = `../images/${productId}.jpg`;
                     const singleImg = new Image();
                     singleImg.src = singleImagePath;
@@ -527,8 +497,6 @@
                         const cardImgElement = document.getElementById(`card-img-${productId}`);
                         if (cardImgElement) cardImgElement.src = this.src;
                     };
-                    
-                    // We let the original <img> onerror handle the completely missing image fallback if singleImg also fails
                 };
             }, 50);
         }
@@ -538,13 +506,10 @@
             if (!targetProduct) return;
 
             selectedProductInDetailView = targetProduct;
-
             const fallbackSrcString = `https://placehold.co/600x400/075E54/white?text=${encodeURIComponent(targetProduct.name)}`;
             const detailPaneImageElement = document.getElementById('detailPaneImg');
             
-            // Set source dynamically based on the verified loaded images
             detailPaneImageElement.src = (targetProduct.loadedImages && targetProduct.loadedImages.length > 0) ? targetProduct.loadedImages[0] : fallbackSrcString;
-            
             detailPaneImageElement.onerror = function() {
                 this.onerror = null;
                 this.src = fallbackSrcString;
@@ -751,13 +716,11 @@
 			actionSubmitBtn.innerText = "Generating Invoice...";
 
 			const name = document.getElementById('custName').value.trim();
-			const phone = document.getElementById('custPhone').value.trim();
 			const flat = document.getElementById('custFlat').value.trim();
 			const address = document.getElementById('custAddress').value.trim();
 			const pin = document.getElementById('custPin').value.trim();
 
 			const orderId = "INV-" + Math.floor(100000 + Math.random() * 900000);
-			const currentDateStamp = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' });
 
 			let itemsTableRows = '';
 			let grandTotal = 0;
@@ -776,7 +739,6 @@
 			});
 
 			const canvas = document.getElementById('invoiceRenderCanvas');
-			// CLEAN TEMPLATE: No images, simple structure
 			canvas.innerHTML = `
 				<div style="padding: 40px; font-family: sans-serif; color: #333;">
 					<h1 style="color: #075E54;">PRINTELIVERY INVOICE</h1>
@@ -804,18 +766,16 @@
 				html2canvas: { scale: 2, useCORS: true },
 				jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
 			};
+
 			window.setTimeout(() => {
 				const canvas = document.getElementById('invoiceRenderCanvas');
-				
-				// DEBUG: Check height
-				console.log("Canvas content height:", canvas.offsetHeight); 
-
 				if (canvas.offsetHeight === 0) {
-					alert("CRITICAL ERROR: Canvas has 0 height. The CSS is still blocking it from rendering.");
-					return; // Stop here if it's broken
+					alert("CRITICAL ERROR: Canvas has 0 height.");
+					actionSubmitBtn.disabled = false;
+                    actionSubmitBtn.innerText = "Confirm Order & Download";
+					return;
 				}
 
-				// Use a single, clean instance of html2pdf
 				html2pdf().from(canvas).set(pdfOptions).save().then(() => {
 					actionSubmitBtn.disabled = false;
 					actionSubmitBtn.innerText = "Confirm Order & Download";
@@ -826,9 +786,9 @@
 					alert("Failed to generate PDF.");
 					actionSubmitBtn.disabled = false;
 				});
-			}, 1000); // 1000ms is safer for loading
+			}, 1000);
 	}
-        fetchProducts();
+    fetchProducts();
     </script>
 </body>
 </html>
