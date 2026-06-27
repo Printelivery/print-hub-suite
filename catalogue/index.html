@@ -82,16 +82,17 @@
         }
         .cart-badge { background: var(--accent-color); color: white; border-radius: 50%; padding: 2px 8px; font-size: 0.8rem; }
 
-        .catalog-grid {
+		/* 1. Constraint the Grid Container */
+		.catalog-grid {
 			display: grid;
-			/* This creates as many columns as fit, but never lets cards get smaller than 280px or larger than 1fr */
-			grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-			gap: 25px;
+			/* This forces the cards to be 300px each, centered, with a gap */
+			grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+			gap: 30px;
 			padding: 20px;
-			max-width: 1400px; /* Limits the total width so they don't become huge on 4K monitors */
-			margin: 0 auto;    /* Centers the entire grid */
-		}
-			
+			/* Limit total width so it doesn't span across massive screens */
+			max-width: 1300px;
+			margin: 0 auto; 
+		}	
 			
 		}
         .cols-1 { grid-template-columns: repeat(1, 1fr); }
@@ -103,45 +104,44 @@
         @media (max-width: 1024px) { .catalog-grid { grid-template-columns: repeat(2, 1fr) !important; } }
         @media (max-width: 650px) { .catalog-grid { grid-template-columns: repeat(1, 1fr) !important; } }
 
-        .product-card {
-			/* Make the card square by matching width and height */
-			width: 100%;           /* Will fill the grid column */
-			aspect-ratio: 1 / 1;   /* Forces the element to be a perfect square */
-			max-width: 350px; /* Cards will never exceed 350px wide */
-			margin: 0 auto;   /* Keeps the card centered in its grid cell */
+		/* 2. Force Square Aspect Ratio on the Card */
+		.product-card {
 			background: #ffffff;
-			border-radius: 16px;
-			box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+			border-radius: 20px;
+			box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 			overflow: hidden;
 			display: flex;
 			flex-direction: column;
+			/* Lock the card to a square */
+			aspect-ratio: 1 / 1;
 			border: 1px solid #e2e8f0;
-			transition: transform 0.3s ease, box-shadow 0.3s ease;
-			cursor: pointer;	
-				}
+			transition: transform 0.2s;
+		}
         .product-card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1); }
-        .image-container { 
-			width: 100%; 
-			background-color: #edf2f7; 
-			position: relative; 
+		/* 3. Image Area - Always takes the top square half */
+		.image-container {
+			width: 100%;
+			flex: 1; /* Occupies the space not taken by text */
 			overflow: hidden;
+			position: relative;
 		}
-        .product-image { 
-			width: 100%; 
-			height: 100%; 
-			object-fit: cover; /* Ensures image covers the area without distortion */
-			display: block; 
+		.product-image {
+			width: 100%;
+			height: 100%;
+			object-fit: cover; /* Keeps it square without distortion */
 		}
-        
         .product-details { padding: 24px; display: flex; flex-direction: column; flex-grow: 1; }
         .product-group-tag { font-size: 0.75rem; font-weight: 700; color: var(--primary-color); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px; }
         .product-id { font-size: 0.8rem; font-weight: 600; color: #a0aec0; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
         .product-title { font-size: 1.2rem; font-weight: 700; margin: 0 0 10px 0; color: #1a202c; line-height: 1.4; }
-        .product-desc { 
-			padding: 15px;
-			background: #ffffff;
-			max-height: 30%; /* Optional: limit height if text is too long */
-			overflow: hidden;			
+		/* 4. Text Area - Fixed at bottom */
+		.product-desc {
+			padding: 16px;
+			background: #fff;
+			border-top: 1px solid #f0f0f0;
+			/* Optional: Ensure text doesn't overflow */
+			max-height: 80px; 
+			overflow-y: auto;
 		}
         
         .action-row { display: flex; align-items: center; justify-content: space-between; margin-top: auto; height: 42px; }
