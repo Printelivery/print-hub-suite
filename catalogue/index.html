@@ -807,9 +807,25 @@
             // Force display for html2pdf to capture correctly
             canvas.style.display = "block";
 			
-			let itemsSummaryText = Object.values(shoppingCartState)
-				.map(i => `${i.metadata.name} (x${i.qty}) - ₹${(parseFloat(i.metadata.price.replace(/[^0-9.]/g, '')) * i.qty).toFixed(2)}`)
-				.join('\n');
+			// Generate an HTML table string for the email
+			let itemsSummaryText = `
+			<table border="1" style="border-collapse: collapse; width: 100%;">
+				<thead>
+					<tr style="background-color: #f2f2f2;">
+						<th>Item</th><th>Price</th><th>Qty</th><th>Total</th>
+					</tr>
+				</thead>
+				<tbody>
+					${Object.values(shoppingCartState).map(i => `
+						<tr>
+							<td>${i.metadata.name}</td>
+							<td>${i.metadata.price}</td>
+							<td>${i.qty}</td>
+							<td>₹${(parseFloat(i.metadata.price.replace(/[^0-9.]/g, '')) * i.qty).toFixed(2)}</td>
+						</tr>
+					`).join('')}
+				</tbody>
+			</table>`;
 
 			try {
 				// 1. Generate PDF data in memory for the email
