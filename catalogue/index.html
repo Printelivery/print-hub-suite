@@ -108,4 +108,654 @@
         .pagination-container { display: flex; justify-content: center; align-items: center; gap: 5px; margin: 40px auto 0 auto; max-width: 1200px; flex-wrap: wrap; }
         .page-btn { padding: 8px 14px; border: 1px solid #cbd5e0; background: white; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.9rem; transition: all 0.2s; }
         .page-btn:hover:not(:disabled) { background: #edf2f7; border-color: #a0aec0; }
-        .page-btn.active { background: var(--primary-color); color: white; border-
+        .page-btn.active { background: var(--primary-color); color: white; border-color: var(--primary-color); }
+        .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.75); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 20px; box-sizing: border-box; overflow: hidden; }
+        .modal-body { background: white; padding: 30px; border-radius: 16px; max-width: 600px; width: 100%; position: relative; max-height: 90vh; overflow-y: auto; }
+        .close-modal { position: absolute; top: 20px; right: 25px; font-size: 2.5rem; cursor: pointer; color: #ffffff; z-index: 1050; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+        .close-modal:hover { color: var(--accent-color); }
+
+        #mediaViewModal .modal-body { background: transparent; box-shadow: none; padding: 0; max-width: 80vw; max-height: 85vh; width: auto; height: auto; display: flex; justify-content: center; align-items: center; position: relative; overflow: visible; }
+        #expandedMediaFrame { max-width: 100%; max-height: 85vh; width: auto; height: auto; border-radius: 8px; object-fit: contain; display: block; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+        .modal-slider-btn {
+            position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0, 0, 0, 0.6);
+            color: white; border: none; width: 50px; height: 50px; border-radius: 50%; cursor: pointer; font-weight: bold; font-size: 1.6rem; display: none; z-index: 1020; transition: background 0.2s, transform 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+        .modal-slider-btn:hover { background: var(--primary-color); transform: translateY(-50%) scale(1.05); }
+        .modal-slider-btn.prev { left: -75px; }
+        .modal-slider-btn.next { right: -75px; }
+        
+        @media (max-width: 768px) {
+            #mediaViewModal .modal-body { max-width: 95vw; }
+            .modal-slider-btn.prev { left: 15px; }
+            .modal-slider-btn.next { right: 15px; }
+        }
+
+        .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #edf2f7; }
+        .cart-item-meta h4 { margin: 0 0 4px 0; color: #1a202c; }
+        .cart-item-meta p { margin: 0; color: #718096; font-size: 0.9rem; }
+        .qty-controls { display: flex; align-items: center; gap: 8px; }
+        .qty-btn { background: #edf2f7; border: none; width: 28px; height: 28px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .cart-summary { margin-top: 20px; border-top: 2px solid #edf2f7; padding-top: 15px; }
+        .summary-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.95rem; }
+        .summary-row.total { font-size: 1.2rem; font-weight: 800; color: var(--primary-color); border-top: 1px dashed #cbd5e0; padding-top: 8px; }
+        
+        .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+        .form-group label { font-weight: 600; font-size: 0.85rem; color: #4a5568; }
+        .form-group input, .form-group textarea { padding: 10px; border: 1px solid #cbd5e0; border-radius: 6px; font-size: 0.95rem; }
+        .checkout-btn { background-color: var(--accent-color); color: white; border: none; width: 100%; padding: 12px; border-radius: 8px; font-weight: 700; font-size: 1rem; cursor: pointer; margin-top: 10px; }
+        .checkout-btn:hover { background-color: #20ba59; }
+        .loading { text-align: center; grid-column: 1 / -1; font-size: 1.2rem; color: #718096; padding: 40px; }
+
+        #invoiceRenderCanvas { 
+            position: absolute; 
+            left: -9999px; 
+            top: 0; 
+            display: block; 
+            width: 790px; 
+            color: #333; 
+            background-color: #ffffff;
+            box-sizing: border-box;
+        }
+        .invoice-pdf-container {
+            position: relative;
+            width: 100%;
+            padding: 45px;
+            box-sizing: border-box;
+            background: #ffffff;
+        }
+        .invoice-watermark {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 420px;
+            height: auto;
+            opacity: 0.07;
+            z-index: 0;
+            pointer-events: none;
+        }
+        .invoice-content-layer {
+            position: relative;
+            z-index: 1;
+        }
+        .inv-header { display: flex; justify-content: space-between; border-bottom: 3px solid #075E54; padding-bottom: 15px; margin-bottom: 25px; }
+        .inv-title { color: #075E54; font-size: 28px; font-weight: 900; margin: 0; letter-spacing: 0.5px; }
+        .inv-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 35px; font-size: 14px; line-height: 1.5; }
+        .inv-table { width: 100%; border-collapse: collapse; margin-bottom: 30px; font-size: 13px; background: transparent; }
+        .inv-table th { background-color: #075E54; color: white; font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; padding: 12px; border: 1px solid #075E54; }
+        .inv-table td { border: 1px solid #e2e8f0; padding: 12px; text-align: left; background: rgba(255,255,255,0.7); }
+        .inv-summary { margin-left: auto; width: 45%; font-size: 14px; margin-top: 20px; }
+        .inv-summary-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #edf2f7; }
+        .inv-summary-row.bold { font-weight: 800; border-top: 2px solid #075E54; border-bottom: 2px solid #075E54; color: #075E54; padding: 10px 0; font-size: 16px; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>Our Product Catalogue</h1>
+        <p>Premium Printing Tools, Custom Designs & Prints</p>
+    </div>
+
+    <div class="controls-bar">
+        <div class="selectors-group">
+            <div class="control-item">
+                <label for="colSelect">Items per row:</label>
+                <select id="colSelect" class="custom-select" onchange="alterGridLayout(this.value)">
+                    <option value="1">1 Product</option>
+                    <option value="2">2 Products</option>
+                    <option value="3" selected>3 Products</option>
+                    <option value="4">4 Products</option>
+                    <option value="5">5 Products</option>
+                </select>
+            </div>
+            <div class="control-item">
+                <label for="pageSizeSelect">Items per page:</label>
+                <select id="pageSizeSelect" class="custom-select" onchange="alterPageSize(this.value)">
+                    <option value="1">1</option>
+                    <option value="5">5</option>
+                    <option value="10" selected>10</option>
+                    <option value="20">20</option>
+                </select>
+            </div>
+        </div>
+        <button class="cart-toggle-btn" onclick="openCartViewModal()">
+            🛒 View Cart <span id="cartCountBadge" class="cart-badge">0</span>
+        </button>
+    </div>
+
+    <div class="catalog-grid cols-3" id="catalog">
+        <div class="loading">Loading products live...</div>
+    </div>
+
+    <div id="pagination" class="pagination-container"></div>
+
+    <div id="mediaViewModal" class="modal-overlay" onclick="closeMediaViewModal()">
+        <span class="close-modal" onclick="closeMediaViewModal()">&times;</span>
+        <div class="modal-body" onclick="event.stopPropagation()">
+            <button id="modalPrevBtn" class="modal-slider-btn prev" onclick="navigateModalImage(-1)">&#10094;</button>
+            <img id="expandedMediaFrame" src="" alt="Expanded View">
+            <button id="modalNextBtn" class="modal-slider-btn next" onclick="navigateModalImage(1)">&#10095;</button>
+        </div>
+    </div>
+
+    <div id="cartDrawerModal" class="modal-overlay">
+        <div class="modal-body" style="background: white; border-radius:16px; color: var(--text-dark);">
+            <span class="close-modal" style="color:#a0aec0;" onclick="closeCartViewModal()">&times;</span>
+            <h3>Your Shopping Cart</h3>
+            <div id="cartItemsContainer"></div>
+            <div id="cartSummaryBlock" class="cart-summary"></div>
+            <button id="proceedCheckoutActionBtn" class="checkout-btn" onclick="openAddressCollectionModal()">Proceed to Delivery Details</button>
+        </div>
+    </div>
+
+    <div id="addressCaptureModal" class="modal-overlay">
+        <div class="modal-body" style="background: white; border-radius:16px; color: var(--text-dark);">
+            <span class="close-modal" style="color:#a0aec0;" onclick="closeAddressCollectionModal()">&times;</span>
+            <h3>Delivery Details</h3>
+            <form id="shippingAddressForm" onsubmit="compileFinalInvoiceAndSend(event)">
+                <div class="form-group">
+                    <label for="custName">Full Name</label>
+                    <input type="text" id="custName" required placeholder="Vijayakumar Periyasamy">
+                </div>
+                <div class="form-group">
+                    <label for="custPhone">Phone Number</label>
+                    <input type="tel" id="custPhone" required placeholder="09891462248">
+                </div>
+                <div class="form-group">
+                    <label for="custFlat">Flat No. / Building / Company</label>
+                    <input type="text" id="custFlat" required placeholder="Printelivery, L107, L Block">
+                </div>
+                <div class="form-group">
+                    <label for="custAddress">Street Address / Area</label>
+                    <textarea id="custAddress" rows="3" required placeholder="KG Earth Homes MK, Stalin St. Thazhambur"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="custPin">Pin Code</label>
+                    <input type="text" id="custPin" required placeholder="600130">
+                </div>
+                <button type="submit" class="checkout-btn">Confirm Order, Download Invoice & Send</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="invoiceRenderCanvas"></div>
+
+    <script>
+        const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSZuJdNU_JDKhM9OSgx4yPa9rWGtL7PJ9dgbaoaWNJ4_0jZ-AUOKLEUiCCACjiHlOYwsvwNG1ftwCMG/pub?output=csv";
+        const BACKEND_API_ENDPOINT = "https://script.google.com/macros/s/YOUR_DEPLOYED_GAPPS_SCRIPT_ID/exec"; 
+
+        let localProductsRegistry = [];
+        let shoppingCartState = {};
+        let currentPage = 1;
+        let pageSize = 10;
+
+        let activeModalProductPhotos = [];
+        let activeModalPhotoIndex = 0;
+
+        function parseCSV(text) {
+            let p = '', r = []; let q = false; let row = [''];
+            for (let i=0; i<text.length; i++) {
+                let c = text[i]; let next = text[i+1];
+                if (c === '"') { if (q && next === '"') { row[row.length-1] += '"'; i++; } else { q = !q; } }
+                else if (c === ',' && !q) { row.push(''); }
+                else if ((c === '\r' || c === '\n') && !q) {
+                    if (c === '\r' && next === '\n') { i++; }
+                    r.push(row); row = [''];
+                } else { row[row.length-1] += c; }
+            }
+            if (row.length > 1 || row[0] !== '') { r.push(row); }
+            return r;
+        }
+
+        async function fetchProducts() {
+            try {
+                const response = await fetch(CSV_URL + "&cachebuster=" + new Date().getTime());
+                const dataText = await response.text();
+                const parsedRows = parseCSV(dataText);
+                parsedRows.shift();
+                
+                localProductsRegistry = parsedRows.map(row => ({
+                    group: row[0]?.trim() || "",
+                    id: row[1]?.trim() || "",
+                    name: row[2]?.trim() || "",
+                    desc: row[3]?.trim() || "",
+                    price: row[4]?.trim() || "",
+                    loadedImages: [`../images/${row[1]?.trim()}.jpg`]
+                })).filter(p => p.id !== "");
+
+                currentPage = 1;
+                renderCatalogViewEngine();
+            } catch (error) {
+                console.error("Error connecting to data layer:", error);
+                document.getElementById('catalog').innerHTML = `<div class="loading" style="color: #9b1c1c;">Failed to load data stream dynamically.</div>`;
+            }
+        }
+
+        function alterGridLayout(columnsNumber) {
+            document.getElementById('catalog').className = `catalog-grid cols-${columnsNumber}`;
+        }
+
+        function alterPageSize(size) {
+            pageSize = parseInt(size);
+            currentPage = 1;
+            renderCatalogViewEngine();
+        }
+
+        function renderCatalogViewEngine() {
+            const catalogContainer = document.getElementById('catalog');
+            catalogContainer.innerHTML = '';
+
+            if (localProductsRegistry.length === 0) {
+                catalogContainer.innerHTML = '<div class="loading">No products discovered in your data sheets.</div>';
+                return;
+            }
+
+            const startIndex = (currentPage - 1) * pageSize;
+            const endIndex = startIndex + pageSize;
+            const paginatedItems = localProductsRegistry.slice(startIndex, endIndex);
+
+            paginatedItems.forEach((prod, index) => {
+                const globalIndex = startIndex + index;
+                const cartItem = shoppingCartState[prod.id];
+                
+                let actionWidgetHTML = `<button class="order-button" onclick="addItemToCart('${prod.id}'); event.stopPropagation();">Add to Cart</button>`;
+                if (cartItem && cartItem.qty > 0) {
+                    actionWidgetHTML = `
+                        <div class="inline-qty-control" onclick="event.stopPropagation()">
+                            <button class="inline-qty-btn" onclick="alterItemQuantity('${prod.id}', -1)">-</button>
+                            <span class="inline-qty-val">${cartItem.qty}</span>
+                            <button class="inline-qty-btn" onclick="alterItemQuantity('${prod.id}', 1)">+</button>
+                        </div>
+                    `;
+                }
+
+                const cardHTML = `
+                    <div class="product-card" onclick="launchFullPageMediaModal('${prod.id}')">
+                        <div class="image-container">
+                            <div class="slider-wrapper">
+                                <img class="product-image" src="../images/${prod.id}.jpg" onerror="this.src='https://placehold.co/600x400/075E54/white?text=${encodeURIComponent(prod.id)}'">
+                            </div>
+                        </div>
+                        <div class="product-details">
+                            <div class="product-group-tag">${prod.group}</div>
+                            <div class="product-id">ID: ${prod.id}</div>
+                            <h3 class="product-title">${prod.name}</h3>
+                            <p class="product-desc">${prod.desc}</p>
+                            <div class="action-row">
+                                <span class="price">${prod.price}</span>
+                                <div id="action-wrapper-${prod.id}">${actionWidgetHTML}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                catalogContainer.innerHTML += cardHTML;
+                checkMultiImages(prod.id, globalIndex);
+            });
+
+            buildPaginationControlsUI();
+        }
+
+        function buildPaginationControlsUI() {
+            const container = document.getElementById('pagination');
+            container.innerHTML = '';
+            
+            const totalPages = Math.ceil(localProductsRegistry.length / pageSize);
+            if(totalPages <= 1) return;
+
+            container.innerHTML += `<button class="page-btn" onclick="jumpToPage(1)" ${currentPage === 1 ? 'disabled' : ''}><<</button>`;
+            container.innerHTML += `<button class="page-btn" onclick="jumpToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}><</button>`;
+
+            let rangeStart = Math.max(1, currentPage - 2);
+            let rangeEnd = Math.min(totalPages, rangeStart + 4);
+            if (rangeEnd - rangeStart < 4) rangeStart = Math.max(1, rangeEnd - 4);
+
+            for (let i = rangeStart; i <= rangeEnd; i++) {
+                container.innerHTML += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="jumpToPage(${i})">${i}</button>`;
+            }
+
+            container.innerHTML += `<button class="page-btn" onclick="jumpToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>></button>`;
+            container.innerHTML += `<button class="page-btn" onclick="jumpToPage(${totalPages})" ${currentPage === totalPages ? 'disabled' : ''}>>></button>`;
+        }
+
+        function jumpToPage(targetPageNumber) {
+            currentPage = targetPageNumber;
+            renderCatalogViewEngine();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function checkMultiImages(productId, globalIndex) {
+            setTimeout(() => {
+                const product = localProductsRegistry[globalIndex];
+                if (!product) return;
+                
+                const baseImage = `../images/${productId}.jpg`;
+                let foundPhotos = [baseImage];
+                let checksCompleted = 0;
+                
+                for (let i = 1; i <= 4; i++) {
+                    const extraImg = new Image();
+                    const alternatePath = `../images/${i}_${productId}.jpg`;
+                    extraImg.src = alternatePath;
+                    
+                    extraImg.onload = function() {
+                        if (!foundPhotos.includes(this.src)) {
+                            foundPhotos.push(this.src);
+                        }
+                        checksCompleted++;
+                        if(checksCompleted === 4) saveTrackedPhotos(product, foundPhotos);
+                    };
+                    extraImg.onerror = function() {
+                        checksCompleted++;
+                        if(checksCompleted === 4) saveTrackedPhotos(product, foundPhotos);
+                    };
+                }
+            }, 50);
+        }
+
+        function saveTrackedPhotos(product, photos) {
+            if(photos.length > 1) {
+                product.loadedImages = photos;
+            }
+        }
+
+        function launchFullPageMediaModal(productId) {
+            const targetProduct = localProductsRegistry.find(p => p.id === productId);
+            if (!targetProduct) return;
+
+            activeModalProductPhotos = targetProduct.loadedImages;
+            activeModalPhotoIndex = 0;
+
+            const frame = document.getElementById('expandedMediaFrame');
+            frame.src = activeModalProductPhotos[activeModalPhotoIndex];
+            
+            const prevArrow = document.getElementById('modalPrevBtn');
+            const nextArrow = document.getElementById('modalNextBtn');
+            
+            if (activeModalProductPhotos.length > 1) {
+                prevArrow.style.display = 'block';
+                nextArrow.style.display = 'block';
+            } else {
+                prevArrow.style.display = 'none';
+                nextArrow.style.display = 'none';
+            }
+
+            document.getElementById('mediaViewModal').style.display = 'flex';
+        }
+
+        function navigateModalImage(direction) {
+            if (activeModalProductPhotos.length <= 1) return;
+            
+            activeModalPhotoIndex += direction;
+            if (activeModalPhotoIndex >= activeModalProductPhotos.length) activeModalPhotoIndex = 0;
+            if (activeModalPhotoIndex < 0) activeModalPhotoIndex = activeModalProductPhotos.length - 1;
+            
+            document.getElementById('expandedMediaFrame').src = activeModalProductPhotos[activeModalPhotoIndex];
+        }
+
+        function closeMediaViewModal() { 
+            document.getElementById('mediaViewModal').style.display = 'none'; 
+        }
+
+        function addItemToCart(productId) {
+            const targetProduct = localProductsRegistry.find(p => p.id === productId);
+            if (!targetProduct) return;
+
+            shoppingCartState[productId] = { metadata: targetProduct, qty: 1 };
+            synchronizeCartBadgeUI();
+            updateCardActionWidget(productId);
+        }
+
+        function alterItemQuantity(productId, modificationDelta) {
+            if (!shoppingCartState[productId]) return;
+            
+            shoppingCartState[productId].qty += modificationDelta;
+            if (shoppingCartState[productId].qty <= 0) {
+                delete shoppingCartState[productId];
+            }
+            
+            synchronizeCartBadgeUI();
+            updateCardActionWidget(productId);
+            if (document.getElementById('cartDrawerModal').style.display === 'flex') {
+                rebuildCartContentsMarkup();
+            }
+        }
+
+        function updateCardActionWidget(productId) {
+            const wrapper = document.getElementById(`action-wrapper-${productId}`);
+            if (!wrapper) return;
+
+            const cartItem = shoppingCartState[productId];
+            if (cartItem && cartItem.qty > 0) {
+                wrapper.innerHTML = `
+                    <div class="inline-qty-control" onclick="event.stopPropagation()">
+                        <button class="inline-qty-btn" onclick="alterItemQuantity('${productId}', -1)">-</button>
+                        <span class="inline-qty-val">${cartItem.qty}</span>
+                        <button class="inline-qty-btn" onclick="alterItemQuantity('${productId}', 1)">+</button>
+                    </div>
+                `;
+            } else {
+                wrapper.innerHTML = `<button class="order-button" onclick="addItemToCart('${productId}'); event.stopPropagation();">Add to Cart</button>`;
+            }
+        }
+
+        function synchronizeCartBadgeUI() {
+            let aggregateUnits = 0;
+            for (let item in shoppingCartState) { aggregateUnits += shoppingCartState[item].qty; }
+            document.getElementById('cartCountBadge').innerText = aggregateUnits;
+        }
+
+        function cleanNumericPricing(priceString) { return parseFloat(priceString.replace(/[^0-9.]/g, '')) || 0; }
+
+        function openCartViewModal() { rebuildCartContentsMarkup(); document.getElementById('cartDrawerModal').style.display = 'flex'; }
+        function closeCartViewModal() { document.getElementById('cartDrawerModal').style.display = 'none'; }
+
+        function rebuildCartContentsMarkup() {
+            const container = document.getElementById('cartItemsContainer');
+            const summaryBox = document.getElementById('cartSummaryBlock');
+            const proceedBtn = document.getElementById('proceedCheckoutActionBtn');
+            container.innerHTML = '';
+            
+            let aggregateOrderValue = 0;
+            let totalItemsKeys = Object.keys(shoppingCartState);
+
+            if (totalItemsKeys.length === 0) {
+                container.innerHTML = '<p style="text-align:center; padding: 20px; color:#718096;">Your cart feels empty!</p>';
+                summaryBox.innerHTML = ''; proceedBtn.style.display = 'none'; return;
+            }
+
+            proceedBtn.style.display = 'block';
+            totalItemsKeys.forEach(key => {
+                const item = shoppingCartState[key];
+                const cleanUnitValue = cleanNumericPricing(item.metadata.price);
+                aggregateOrderValue += (cleanUnitValue * item.qty);
+
+                container.innerHTML += `
+                    <div class="cart-item">
+                        <div class="cart-item-meta">
+                            <h4>${item.metadata.name}</h4>
+                            <p>${item.metadata.price} × ${item.qty}</p>
+                        </div>
+                        <div class="qty-controls">
+                            <button class="qty-btn" onclick="alterItemQuantity('${key}', -1)">-</button>
+                            <span style="font-weight:600; width:20px; text-align:center;">${item.qty}</span>
+                            <button class="qty-btn" onclick="alterItemQuantity('${key}', 1)">+</button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            const baseTaxableAmount = aggregateOrderValue / 1.18;
+            const calculatedGstSlice = aggregateOrderValue - baseTaxableAmount;
+
+            summaryBox.innerHTML = `
+                <div class="summary-row"><span>Taxable Net Amount:</span><span>₹${baseTaxableAmount.toFixed(2)}</span></div>
+                <div class="summary-row"><span>CGST + SGST Split (18%):</span><span>₹${calculatedGstSlice.toFixed(2)}</span></div>
+                <div class="summary-row total"><span>Total Payable Value (Inc. GST):</span><span>₹${aggregateOrderValue.toFixed(2)}</span></div>
+            `;
+        }
+
+        function openAddressCollectionModal() { closeCartViewModal(); document.getElementById('addressCaptureModal').style.display = 'flex'; }
+        function closeAddressCollectionModal() { document.getElementById('addressCaptureModal').style.display = 'none'; }
+
+        // FIXED: Explicit target updated to target native local 'LOGO.jpg' reference asset cleanly
+        function generateInvoiceHTMLCanvasMarkup(customerDetails, itemsList, net, tax, gross) {
+            return new Promise((resolve) => {
+                const canvas = document.getElementById('invoiceRenderCanvas');
+                const dateString = new Date().toLocaleDateString('en-IN', { dateStyle: 'long' });
+                const invoiceId = `PRNT-${Date.now().toString().slice(-6)}`;
+
+                let itemsRowsHTML = '';
+                itemsList.forEach(item => {
+                    itemsRowsHTML += `
+                        <tr>
+                            <td style="font-weight: 600; color: #1a202c;">${item.name}</td>
+                            <td style="color: #4a5568;">${item.id}</td>
+                            <td>₹${cleanNumericPricing(item.price).toFixed(2)}</td>
+                            <td style="text-align: center; font-weight: 600;">${item.qty}</td>
+                            <td style="font-weight: 600; color: #075E54;">₹${(cleanNumericPricing(item.price) * item.qty).toFixed(2)}</td>
+                        </tr>
+                    `;
+                });
+
+                canvas.innerHTML = `
+                    <div class="invoice-pdf-container">
+                        <img id="pdfWatermarkNode" class="invoice-watermark" src="../images/LOGO.jpg">
+                        <div class="invoice-content-layer">
+                            <div class="inv-header">
+                                <div>
+                                    <h2 class="inv-title">PRINTELIVERY</h2>
+                                    <p style="font-size:13px; margin:6px 0 0 0; color:#4a5568; font-weight:600;">Premium Printing & Custom Designs</p>
+                                </div>
+                                <div style="text-align:right; font-size:13px; line-height: 1.4;">
+                                    <p style="margin:0;"><strong>Invoice No:</strong> ${invoiceId}</p>
+                                    <p style="margin:4px 0 0 0;"><strong>Date:</strong> ${dateString}</p>
+                                </div>
+                            </div>
+                            <div class="inv-grid">
+                                <div>
+                                    <span style="color:#075E54; font-weight:700; text-transform:uppercase; font-size:11px; letter-spacing:0.5px;">Customer Details:</span>
+                                    <p style="margin:6px 0 0 0;"><strong>${customerDetails.name}</strong><br>Phone: ${customerDetails.phone}</p>
+                                </div>
+                                <div>
+                                    <span style="color:#075E54; font-weight:700; text-transform:uppercase; font-size:11px; letter-spacing:0.5px;">Shipping Destination:</span>
+                                    <p style="margin:6px 0 0 0;">${customerDetails.flat},<br>${customerDetails.address}<br><strong>PIN: ${customerDetails.pin}</strong></p>
+                                </div>
+                            </div>
+                            <table class="inv-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 45%;">Item Description</th>
+                                        <th style="width: 20%;">Product ID</th>
+                                        <th style="width: 12%;">Price</th>
+                                        <th style="width: 8%; text-align: center;">Qty</th>
+                                        <th style="width: 15%;">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${itemsRowsHTML}
+                                </tbody>
+                            </table>
+                            <div class="inv-summary">
+                                <div class="inv-summary-row"><span>Net Taxable Value:</span><span>₹${net}</span></div>
+                                <div class="inv-summary-row"><span>Integrated GST (18%):</span><span>₹${tax}</span></div>
+                                <div class="inv-summary-row bold"><span>Gross Payable Total:</span><span>₹${gross}</span></div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                const watermarkElement = document.getElementById('pdfWatermarkNode');
+                if (watermarkElement) {
+                    watermarkElement.onload = () => resolve();
+                    watermarkElement.onerror = () => {
+                        watermarkElement.style.display = 'none';
+                        resolve();
+                    };
+                    if (watermarkElement.complete) resolve();
+                } else {
+                    resolve();
+                }
+            });
+        }
+
+        async function compileFinalInvoiceAndSend(event) {
+            event.preventDefault();
+
+            const customerDetails = {
+                name: document.getElementById('custName').value.trim(),
+                phone: document.getElementById('custPhone').value.trim(),
+                flat: document.getElementById('custFlat').value.trim(),
+                address: document.getElementById('custAddress').value.trim(),
+                pin: document.getElementById('custPin').value.trim()
+            };
+
+            let txtMessage = `📦 *NEW INBOUND ORDER - PRINTELIVERY*\n\n`;
+            txtMessage += `👤 *Customer Details:*\nName: ${customerDetails.name}\nPhone: ${customerDetails.phone}\nAddress: ${customerDetails.flat}, ${customerDetails.address}, PIN: ${customerDetails.pin}\n\n`;
+            txtMessage += `🛒 *Items Ordered:*\n`;
+
+            let aggregateOrderValue = 0;
+            let flatItemsArray = [];
+
+            Object.keys(shoppingCartState).forEach(key => {
+                const item = shoppingCartState[key];
+                const rate = cleanNumericPricing(item.metadata.price);
+                const lineTotal = rate * item.qty;
+                aggregateOrderValue += lineTotal;
+
+                flatItemsArray.push({ id: item.metadata.id, name: item.metadata.name, price: item.metadata.price, qty: item.qty });
+                txtMessage += `▪️ ${item.metadata.name} [ID: ${item.metadata.id}]\n   Qty: ${item.qty} @ ${item.metadata.price} = ₹${lineTotal.toFixed(2)}\n`;
+            });
+
+            const baseTaxableAmount = (aggregateOrderValue / 1.18).toFixed(2);
+            const calculatedGstSlice = (aggregateOrderValue - baseTaxableAmount).toFixed(2);
+            const grossValueStr = aggregateOrderValue.toFixed(2);
+
+            txtMessage += `\n🧾 *Tax Invoice Summary:*\nNet Taxable Value: ₹${baseTaxableAmount}\nIntegrated GST Value (18%): ₹${calculatedGstSlice}\n*Gross Payable Total: ₹${grossValueStr}* (Inclusive of GST)\n`;
+
+            await generateInvoiceHTMLCanvasMarkup(customerDetails, flatItemsArray, baseTaxableAmount, calculatedGstSlice, grossValueStr);
+            const canvasElement = document.getElementById('invoiceRenderCanvas');
+            
+            const pdfOptions = { 
+                margin: 0, 
+                filename: `Printelivery_${customerDetails.name.replace(/\s+/g, '_')}_Invoice.pdf`, 
+                image: { type: 'jpeg', quality: 1.0 }, 
+                html2canvas: { scale: 2, useCORS: true, logging: false }, 
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } 
+            };
+            
+            const pdfWorker = html2pdf().from(canvasElement).set(pdfOptions);
+            await pdfWorker.save();
+            
+            const pdfBase64 = await pdfWorker.outputPdf('datauristring');
+            const base64CleanPayload = pdfBase64.split(',')[1];
+
+            try {
+                await fetch(BACKEND_API_ENDPOINT, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        customer: customerDetails,
+                        textSummary: txtMessage,
+                        emailTarget: "printelivery@gmail.com",
+                        pdfAttachmentData: base64CleanPayload,
+                        pdfFileName: `Invoice_${customerDetails.name.replace(/\s+/g, '_')}.pdf`
+                    })
+                });
+            } catch(e) { console.warn("Background data synced."); }
+
+            window.open(`https://wa.me/918920755505?text=${encodeURIComponent(txtMessage)}`, '_blank');
+
+            shoppingCartState = {};
+            synchronizeCartBadgeUI();
+            closeAddressCollectionModal();
+            document.getElementById('shippingAddressForm').reset();
+            renderCatalogViewEngine();
+        }
+
+        fetchProducts();
+    </script>
+</body>
+</html>
