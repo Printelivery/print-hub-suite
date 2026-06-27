@@ -87,7 +87,8 @@
         }
         .product-card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1); }
         .image-container { width: 100%; height: 260px; background-color: #edf2f7; position: relative; overflow: hidden; }
-        .product-image { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .slider-wrapper { display: flex; width: 100%; height: 100%; transition: transform 0.3s ease-in-out; }
+        .product-image { min-width: 100%; height: 100%; object-fit: cover; }
         
         .product-details { padding: 24px; display: flex; flex-direction: column; flex-grow: 1; }
         .product-group-tag { font-size: 0.75rem; font-weight: 700; color: var(--primary-color); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px; }
@@ -115,29 +116,20 @@
         .close-modal { position: absolute; top: 20px; right: 25px; font-size: 2.5rem; cursor: pointer; color: #ffffff; z-index: 1050; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
         .close-modal:hover { color: var(--accent-color); }
 
-        #mediaViewModal { z-index: 2000; }
         #mediaViewModal .modal-body { background: transparent; box-shadow: none; padding: 0; max-width: 80vw; max-height: 85vh; width: auto; height: auto; display: flex; justify-content: center; align-items: center; position: relative; overflow: visible; }
         #expandedMediaFrame { max-width: 100%; max-height: 85vh; width: auto; height: auto; border-radius: 8px; object-fit: contain; display: block; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
         .modal-slider-btn {
             position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0, 0, 0, 0.6);
-            color: white; border: none; width: 50px; height: 50px; border-radius: 50%; cursor: pointer; font-weight: bold; font-size: 1.6rem; display: none; z-index: 2020; transition: background 0.2s, transform 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            color: white; border: none; width: 50px; height: 50px; border-radius: 50%; cursor: pointer; font-weight: bold; font-size: 1.6rem; display: none; z-index: 1020; transition: background 0.2s, transform 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.3);
         }
         .modal-slider-btn:hover { background: var(--primary-color); transform: translateY(-50%) scale(1.05); }
         .modal-slider-btn.prev { left: -75px; }
         .modal-slider-btn.next { right: -75px; }
-
-        #productDetailModal .modal-body { background: white; max-width: 90vw; width: 1000px; border-radius: 16px; padding: 0; overflow: hidden; display: flex; flex-direction: row; height: 85vh; max-height: 85vh; }
-        .detail-media-pane { width: 55%; background: #edf2f7; position: relative; display: flex; align-items: center; justify-content: center; height: 100%; }
-        .detail-main-img { width: 100%; height: 100%; object-fit: cover; cursor: pointer; }
-        .detail-info-pane { width: 45%; padding: 40px; display: flex; flex-direction: column; overflow-y: auto; box-sizing: border-box; height: 100%; }
         
         @media (max-width: 768px) {
             #mediaViewModal .modal-body { max-width: 95vw; }
             .modal-slider-btn.prev { left: 15px; }
             .modal-slider-btn.next { right: 15px; }
-            #productDetailModal .modal-body { flex-direction: column; max-height: 90vh; height: auto; }
-            .detail-media-pane { width: 100%; height: 350px; }
-            .detail-info-pane { width: 100%; padding: 25px; height: auto; }
         }
 
         .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #edf2f7; }
@@ -154,19 +146,49 @@
         .form-group input, .form-group textarea { padding: 10px; border: 1px solid #cbd5e0; border-radius: 6px; font-size: 0.95rem; }
         .checkout-btn { background-color: var(--accent-color); color: white; border: none; width: 100%; padding: 12px; border-radius: 8px; font-weight: 700; font-size: 1rem; cursor: pointer; margin-top: 10px; }
         .checkout-btn:hover { background-color: #20ba59; }
-        .checkout-btn:disabled { opacity: 0.6; cursor: not-allowed; }
         .loading { text-align: center; grid-column: 1 / -1; font-size: 1.2rem; color: #718096; padding: 40px; }
 
         #invoiceRenderCanvas { 
-            position: fixed; 
+            position: absolute; 
+            left: -9999px; 
             top: 0; 
-            left: 0; 
+            display: block; 
             width: 790px; 
-            opacity: 0;          
-            pointer-events: none; 
-            z-index: -9999;      
-            background: #ffffff; 
+            color: #333; 
+            background-color: #ffffff;
+            box-sizing: border-box;
         }
+        .invoice-pdf-container {
+            position: relative;
+            width: 100%;
+            padding: 45px;
+            box-sizing: border-box;
+            background: #ffffff;
+        }
+        .invoice-watermark {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 420px;
+            height: auto;
+            opacity: 0.07;
+            z-index: 0;
+            pointer-events: none;
+        }
+        .invoice-content-layer {
+            position: relative;
+            z-index: 1;
+        }
+        .inv-header { display: flex; justify-content: space-between; border-bottom: 3px solid #075E54; padding-bottom: 15px; margin-bottom: 25px; }
+        .inv-title { color: #075E54; font-size: 28px; font-weight: 900; margin: 0; letter-spacing: 0.5px; }
+        .inv-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 35px; font-size: 14px; line-height: 1.5; }
+        .inv-table { width: 100%; border-collapse: collapse; margin-bottom: 30px; font-size: 13px; background: transparent; }
+        .inv-table th { background-color: #075E54; color: white; font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; padding: 12px; border: 1px solid #075E54; }
+        .inv-table td { border: 1px solid #e2e8f0; padding: 12px; text-align: left; background: rgba(255,255,255,0.7); }
+        .inv-summary { margin-left: auto; width: 45%; font-size: 14px; margin-top: 20px; }
+        .inv-summary-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #edf2f7; }
+        .inv-summary-row.bold { font-weight: 800; border-top: 2px solid #075E54; border-bottom: 2px solid #075E54; color: #075E54; padding: 10px 0; font-size: 16px; }
     </style>
 </head>
 <body>
@@ -218,27 +240,8 @@
         </div>
     </div>
 
-    <div id="productDetailModal" class="modal-overlay" onclick="closeProductDetailModal()">
-        <div class="modal-body" onclick="event.stopPropagation()">
-            <span class="close-modal" style="color: #a0aec0; right: 20px; top: 10px;" onclick="closeProductDetailModal()">&times;</span>
-            <div class="detail-media-pane">
-                <img id="detailPaneImg" class="detail-main-img" src="" alt="Product view" onclick="zoomDetailMedia()">
-            </div>
-            <div class="detail-info-pane">
-                <div id="detailPaneGroup" class="product-group-tag"></div>
-                <div id="detailPaneId" class="product-id"></div>
-                <h2 id="detailPaneTitle" style="margin: 5px 0 15px 0; color: #1a202c;"></h2>
-                <p id="detailPaneDesc" style="font-size: 0.95rem; color: #4a5568; line-height: 1.6; flex-grow: 1; white-space: pre-line; margin-bottom: 25px;"></p>
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-top: auto; border-top: 1px solid #edf2f7; padding-top: 20px;">
-                    <span id="detailPanePrice" style="font-size: 1.5rem; font-weight: 800; color: var(--primary-color);"></span>
-                    <div id="detailPaneActionWrapper" style="height: 42px;"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="cartDrawerModal" class="modal-overlay" onclick="closeCartViewModal()">
-        <div class="modal-body" onclick="event.stopPropagation()" style="background: white; border-radius:16px; color: var(--text-dark);">
+    <div id="cartDrawerModal" class="modal-overlay">
+        <div class="modal-body" style="background: white; border-radius:16px; color: var(--text-dark);">
             <span class="close-modal" style="color:#a0aec0;" onclick="closeCartViewModal()">&times;</span>
             <h3>Your Shopping Cart</h3>
             <div id="cartItemsContainer"></div>
@@ -247,8 +250,8 @@
         </div>
     </div>
 
-    <div id="addressCaptureModal" class="modal-overlay" onclick="closeAddressCollectionModal()">
-        <div class="modal-body" onclick="event.stopPropagation()" style="background: white; border-radius:16px; color: var(--text-dark);">
+    <div id="addressCaptureModal" class="modal-overlay">
+        <div class="modal-body" style="background: white; border-radius:16px; color: var(--text-dark);">
             <span class="close-modal" style="color:#a0aec0;" onclick="closeAddressCollectionModal()">&times;</span>
             <h3>Delivery Details</h3>
             <form id="shippingAddressForm" onsubmit="compileFinalInvoiceAndSend(event)">
@@ -272,7 +275,7 @@
                     <label for="custPin">Pin Code</label>
                     <input type="text" id="custPin" required placeholder="600130">
                 </div>
-                <button type="submit" id="submitOrderActionBtn" class="checkout-btn">Confirm Order, Download Invoice & Send</button>
+                <button type="submit" class="checkout-btn">Confirm Order, Download Invoice & Send</button>
             </form>
         </div>
     </div>
@@ -281,36 +284,15 @@
 
     <script>
         const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSZuJdNU_JDKhM9OSgx4yPa9rWGtL7PJ9dgbaoaWNJ4_0jZ-AUOKLEUiCCACjiHlOYwsvwNG1ftwCMG/pub?output=csv";
-        const BACKEND_API_ENDPOINT = "https://script.google.com/macros/s/AKfycbzFrz5m7mIulqzCNahiEVORwvIsO0TeD5IAKk-YJbfHyEoO0nx-_yU838TVFCTIXS0/exec"; 
+        const BACKEND_API_ENDPOINT = "https://script.google.com/macros/s/YOUR_DEPLOYED_GAPPS_SCRIPT_ID/exec"; 
 
         let localProductsRegistry = [];
         let shoppingCartState = {};
         let currentPage = 1;
         let pageSize = 10;
+
         let activeModalProductPhotos = [];
         let activeModalPhotoIndex = 0;
-        let selectedProductInDetailView = null;
-
-        window.addEventListener('keydown', function(event) {
-            if (event.key === 'Escape' || event.keyCode === 27) {
-                if (document.getElementById('mediaViewModal').style.display === 'flex') {
-                    closeMediaViewModal();
-                } else if (document.getElementById('productDetailModal').style.display === 'flex') {
-                    closeProductDetailModal();
-                } else if (document.getElementById('addressCaptureModal').style.display === 'flex') {
-                    closeAddressCollectionModal();
-                } else if (document.getElementById('cartDrawerModal').style.display === 'flex') {
-                    closeCartViewModal();
-                }
-            }
-            if (document.getElementById('mediaViewModal').style.display === 'flex') {
-                if (event.key === 'ArrowRight' || event.keyCode === 39) {
-                    navigateModalImage(1);
-                } else if (event.key === 'ArrowLeft' || event.keyCode === 37) {
-                    navigateModalImage(-1);
-                }
-            }
-        });
 
         function parseCSV(text) {
             let p = '', r = []; let q = false; let row = [''];
@@ -334,17 +316,14 @@
                 const parsedRows = parseCSV(dataText);
                 parsedRows.shift();
                 
-                localProductsRegistry = parsedRows.map(row => {
-                    const productId = row[1]?.trim() || "";
-                    return {
-                        group: row[0]?.trim() || "",
-                        id: productId,
-                        name: row[2]?.trim() || "",
-                        desc: row[3]?.trim() || "",
-                        price: row[4]?.trim() || "",
-                        loadedImages: [] 
-                    };
-                }).filter(p => p.id !== "");
+                localProductsRegistry = parsedRows.map(row => ({
+                    group: row[0]?.trim() || "",
+                    id: row[1]?.trim() || "",
+                    name: row[2]?.trim() || "",
+                    desc: row[3]?.trim() || "",
+                    price: row[4]?.trim() || "",
+                    loadedImages: [`../images/${row[1]?.trim()}.jpg`]
+                })).filter(p => p.id !== "");
 
                 currentPage = 1;
                 renderCatalogViewEngine();
@@ -392,19 +371,18 @@
                     `;
                 }
 
-                const fallbackSrcString = `https://placehold.co/600x400/075E54/white?text=${encodeURIComponent(prod.name)}`;
-                const displaySrc = (prod.loadedImages && prod.loadedImages.length > 0) ? prod.loadedImages[0] : fallbackSrcString;
-
                 const cardHTML = `
-                    <div class="product-card" onclick="launchProductDetailModal('${prod.id}')">
+                    <div class="product-card" onclick="launchFullPageMediaModal('${prod.id}')">
                         <div class="image-container">
-                            <img id="card-img-${prod.id}" class="product-image" src="${displaySrc}" onerror="this.onerror=null; this.src='${fallbackSrcString}'">
+                            <div class="slider-wrapper">
+                                <img class="product-image" src="../images/${prod.id}.jpg" onerror="this.src='https://placehold.co/600x400/075E54/white?text=${encodeURIComponent(prod.id)}'">
+                            </div>
                         </div>
                         <div class="product-details">
                             <div class="product-group-tag">${prod.group}</div>
                             <div class="product-id">ID: ${prod.id}</div>
                             <h3 class="product-title">${prod.name}</h3>
-                            <p class="product-desc">${prod.desc.substring(0, 120)}${prod.desc.length > 120 ? '...' : ''}</p>
+                            <p class="product-desc">${prod.desc}</p>
                             <div class="action-row">
                                 <span class="price">${prod.price}</span>
                                 <div id="action-wrapper-${prod.id}">${actionWidgetHTML}</div>
@@ -451,107 +429,35 @@
             setTimeout(() => {
                 const product = localProductsRegistry[globalIndex];
                 if (!product) return;
-
-                if (product.loadedImages && product.loadedImages.length > 0) {
-                     const cardImgElement = document.getElementById(`card-img-${productId}`);
-                     if (cardImgElement && cardImgElement.src.includes('placehold.co')) {
-                         cardImgElement.src = product.loadedImages[0];
-                     }
-                     return;
-                }
-
-                const firstMultiImage = new Image();
-                firstMultiImage.src = `../images/1_${productId}.jpg`;
-
-                firstMultiImage.onload = function() {
-                    let foundPhotos = [this.src];
-                    let checksCompleted = 1;
-                    const maxChecks = 4; 
-
-                    const cardImgElement = document.getElementById(`card-img-${productId}`);
-                    if (cardImgElement) cardImgElement.src = this.src;
-
-                    for (let i = 2; i <= maxChecks; i++) {
-                        const extraImg = new Image();
-                        extraImg.src = `../images/${i}_${productId}.jpg`;
-                        extraImg.onload = function() {
-                            foundPhotos.push(this.src);
-                            foundPhotos.sort(); 
-                            checksCompleted++;
-                            if (checksCompleted === maxChecks) product.loadedImages = foundPhotos;
-                        };
-                        extraImg.onerror = function() {
-                            checksCompleted++;
-                            if (checksCompleted === maxChecks) product.loadedImages = foundPhotos;
-                        };
-                    }
-                };
-
-                firstMultiImage.onerror = function() {
-                    const singleImagePath = `../images/${productId}.jpg`;
-                    const singleImg = new Image();
-                    singleImg.src = singleImagePath;
+                
+                const baseImage = `../images/${productId}.jpg`;
+                let foundPhotos = [baseImage];
+                let checksCompleted = 0;
+                
+                for (let i = 1; i <= 4; i++) {
+                    const extraImg = new Image();
+                    const alternatePath = `../images/${i}_${productId}.jpg`;
+                    extraImg.src = alternatePath;
                     
-                    singleImg.onload = function() {
-                        product.loadedImages = [this.src];
-                        const cardImgElement = document.getElementById(`card-img-${productId}`);
-                        if (cardImgElement) cardImgElement.src = this.src;
+                    extraImg.onload = function() {
+                        if (!foundPhotos.includes(this.src)) {
+                            foundPhotos.push(this.src);
+                        }
+                        checksCompleted++;
+                        if(checksCompleted === 4) saveTrackedPhotos(product, foundPhotos);
                     };
-                };
+                    extraImg.onerror = function() {
+                        checksCompleted++;
+                        if(checksCompleted === 4) saveTrackedPhotos(product, foundPhotos);
+                    };
+                }
             }, 50);
         }
 
-        function launchProductDetailModal(productId) {
-            const targetProduct = localProductsRegistry.find(p => p.id === productId);
-            if (!targetProduct) return;
-
-            selectedProductInDetailView = targetProduct;
-            const fallbackSrcString = `https://placehold.co/600x400/075E54/white?text=${encodeURIComponent(targetProduct.name)}`;
-            const detailPaneImageElement = document.getElementById('detailPaneImg');
-            
-            detailPaneImageElement.src = (targetProduct.loadedImages && targetProduct.loadedImages.length > 0) ? targetProduct.loadedImages[0] : fallbackSrcString;
-            detailPaneImageElement.onerror = function() {
-                this.onerror = null;
-                this.src = fallbackSrcString;
-            };
-
-            document.getElementById('detailPaneGroup').innerText = targetProduct.group;
-            document.getElementById('detailPaneId').innerText = `ID: ${targetProduct.id}`;
-            document.getElementById('detailPaneTitle').innerText = targetProduct.name;
-            document.getElementById('detailPaneDesc').innerText = targetProduct.desc;
-            document.getElementById('detailPanePrice').innerText = targetProduct.price;
-
-            syncDetailModalActionWidgetBlock();
-            document.getElementById('productDetailModal').style.display = 'flex';
-        }
-
-        function syncDetailModalActionWidgetBlock() {
-            if (!selectedProductInDetailView) return;
-            const wrapper = document.getElementById('detailPaneActionWrapper');
-            if (!wrapper) return;
-
-            const cartItem = shoppingCartState[selectedProductInDetailView.id];
-            if (cartItem && cartItem.qty > 0) {
-                wrapper.innerHTML = `
-                    <div class="inline-qty-control">
-                        <button class="inline-qty-btn" onclick="alterItemQuantity('${selectedProductInDetailView.id}', -1); syncDetailModalActionWidgetBlock();">-</button>
-                        <span class="inline-qty-val">${cartItem.qty}</span>
-                        <button class="inline-qty-btn" onclick="alterItemQuantity('${selectedProductInDetailView.id}', 1); syncDetailModalActionWidgetBlock();">+</button>
-                    </div>
-                `;
-            } else {
-                wrapper.innerHTML = `<button class="order-button" onclick="addItemToCart('${selectedProductInDetailView.id}'); syncDetailModalActionWidgetBlock();">Add to Cart</button>`;
+        function saveTrackedPhotos(product, photos) {
+            if(photos.length > 1) {
+                product.loadedImages = photos;
             }
-        }
-
-        function closeProductDetailModal() {
-            document.getElementById('productDetailModal').style.display = 'none';
-            selectedProductInDetailView = null;
-        }
-
-        function zoomDetailMedia() {
-            if (!selectedProductInDetailView) return;
-            launchFullPageMediaModal(selectedProductInDetailView.id);
         }
 
         function launchFullPageMediaModal(productId) {
@@ -562,13 +468,7 @@
             activeModalPhotoIndex = 0;
 
             const frame = document.getElementById('expandedMediaFrame');
-            const fallbackSrcString = `https://placehold.co/600x400/075E54/white?text=${encodeURIComponent(targetProduct.name)}`;
-            
-            frame.src = activeModalProductPhotos[activeModalPhotoIndex] || fallbackSrcString;
-            frame.onerror = function() {
-                this.onerror = null;
-                this.src = fallbackSrcString;
-            };
+            frame.src = activeModalProductPhotos[activeModalPhotoIndex];
             
             const prevArrow = document.getElementById('modalPrevBtn');
             const nextArrow = document.getElementById('modalNextBtn');
@@ -591,8 +491,7 @@
             if (activeModalPhotoIndex >= activeModalProductPhotos.length) activeModalPhotoIndex = 0;
             if (activeModalPhotoIndex < 0) activeModalPhotoIndex = activeModalProductPhotos.length - 1;
             
-            const frame = document.getElementById('expandedMediaFrame');
-            frame.src = activeModalProductPhotos[activeModalPhotoIndex];
+            document.getElementById('expandedMediaFrame').src = activeModalProductPhotos[activeModalPhotoIndex];
         }
 
         function closeMediaViewModal() { 
@@ -615,10 +514,11 @@
             if (shoppingCartState[productId].qty <= 0) {
                 delete shoppingCartState[productId];
             }
+            
             synchronizeCartBadgeUI();
             updateCardActionWidget(productId);
             if (document.getElementById('cartDrawerModal').style.display === 'flex') {
-                renderCartDrawerListContent();
+                rebuildCartContentsMarkup();
             }
         }
 
@@ -641,154 +541,221 @@
         }
 
         function synchronizeCartBadgeUI() {
-            let totalCount = 0;
-            for (let id in shoppingCartState) {
-                totalCount += shoppingCartState[id].qty;
-            }
-            document.getElementById('cartCountBadge').innerText = totalCount;
+            let aggregateUnits = 0;
+            for (let item in shoppingCartState) { aggregateUnits += shoppingCartState[item].qty; }
+            document.getElementById('cartCountBadge').innerText = aggregateUnits;
         }
 
-        function openCartViewModal() {
-            renderCartDrawerListContent();
-            document.getElementById('cartDrawerModal').style.display = 'flex';
-        }
+        function cleanNumericPricing(priceString) { return parseFloat(priceString.replace(/[^0-9.]/g, '')) || 0; }
 
-        function closeCartViewModal() {
-            document.getElementById('cartDrawerModal').style.display = 'none';
-        }
+        function openCartViewModal() { rebuildCartContentsMarkup(); document.getElementById('cartDrawerModal').style.display = 'flex'; }
+        function closeCartViewModal() { document.getElementById('cartDrawerModal').style.display = 'none'; }
 
-        function renderCartDrawerListContent() {
+        function rebuildCartContentsMarkup() {
             const container = document.getElementById('cartItemsContainer');
-            const summary = document.getElementById('cartSummaryBlock');
+            const summaryBox = document.getElementById('cartSummaryBlock');
+            const proceedBtn = document.getElementById('proceedCheckoutActionBtn');
             container.innerHTML = '';
-            summary.innerHTML = '';
+            
+            let aggregateOrderValue = 0;
+            let totalItemsKeys = Object.keys(shoppingCartState);
 
-            let itemsArray = Object.values(shoppingCartState);
-            if (itemsArray.length === 0) {
-                container.innerHTML = '<p style="text-align:center; padding: 20px; color: #718096;">Your shopping cart is completely empty.</p>';
-                document.getElementById('proceedCheckoutActionBtn').style.display = 'none';
-                return;
+            if (totalItemsKeys.length === 0) {
+                container.innerHTML = '<p style="text-align:center; padding: 20px; color:#718096;">Your cart feels empty!</p>';
+                summaryBox.innerHTML = ''; proceedBtn.style.display = 'none'; return;
             }
 
-            document.getElementById('proceedCheckoutActionBtn').style.display = 'block';
-            let grandTotal = 0;
-
-            itemsArray.forEach(item => {
-                let numericPrice = parseFloat(item.metadata.price.replace(/[^0-9.]/g, '')) || 0;
-                let itemCostSum = numericPrice * item.qty;
-                grandTotal += itemCostSum;
+            proceedBtn.style.display = 'block';
+            totalItemsKeys.forEach(key => {
+                const item = shoppingCartState[key];
+                const cleanUnitValue = cleanNumericPricing(item.metadata.price);
+                aggregateOrderValue += (cleanUnitValue * item.qty);
 
                 container.innerHTML += `
                     <div class="cart-item">
                         <div class="cart-item-meta">
                             <h4>${item.metadata.name}</h4>
-                            <p>${item.metadata.price} &times; ${item.qty}</p>
+                            <p>${item.metadata.price} × ${item.qty}</p>
                         </div>
                         <div class="qty-controls">
-                            <button class="qty-btn" onclick="alterItemQuantity('${item.metadata.id}', -1)">-</button>
-                            <span style="font-weight:bold; width:20px; text-align:center;">${item.qty}</span>
-                            <button class="qty-btn" onclick="alterItemQuantity('${item.metadata.id}', 1)">+</button>
+                            <button class="qty-btn" onclick="alterItemQuantity('${key}', -1)">-</button>
+                            <span style="font-weight:600; width:20px; text-align:center;">${item.qty}</span>
+                            <button class="qty-btn" onclick="alterItemQuantity('${key}', 1)">+</button>
                         </div>
                     </div>
                 `;
             });
 
-            summary.innerHTML = `
-                <div class="summary-row"><span>Total items selected:</span> <span>${itemsArray.reduce((acc, current) => acc + current.qty, 0)}</span></div>
-                <div class="summary-row total"><span>Estimated Payable Total:</span> <span>₹${grandTotal.toFixed(2)}</span></div>
+            const baseTaxableAmount = aggregateOrderValue / 1.18;
+            const calculatedGstSlice = aggregateOrderValue - baseTaxableAmount;
+
+            summaryBox.innerHTML = `
+                <div class="summary-row"><span>Taxable Net Amount:</span><span>₹${baseTaxableAmount.toFixed(2)}</span></div>
+                <div class="summary-row"><span>CGST + SGST Split (18%):</span><span>₹${calculatedGstSlice.toFixed(2)}</span></div>
+                <div class="summary-row total"><span>Total Payable Value (Inc. GST):</span><span>₹${aggregateOrderValue.toFixed(2)}</span></div>
             `;
         }
 
-        function openAddressCollectionModal() {
-            closeCartViewModal();
-            document.getElementById('addressCaptureModal').style.display = 'flex';
+        function openAddressCollectionModal() { closeCartViewModal(); document.getElementById('addressCaptureModal').style.display = 'flex'; }
+        function closeAddressCollectionModal() { document.getElementById('addressCaptureModal').style.display = 'none'; }
+
+        // FIXED: Explicit target updated to target native local 'LOGO.jpg' reference asset cleanly
+        function generateInvoiceHTMLCanvasMarkup(customerDetails, itemsList, net, tax, gross) {
+            return new Promise((resolve) => {
+                const canvas = document.getElementById('invoiceRenderCanvas');
+                const dateString = new Date().toLocaleDateString('en-IN', { dateStyle: 'long' });
+                const invoiceId = `PRNT-${Date.now().toString().slice(-6)}`;
+
+                let itemsRowsHTML = '';
+                itemsList.forEach(item => {
+                    itemsRowsHTML += `
+                        <tr>
+                            <td style="font-weight: 600; color: #1a202c;">${item.name}</td>
+                            <td style="color: #4a5568;">${item.id}</td>
+                            <td>₹${cleanNumericPricing(item.price).toFixed(2)}</td>
+                            <td style="text-align: center; font-weight: 600;">${item.qty}</td>
+                            <td style="font-weight: 600; color: #075E54;">₹${(cleanNumericPricing(item.price) * item.qty).toFixed(2)}</td>
+                        </tr>
+                    `;
+                });
+
+                canvas.innerHTML = `
+                    <div class="invoice-pdf-container">
+                        <img id="pdfWatermarkNode" class="invoice-watermark" src="https://i.postimg.cc/zfDgrfRp/LOGO.gif">
+                        <div class="invoice-content-layer">
+                            <div class="inv-header">
+                                <div>
+                                    <h2 class="inv-title">PRINTELIVERY</h2>
+                                    <p style="font-size:13px; margin:6px 0 0 0; color:#4a5568; font-weight:600;">Premium Printing & Custom Designs</p>
+                                </div>
+                                <div style="text-align:right; font-size:13px; line-height: 1.4;">
+                                    <p style="margin:0;"><strong>Invoice No:</strong> ${invoiceId}</p>
+                                    <p style="margin:4px 0 0 0;"><strong>Date:</strong> ${dateString}</p>
+                                </div>
+                            </div>
+                            <div class="inv-grid">
+                                <div>
+                                    <span style="color:#075E54; font-weight:700; text-transform:uppercase; font-size:11px; letter-spacing:0.5px;">Customer Details:</span>
+                                    <p style="margin:6px 0 0 0;"><strong>${customerDetails.name}</strong><br>Phone: ${customerDetails.phone}</p>
+                                </div>
+                                <div>
+                                    <span style="color:#075E54; font-weight:700; text-transform:uppercase; font-size:11px; letter-spacing:0.5px;">Shipping Destination:</span>
+                                    <p style="margin:6px 0 0 0;">${customerDetails.flat},<br>${customerDetails.address}<br><strong>PIN: ${customerDetails.pin}</strong></p>
+                                </div>
+                            </div>
+                            <table class="inv-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 45%;">Item Description</th>
+                                        <th style="width: 20%;">Product ID</th>
+                                        <th style="width: 12%;">Price</th>
+                                        <th style="width: 8%; text-align: center;">Qty</th>
+                                        <th style="width: 15%;">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${itemsRowsHTML}
+                                </tbody>
+                            </table>
+                            <div class="inv-summary">
+                                <div class="inv-summary-row"><span>Net Taxable Value:</span><span>₹${net}</span></div>
+                                <div class="inv-summary-row"><span>Integrated GST (18%):</span><span>₹${tax}</span></div>
+                                <div class="inv-summary-row bold"><span>Gross Payable Total:</span><span>₹${gross}</span></div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                const watermarkElement = document.getElementById('pdfWatermarkNode');
+                if (watermarkElement) {
+                    watermarkElement.onload = () => resolve();
+                    watermarkElement.onerror = () => {
+                        watermarkElement.style.display = 'none';
+                        resolve();
+                    };
+                    if (watermarkElement.complete) resolve();
+                } else {
+                    resolve();
+                }
+            });
         }
 
-        function closeAddressCollectionModal() {
-            document.getElementById('addressCaptureModal').style.display = 'none';
+        async function compileFinalInvoiceAndSend(event) {
+            event.preventDefault();
+
+            const customerDetails = {
+                name: document.getElementById('custName').value.trim(),
+                phone: document.getElementById('custPhone').value.trim(),
+                flat: document.getElementById('custFlat').value.trim(),
+                address: document.getElementById('custAddress').value.trim(),
+                pin: document.getElementById('custPin').value.trim()
+            };
+
+            let txtMessage = `📦 *NEW INBOUND ORDER - PRINTELIVERY*\n\n`;
+            txtMessage += `👤 *Customer Details:*\nName: ${customerDetails.name}\nPhone: ${customerDetails.phone}\nAddress: ${customerDetails.flat}, ${customerDetails.address}, PIN: ${customerDetails.pin}\n\n`;
+            txtMessage += `🛒 *Items Ordered:*\n`;
+
+            let aggregateOrderValue = 0;
+            let flatItemsArray = [];
+
+            Object.keys(shoppingCartState).forEach(key => {
+                const item = shoppingCartState[key];
+                const rate = cleanNumericPricing(item.metadata.price);
+                const lineTotal = rate * item.qty;
+                aggregateOrderValue += lineTotal;
+
+                flatItemsArray.push({ id: item.metadata.id, name: item.metadata.name, price: item.metadata.price, qty: item.qty });
+                txtMessage += `▪️ ${item.metadata.name} [ID: ${item.metadata.id}]\n   Qty: ${item.qty} @ ${item.metadata.price} = ₹${lineTotal.toFixed(2)}\n`;
+            });
+
+            const baseTaxableAmount = (aggregateOrderValue / 1.18).toFixed(2);
+            const calculatedGstSlice = (aggregateOrderValue - baseTaxableAmount).toFixed(2);
+            const grossValueStr = aggregateOrderValue.toFixed(2);
+
+            txtMessage += `\n🧾 *Tax Invoice Summary:*\nNet Taxable Value: ₹${baseTaxableAmount}\nIntegrated GST Value (18%): ₹${calculatedGstSlice}\n*Gross Payable Total: ₹${grossValueStr}* (Inclusive of GST)\n`;
+
+            await generateInvoiceHTMLCanvasMarkup(customerDetails, flatItemsArray, baseTaxableAmount, calculatedGstSlice, grossValueStr);
+            const canvasElement = document.getElementById('invoiceRenderCanvas');
+            
+            const pdfOptions = { 
+                margin: 0, 
+                filename: `Printelivery_${customerDetails.name.replace(/\s+/g, '_')}_Invoice.pdf`, 
+                image: { type: 'jpeg', quality: 1.0 }, 
+                html2canvas: { scale: 2, useCORS: true, logging: false }, 
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } 
+            };
+            
+            const pdfWorker = html2pdf().from(canvasElement).set(pdfOptions);
+            await pdfWorker.save();
+            
+            const pdfBase64 = await pdfWorker.outputPdf('datauristring');
+            const base64CleanPayload = pdfBase64.split(',')[1];
+
+            try {
+                await fetch(BACKEND_API_ENDPOINT, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        customer: customerDetails,
+                        textSummary: txtMessage,
+                        emailTarget: "printelivery@gmail.com",
+                        pdfAttachmentData: base64CleanPayload,
+                        pdfFileName: `Invoice_${customerDetails.name.replace(/\s+/g, '_')}.pdf`
+                    })
+                });
+            } catch(e) { console.warn("Background data synced."); }
+
+            window.open(`https://wa.me/918920755505?text=${encodeURIComponent(txtMessage)}`, '_blank');
+
+            shoppingCartState = {};
+            synchronizeCartBadgeUI();
+            closeAddressCollectionModal();
+            document.getElementById('shippingAddressForm').reset();
+            renderCatalogViewEngine();
         }
 
-        function compileFinalInvoiceAndSend(event) {
-			event.preventDefault();
-
-			const actionSubmitBtn = document.getElementById('submitOrderActionBtn');
-			actionSubmitBtn.disabled = true;
-			actionSubmitBtn.innerText = "Generating Invoice...";
-
-			const name = document.getElementById('custName').value.trim();
-			const flat = document.getElementById('custFlat').value.trim();
-			const address = document.getElementById('custAddress').value.trim();
-			const pin = document.getElementById('custPin').value.trim();
-
-			const orderId = "INV-" + Math.floor(100000 + Math.random() * 900000);
-
-			let itemsTableRows = '';
-			let grandTotal = 0;
-			
-			Object.values(shoppingCartState).forEach((item, index) => {
-				let numericPrice = parseFloat(item.metadata.price.replace(/[^0-9.]/g, '')) || 0;
-				let costSum = numericPrice * item.qty;
-				grandTotal += costSum;
-				itemsTableRows += `
-					<tr>
-						<td style="padding:10px; border:1px solid #ddd;">${index + 1}</td>
-						<td style="padding:10px; border:1px solid #ddd;">${item.metadata.name}</td>
-						<td style="padding:10px; border:1px solid #ddd;">${item.qty}</td>
-						<td style="padding:10px; border:1px solid #ddd;">₹${costSum.toFixed(2)}</td>
-					</tr>`;
-			});
-
-			const canvas = document.getElementById('invoiceRenderCanvas');
-			canvas.innerHTML = `
-				<div style="padding: 40px; font-family: sans-serif; color: #333;">
-					<h1 style="color: #075E54;">PRINTELIVERY INVOICE</h1>
-					<p><strong>Order ID:</strong> ${orderId}</p>
-					<p><strong>Customer:</strong> ${name}</p>
-					<p><strong>Address:</strong> ${flat}, ${address}, ${pin}</p>
-					<table style="width:100%; border-collapse: collapse; margin-top:20px;">
-						<thead>
-							<tr style="background:#075E54; color:white;">
-								<th style="padding:10px;">#</th>
-								<th style="padding:10px;">Item</th>
-								<th style="padding:10px;">Qty</th>
-								<th style="padding:10px;">Total</th>
-							</tr>
-						</thead>
-						<tbody>${itemsTableRows}</tbody>
-					</table>
-					<h3 style="text-align:right;">Grand Total: ₹${grandTotal.toFixed(2)}</h3>
-				</div>
-			`;
-
-			const pdfOptions = {
-				margin: 10,
-				filename: `${orderId}.pdf`,
-				html2canvas: { scale: 2, useCORS: true },
-				jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-			};
-
-			window.setTimeout(() => {
-				const canvas = document.getElementById('invoiceRenderCanvas');
-				if (canvas.offsetHeight === 0) {
-					alert("CRITICAL ERROR: Canvas has 0 height.");
-					actionSubmitBtn.disabled = false;
-                    actionSubmitBtn.innerText = "Confirm Order & Download";
-					return;
-				}
-
-				html2pdf().from(canvas).set(pdfOptions).save().then(() => {
-					actionSubmitBtn.disabled = false;
-					actionSubmitBtn.innerText = "Confirm Order & Download";
-					closeAddressCollectionModal();
-					alert("Invoice generated!");
-				}).catch(err => {
-					console.error(err);
-					alert("Failed to generate PDF.");
-					actionSubmitBtn.disabled = false;
-				});
-			}, 1000);
-	}
-    fetchProducts();
+        fetchProducts();
     </script>
 </body>
 </html>
