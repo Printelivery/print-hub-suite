@@ -100,8 +100,9 @@
         @media (max-width: 650px) { .catalog-grid { grid-template-columns: repeat(1, 1fr) !important; } }
 
         .product-card {
-			/* Set a consistent minimum height */
-			min-height: 450px; 
+			/* Make the card square by matching width and height */
+			width: 100%;           /* Will fill the grid column */
+			aspect-ratio: 1 / 1;   /* Forces the element to be a perfect square */
 			background: #ffffff;
 			border-radius: 16px;
 			box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
@@ -111,11 +112,10 @@
 			border: 1px solid #e2e8f0;
 			transition: transform 0.3s ease, box-shadow 0.3s ease;
 			cursor: pointer;	
-        }
+				}
         .product-card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1); }
         .image-container { 
 			width: 100%; 
-			height: 250px; /* Fixed height for image area */
 			background-color: #edf2f7; 
 			position: relative; 
 			overflow: hidden;
@@ -123,8 +123,7 @@
         .product-image { 
 			width: 100%; 
 			height: 100%; 
-			/* Ensures image covers the area without distortion */
-			object-fit: cover; 
+			object-fit: cover; /* Ensures image covers the area without distortion */
 			display: block; 
 		}
         
@@ -133,15 +132,9 @@
         .product-id { font-size: 0.8rem; font-weight: 600; color: #a0aec0; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
         .product-title { font-size: 1.2rem; font-weight: 700; margin: 0 0 10px 0; color: #1a202c; line-height: 1.4; }
         .product-desc { 
-			font-size: 0.9rem; 
-			color: #4a5568; 
-			line-height: 1.5; 
-			margin: 0 0 20px 0; 
-			flex-grow: 1; 
-			white-space: pre-line;
-			/* Keeps the description area uniform */
-			min-height: 60px; 
-			max-height: 100px;
+			padding: 15px;
+			background: #ffffff;
+			max-height: 30%; /* Optional: limit height if text is too long */
 			overflow: hidden;			
 		}
         
