@@ -18,16 +18,29 @@
             margin: 0;
             padding: 40px 20px;
             color: var(--text-dark);
-			
-			 /* Your exact live background URL asset */
-            background: url('https://print-hub-suite.vercel.app/images/BG_CATALOGUE.jpg') no-repeat center center fixed;
-            background-size: cover;
+			position: relative;
+			z-index: 1;
         }
+		/* Create a container layer for the background image */
+		body::before {
+			content: "";
+			position: fixed;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			z-index: -1; /* Place behind everything */
+			background: url('https://print-hub-suite.vercel.app/images/BG_CATALOGUE.jpg') no-repeat center center fixed;
+			background-size: cover;
+			/* CONTROL THE OPACITY HERE (0.0 to 1.0) */
+			opacity: 0.3; 
+		}
         .header {
             text-align: center;
             margin-bottom: 50px;
             position: relative;
-            max-width: 1200px;
+            max-width: 100%;
+			padding: 0 20px;
             margin-left: auto;
             margin-right: auto;
         }
@@ -38,10 +51,11 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            max-width: 1200px;
+            max-width: 100%;
             margin: 0 auto 30px auto;
             flex-wrap: wrap;
             gap: 15px;
+			padding: 0 20px;
         }
         .selectors-group { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
         .control-item { display: flex; align-items: center; gap: 8px; font-weight: 600; }
@@ -68,7 +82,14 @@
         }
         .cart-badge { background: var(--accent-color); color: white; border-radius: 50%; padding: 2px 8px; font-size: 0.8rem; }
 
-        .catalog-grid { display: grid; gap: 30px; max-width: 1200px; margin: 0 auto; transition: all 0.3s ease; }
+        .catalog-grid { 
+			display: grid; 
+			gap: 30px; 
+			max-width: 100%; 
+			margin: 0 auto; 
+			transition: all 0.3s ease; 
+			padding: 0 20px;
+		}
         .cols-1 { grid-template-columns: repeat(1, 1fr); }
         .cols-2 { grid-template-columns: repeat(2, 1fr); }
         .cols-3 { grid-template-columns: repeat(3, 1fr); }
@@ -108,7 +129,15 @@
         .inline-qty-btn { background: white; border: 1px solid #cbd5e0; width: 32px; height: 32px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; }
         .inline-qty-val { font-weight: 700; width: 25px; text-align: center; font-size: 1rem; }
 
-        .pagination-container { display: flex; justify-content: center; align-items: center; gap: 5px; margin: 40px auto 0 auto; max-width: 1200px; flex-wrap: wrap; }
+        .pagination-container { 
+			display: flex; 
+			justify-content: center; 
+			align-items: center; 
+			gap: 5px; 
+			margin: 40px auto 0 auto; 
+			max-width: 100%; 
+			flex-wrap: wrap; 
+		}
         .page-btn { padding: 8px 14px; border: 1px solid #cbd5e0; background: white; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.9rem; transition: all 0.2s; }
         .page-btn:hover:not(:disabled) { background: #edf2f7; border-color: #a0aec0; }
         .page-btn.active { background: var(--primary-color); color: white; border-color: var(--primary-color); }
