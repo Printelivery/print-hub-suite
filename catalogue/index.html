@@ -834,14 +834,14 @@
 						${Object.values(shoppingCartState).map(i => `
 							<tr>
 								<td style="padding: 8px;">
-									<img src="https://print-hub-suite.vercel.app/images/${
-											(i.metadata.loadedImages && i.metadata.loadedImages.length > 0) 
-											? '1_' + i.metadata.id 
-											: i.metadata.id
-										}.jpg"
-										 width="50" height="50" 
-										 style="border-radius: 4px;"
-										 onerror="this.style.display='none'">
+									<img src="${
+										(i.metadata.loadedImages && i.metadata.loadedImages.length > 0) 
+										? i.metadata.loadedImages[0] 
+										: `https://print-hub-suite.vercel.app/images/${i.metadata.id}.jpg`
+									}" 
+									width="50" height="50" 
+									style="border-radius: 4px;"
+									onerror="this.style.display='none'">
 								</td>
 								<td style="padding: 8px;">${i.metadata.name}</td>
 								<td style="padding: 8px;">${i.metadata.price}</td>
@@ -873,8 +873,7 @@
                     whatsappTextMsg += `*Grand Total Amount:* ₹${grandTotal.toFixed(2)}\n\n`;
                     whatsappTextMsg += `Thank you! Your invoice copy has been downloaded automatically. Please look over the details.`;
 					const encodedMessageURL = encodeURIComponent(whatsappTextMsg);
-                    const targetWhatsAppContactPhone = "918920755505";
-                    const baseWhatsAppLinkString = `https://api.whatsapp.com/send?phone=${targetWhatsAppContactPhone}&text=${encodedMessageURL}`;
+					window.open(`https://wa.me/918920755505?text=${encodeURIComponent(encodedMessageURL)}`, '_blank');
                 
 			} catch (err) {
 				console.error(err);
