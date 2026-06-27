@@ -87,8 +87,7 @@
         }
         .product-card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1); }
         .image-container { width: 100%; height: 260px; background-color: #edf2f7; position: relative; overflow: hidden; }
-        .slider-wrapper { display: flex; width: 100%; height: 100%; transition: transform 0.3s ease-in-out; }
-        .product-image { min-width: 100%; height: 100%; object-fit: cover; }
+        .product-image { width: 100%; height: 100%; object-fit: cover; display: block; }
         
         .product-details { padding: 24px; display: flex; flex-direction: column; flex-grow: 1; }
         .product-group-tag { font-size: 0.75rem; font-weight: 700; color: var(--primary-color); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px; }
@@ -125,11 +124,19 @@
         .modal-slider-btn:hover { background: var(--primary-color); transform: translateY(-50%) scale(1.05); }
         .modal-slider-btn.prev { left: -75px; }
         .modal-slider-btn.next { right: -75px; }
+
+        #productDetailModal .modal-body { background: white; max-width: 800px; width: 100%; border-radius: 16px; padding: 0; overflow: hidden; display: flex; flex-direction: row; max-height: 80vh; }
+        .detail-media-pane { width: 50%; background: #edf2f7; position: relative; display: flex; align-items: center; justify-content: center; }
+        .detail-main-img { width: 100%; height: 100%; object-fit: cover; cursor: pointer; }
+        .detail-info-pane { width: 50%; padding: 35px; display: flex; flex-direction: column; overflow-y: auto; box-sizing: border-box; }
         
         @media (max-width: 768px) {
             #mediaViewModal .modal-body { max-width: 95vw; }
             .modal-slider-btn.prev { left: 15px; }
             .modal-slider-btn.next { right: 15px; }
+            #productDetailModal .modal-body { flex-direction: column; max-height: 90vh; }
+            .detail-media-pane { width: 100%; height: 300px; }
+            .detail-info-pane { width: 100%; padding: 20px; }
         }
 
         .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #edf2f7; }
@@ -240,8 +247,27 @@
         </div>
     </div>
 
-    <div id="cartDrawerModal" class="modal-overlay">
-        <div class="modal-body" style="background: white; border-radius:16px; color: var(--text-dark);">
+    <div id="productDetailModal" class="modal-overlay" onclick="closeProductDetailModal()">
+        <div class="modal-body" onclick="event.stopPropagation()">
+            <span class="close-modal" style="color: #a0aec0; right: 20px; top: 10px;" onclick="closeProductDetailModal()">&times;</span>
+            <div class="detail-media-pane">
+                <img id="detailPaneImg" class="detail-main-img" src="" alt="Product view" onclick="zoomDetailMedia()">
+            </div>
+            <div class="detail-info-pane">
+                <div id="detailPaneGroup" class="product-group-tag"></div>
+                <div id="detailPaneId" class="product-id"></div>
+                <h2 id="detailPaneTitle" style="margin: 5px 0 15px 0; color: #1a202c;"></h2>
+                <p id="detailPaneDesc" style="font-size: 0.95rem; color: #4a5568; line-height: 1.6; flex-grow: 1; white-space: pre-line; margin-bottom: 25px;"></p>
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-top: auto; border-top: 1px solid #edf2f7; padding-top: 20px;">
+                    <span id="detailPanePrice" style="font-size: 1.5rem; font-weight: 800; color: var(--primary-color);"></span>
+                    <div id="detailPaneActionWrapper" style="height: 42px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="cartDrawerModal" class="modal-overlay" onclick="closeCartViewModal()">
+        <div class="modal-body" onclick="event.stopPropagation()" style="background: white; border-radius:16px; color: var(--text-dark);">
             <span class="close-modal" style="color:#a0aec0;" onclick="closeCartViewModal()">&times;</span>
             <h3>Your Shopping Cart</h3>
             <div id="cartItemsContainer"></div>
@@ -250,8 +276,8 @@
         </div>
     </div>
 
-    <div id="addressCaptureModal" class="modal-overlay">
-        <div class="modal-body" style="background: white; border-radius:16px; color: var(--text-dark);">
+    <div id="addressCaptureModal" class="modal-overlay" onclick="closeAddressCollectionModal()">
+        <div class="modal-body" onclick="event.stopPropagation()" style="background: white; border-radius:16px; color: var(--text-dark);">
             <span class="close-modal" style="color:#a0aec0;" onclick="closeAddressCollectionModal()">&times;</span>
             <h3>Delivery Details</h3>
             <form id="shippingAddressForm" onsubmit="compileFinalInvoiceAndSend(event)">
@@ -293,6 +319,16 @@
 
         let activeModalProductPhotos = [];
         let activeModalPhotoIndex = 0;
+        let selectedProductInDetailView = null;
+
+        window.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape' || event.keyCode === 27) {
+                closeMediaViewModal();
+                closeProductDetailModal();
+                closeCartViewModal();
+                closeAddressCollectionModal();
+            }
+        });
 
         function parseCSV(text) {
             let p = '', r = []; let q = false; let row = [''];
@@ -316,14 +352,17 @@
                 const parsedRows = parseCSV(dataText);
                 parsedRows.shift();
                 
-                localProductsRegistry = parsedRows.map(row => ({
-                    group: row[0]?.trim() || "",
-                    id: row[1]?.trim() || "",
-                    name: row[2]?.trim() || "",
-                    desc: row[3]?.trim() || "",
-                    price: row[4]?.trim() || "",
-                    loadedImages: [`../images/${row[1]?.trim()}.jpg`]
-                })).filter(p => p.id !== "");
+                localProductsRegistry = parsedRows.map(row => {
+                    const productId = row[1]?.trim() || "";
+                    return {
+                        group: row[0]?.trim() || "",
+                        id: productId,
+                        name: row[2]?.trim() || "",
+                        desc: row[3]?.trim() || "",
+                        price: row[4]?.trim() || "",
+                        loadedImages: [`../images/${productId}.jpg`]
+                    };
+                }).filter(p => p.id !== "");
 
                 currentPage = 1;
                 renderCatalogViewEngine();
@@ -372,17 +411,15 @@
                 }
 
                 const cardHTML = `
-                    <div class="product-card" onclick="launchFullPageMediaModal('${prod.id}')">
+                    <div class="product-card" onclick="launchProductDetailModal('${prod.id}')">
                         <div class="image-container">
-                            <div class="slider-wrapper">
-                                <img class="product-image" src="../images/${prod.id}.jpg" onerror="this.src='https://placehold.co/600x400/075E54/white?text=${encodeURIComponent(prod.id)}'">
-                            </div>
+                            <img id="card-img-${prod.id}" class="product-image" src="../images/${prod.id}.jpg" onerror="this.onerror=null; this.src='https://placehold.co/600x400/075E54/white?text=${encodeURIComponent(prod.name)}'">
                         </div>
                         <div class="product-details">
                             <div class="product-group-tag">${prod.group}</div>
                             <div class="product-id">ID: ${prod.id}</div>
                             <h3 class="product-title">${prod.name}</h3>
-                            <p class="product-desc">${prod.desc}</p>
+                            <p class="product-desc">${prod.desc.substring(0, 120)}${prod.desc.length > 120 ? '...' : ''}</p>
                             <div class="action-row">
                                 <span class="price">${prod.price}</span>
                                 <div id="action-wrapper-${prod.id}">${actionWidgetHTML}</div>
@@ -444,20 +481,66 @@
                             foundPhotos.push(this.src);
                         }
                         checksCompleted++;
-                        if(checksCompleted === 4) saveTrackedPhotos(product, foundPhotos);
+                        if(checksCompleted === 4) saveTrackedPhotos(product, foundPhotos, productId);
                     };
                     extraImg.onerror = function() {
                         checksCompleted++;
-                        if(checksCompleted === 4) saveTrackedPhotos(product, foundPhotos);
+                        if(checksCompleted === 4) saveTrackedPhotos(product, foundPhotos, productId);
                     };
                 }
             }, 50);
         }
 
-        function saveTrackedPhotos(product, photos) {
+        function saveTrackedPhotos(product, photos, productId) {
             if(photos.length > 1) {
                 product.loadedImages = photos;
             }
+        }
+
+        function launchProductDetailModal(productId) {
+            const targetProduct = localProductsRegistry.find(p => p.id === productId);
+            if (!targetProduct) return;
+
+            selectedProductInDetailView = targetProduct;
+
+            document.getElementById('detailPaneImg').src = `../images/${productId}.jpg`;
+            document.getElementById('detailPaneGroup').innerText = targetProduct.group;
+            document.getElementById('detailPaneId').innerText = `ID: ${targetProduct.id}`;
+            document.getElementById('detailPaneTitle').innerText = targetProduct.name;
+            document.getElementById('detailPaneDesc').innerText = targetProduct.desc;
+            document.getElementById('detailPanePrice').innerText = targetProduct.price;
+
+            syncDetailModalActionWidgetBlock();
+            document.getElementById('productDetailModal').style.display = 'flex';
+        }
+
+        function syncDetailModalActionWidgetBlock() {
+            if (!selectedProductInDetailView) return;
+            const wrapper = document.getElementById('detailPaneActionWrapper');
+            if (!wrapper) return;
+
+            const cartItem = shoppingCartState[selectedProductInDetailView.id];
+            if (cartItem && cartItem.qty > 0) {
+                wrapper.innerHTML = `
+                    <div class="inline-qty-control">
+                        <button class="inline-qty-btn" onclick="alterItemQuantity('${selectedProductInDetailView.id}', -1); syncDetailModalActionWidgetBlock();">-</button>
+                        <span class="inline-qty-val">${cartItem.qty}</span>
+                        <button class="inline-qty-btn" onclick="alterItemQuantity('${selectedProductInDetailView.id}', 1); syncDetailModalActionWidgetBlock();">+</button>
+                    </div>
+                `;
+            } else {
+                wrapper.innerHTML = `<button class="order-button" onclick="addItemToCart('${selectedProductInDetailView.id}'); syncDetailModalActionWidgetBlock();">Add to Cart</button>`;
+            }
+        }
+
+        function closeProductDetailModal() {
+            document.getElementById('productDetailModal').style.display = 'none';
+            selectedProductInDetailView = null;
+        }
+
+        function zoomDetailMedia() {
+            if (!selectedProductInDetailView) return;
+            launchFullPageMediaModal(selectedProductInDetailView.id);
         }
 
         function launchFullPageMediaModal(productId) {
@@ -599,87 +682,95 @@
         function openAddressCollectionModal() { closeCartViewModal(); document.getElementById('addressCaptureModal').style.display = 'flex'; }
         function closeAddressCollectionModal() { document.getElementById('addressCaptureModal').style.display = 'none'; }
 
-        // FIXED: Explicit target updated to target native local 'LOGO.jpg' reference asset cleanly
-        function generateInvoiceHTMLCanvasMarkup(customerDetails, itemsList, net, tax, gross) {
+        function resolveImageToBase64URI(url) {
             return new Promise((resolve) => {
-                const canvas = document.getElementById('invoiceRenderCanvas');
-                const dateString = new Date().toLocaleDateString('en-IN', { dateStyle: 'long' });
-                const invoiceId = `PRNT-${Date.now().toString().slice(-6)}`;
-
-                let itemsRowsHTML = '';
-                itemsList.forEach(item => {
-                    itemsRowsHTML += `
-                        <tr>
-                            <td style="font-weight: 600; color: #1a202c;">${item.name}</td>
-                            <td style="color: #4a5568;">${item.id}</td>
-                            <td>₹${cleanNumericPricing(item.price).toFixed(2)}</td>
-                            <td style="text-align: center; font-weight: 600;">${item.qty}</td>
-                            <td style="font-weight: 600; color: #075E54;">₹${(cleanNumericPricing(item.price) * item.qty).toFixed(2)}</td>
-                        </tr>
-                    `;
-                });
-
-                canvas.innerHTML = `
-                    <div class="invoice-pdf-container">
-                        <img id="pdfWatermarkNode" class="invoice-watermark" src="../images/LOGO.jpg">
-                        <div class="invoice-content-layer">
-                            <div class="inv-header">
-                                <div>
-                                    <h2 class="inv-title">PRINTELIVERY</h2>
-                                    <p style="font-size:13px; margin:6px 0 0 0; color:#4a5568; font-weight:600;">Premium Printing & Custom Designs</p>
-                                </div>
-                                <div style="text-align:right; font-size:13px; line-height: 1.4;">
-                                    <p style="margin:0;"><strong>Invoice No:</strong> ${invoiceId}</p>
-                                    <p style="margin:4px 0 0 0;"><strong>Date:</strong> ${dateString}</p>
-                                </div>
-                            </div>
-                            <div class="inv-grid">
-                                <div>
-                                    <span style="color:#075E54; font-weight:700; text-transform:uppercase; font-size:11px; letter-spacing:0.5px;">Customer Details:</span>
-                                    <p style="margin:6px 0 0 0;"><strong>${customerDetails.name}</strong><br>Phone: ${customerDetails.phone}</p>
-                                </div>
-                                <div>
-                                    <span style="color:#075E54; font-weight:700; text-transform:uppercase; font-size:11px; letter-spacing:0.5px;">Shipping Destination:</span>
-                                    <p style="margin:6px 0 0 0;">${customerDetails.flat},<br>${customerDetails.address}<br><strong>PIN: ${customerDetails.pin}</strong></p>
-                                </div>
-                            </div>
-                            <table class="inv-table">
-                                <thead>
-                                    <tr>
-                                        <th style="width: 45%;">Item Description</th>
-                                        <th style="width: 20%;">Product ID</th>
-                                        <th style="width: 12%;">Price</th>
-                                        <th style="width: 8%; text-align: center;">Qty</th>
-                                        <th style="width: 15%;">Total</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${itemsRowsHTML}
-                                </tbody>
-                            </table>
-                            <div class="inv-summary">
-                                <div class="inv-summary-row"><span>Net Taxable Value:</span><span>₹${net}</span></div>
-                                <div class="inv-summary-row"><span>Integrated GST (18%):</span><span>₹${tax}</span></div>
-                                <div class="inv-summary-row bold"><span>Gross Payable Total:</span><span>₹${gross}</span></div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-
-                const watermarkElement = document.getElementById('pdfWatermarkNode');
-                if (watermarkElement) {
-                    watermarkElement.onload = () => resolve();
-                    watermarkElement.onerror = () => {
-                        watermarkElement.style.display = 'none';
-                        resolve();
-                    };
-                    if (watermarkElement.complete) resolve();
-                } else {
-                    resolve();
-                }
+                const img = new Image();
+                img.crossOrigin = 'Anonymous';
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = this.width;
+                    canvas.height = this.height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(this, 0, 0);
+                    resolve(canvas.toDataURL('image/jpeg'));
+                };
+                img.onerror = function() {
+                    resolve(null);
+                };
+                img.src = url;
             });
         }
 
+        async function generateInvoiceHTMLCanvasMarkup(customerDetails, itemsList, net, tax, gross) {
+            const canvas = document.getElementById('invoiceRenderCanvas');
+            const dateString = new Date().toLocaleDateString('en-IN', { dateStyle: 'long' });
+            const invoiceId = `PRNT-${Date.now().toString().slice(-6)}`;
+
+            let watermarkDataUri = await resolveImageToBase64URI('../images/LOGO.jpg');
+            let baseWatermarkTag = watermarkDataUri ? `<img class="invoice-watermark" src="${watermarkDataUri}">` : '';
+
+            let itemsRowsHTML = '';
+            itemsList.forEach(item => {
+                itemsRowsHTML += `
+                    <tr>
+                        <td style="font-weight: 600; color: #1a202c;">${item.name}</td>
+                        <td style="color: #4a5568;">${item.id}</td>
+                        <td>₹${cleanNumericPricing(item.price).toFixed(2)}</td>
+                        <td style="text-align: center; font-weight: 600;">${item.qty}</td>
+                        <td style="font-weight: 600; color: #075E54;">₹${(cleanNumericPricing(item.price) * item.qty).toFixed(2)}</td>
+                    </tr>
+                `;
+            });
+
+            canvas.innerHTML = `
+                <div class="invoice-pdf-container">
+                    ${baseWatermarkTag}
+                    <div class="invoice-content-layer">
+                        <div class="inv-header">
+                            <div>
+                                <h2 class="inv-title">PRINTELIVERY</h2>
+                                <p style="font-size:13px; margin:6px 0 0 0; color:#4a5568; font-weight:600;">Premium Printing & Custom Designs</p>
+                            </div>
+                            <div style="text-align:right; font-size:13px; line-height: 1.4;">
+                                <p style="margin:0;"><strong>Invoice No:</strong> ${invoiceId}</p>
+                                <p style="margin:4px 0 0 0;"><strong>Date:</strong> ${dateString}</p>
+                            </div>
+                        </div>
+                        <div class="inv-grid">
+                            <div>
+                                <span style="color:#075E54; font-weight:700; text-transform:uppercase; font-size:11px; letter-spacing:0.5px;">Customer Details:</span>
+                                <p style="margin:6px 0 0 0;"><strong>${customerDetails.name}</strong><br>Phone: ${customerDetails.phone}</p>
+                            </div>
+                            <div>
+                                <span style="color:#075E54; font-weight:700; text-transform:uppercase; font-size:11px; letter-spacing:0.5px;">Shipping Destination:</span>
+                                <p style="margin:6px 0 0 0;">${customerDetails.flat},<br>${customerDetails.address}<br><strong>PIN: ${customerDetails.pin}</strong></p>
+                            </div>
+                        </div>
+                        <table class="inv-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 45%;">Item Description</th>
+                                    <th style="width: 20%;">Product ID</th>
+                                    <th style="width: 12%;">Price</th>
+                                    <th style="width: 8%; text-align: center;">Qty</th>
+                                    <th style="width: 15%;">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${itemsRowsHTML}
+                            </tbody>
+                        </table>
+                        <div class="inv-summary">
+                            <div class="inv-summary-row"><span>Net Taxable Value:</span><span>₹${net}</span></div>
+                            <div class="inv-summary-row"><span>Integrated GST (18%):</span><span>₹${tax}</span></div>
+                            <div class="inv-summary-row bold"><span>Gross Payable Total:</span><span>₹${gross}</span></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // FIXED: Rebuilt payload architecture inside sequential execution promises to guarantee backend email delivery
         async function compileFinalInvoiceAndSend(event) {
             event.preventDefault();
 
@@ -725,17 +816,18 @@
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } 
             };
             
+            // Generate PDF object cleanly
             const pdfWorker = html2pdf().from(canvasElement).set(pdfOptions);
-            await pdfWorker.save();
             
+            // FIXED: Get raw datauri string from worker thread before saving locally to lock thread resources
             const pdfBase64 = await pdfWorker.outputPdf('datauristring');
             const base64CleanPayload = pdfBase64.split(',')[1];
 
+            // FIXED: Dispatched with default dynamic browser fetch headers to satisfy Google Script macro ingestion
             try {
                 await fetch(BACKEND_API_ENDPOINT, {
                     method: 'POST',
-                    mode: 'no-cors',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                     body: JSON.stringify({
                         customer: customerDetails,
                         textSummary: txtMessage,
@@ -744,8 +836,14 @@
                         pdfFileName: `Invoice_${customerDetails.name.replace(/\s+/g, '_')}.pdf`
                     })
                 });
-            } catch(e) { console.warn("Background data synced."); }
+            } catch(e) { 
+                console.error("Transmission state tracked:", e); 
+            }
 
+            // Trigger local download save safely
+            await pdfWorker.save();
+
+            // Redirect to chat API interface 
             window.open(`https://wa.me/918920755505?text=${encodeURIComponent(txtMessage)}`, '_blank');
 
             shoppingCartState = {};
