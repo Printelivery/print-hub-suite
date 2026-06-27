@@ -255,11 +255,11 @@
             <form id="shippingAddressForm" onsubmit="compileFinalInvoiceAndSend(event)">
                 <div class="form-group">
                     <label for="custName">Full Name</label>
-                    <input type="text" id="custName" required placeholder="Vijayakumar Periyasamy">
+                    <input type="text" id="custName" required placeholder="John Doe">
                 </div>
                 <div class="form-group">
                     <label for="custPhone">Phone Number</label>
-                    <input type="tel" id="custPhone" required placeholder="09891462248">
+                    <input type="tel" id="custPhone" required placeholder="09000000000">
                 </div>
 				<div class="form-group">
 					<label for="custEmail">Email Address</label>
@@ -267,11 +267,11 @@
 				</div>
                 <div class="form-group">
                     <label for="custFlat">Flat No. / Building / Company</label>
-                    <input type="text" id="custFlat" required placeholder="Printelivery, L107, L Block">
+                    <input type="text" id="custFlat" required placeholder="Please enter Flat No & Block">
                 </div>
                 <div class="form-group">
                     <label for="custAddress">Street Address / Area</label>
-                    <textarea id="custAddress" rows="3" required placeholder="KG Earth Homes MK, Stalin St. Thazhambur"></textarea>
+                    <textarea id="custAddress" rows="3" required placeholder="Full Address"></textarea>
                 </div>
                 <div class="form-group">
                     <label for="custPin">Pin Code</label>
@@ -723,7 +723,7 @@
             const customerDetails = {
                 name: document.getElementById('custName').value.trim(),
                 phone: document.getElementById('custPhone').value.trim(),
-				email: document.getElementById('custEmail').value.trim();
+				email: document.getElementById('custEmail').value.trim(),
                 flat: document.getElementById('custFlat').value.trim(),
                 address: document.getElementById('custAddress').value.trim(),
                 pin: document.getElementById('custPin').value.trim()
