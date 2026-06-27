@@ -713,168 +713,178 @@
             document.getElementById('addressCaptureModal').style.display = 'none';
         }
 
-        async function compileFinalInvoiceAndSend(event) {
-            event.preventDefault();
+		async function compileFinalInvoiceAndSend(event) {
+			event.preventDefault();
 
-            const actionSubmitBtn = document.getElementById('submitOrderActionBtn');
-            actionSubmitBtn.disabled = true;
-            actionSubmitBtn.innerText = "Generating Invoice...";
+			const actionSubmitBtn = document.getElementById('submitOrderActionBtn');
+			actionSubmitBtn.disabled = true;
+			actionSubmitBtn.innerText = "Generating Invoice...";
 
-            const customerDetails = {
-                name: document.getElementById('custName').value.trim(),
-                phone: document.getElementById('custPhone').value.trim(),
+			const customerDetails = {
+				name: document.getElementById('custName').value.trim(),
+				phone: document.getElementById('custPhone').value.trim(),
 				email: document.getElementById('custEmail').value.trim(),
-                flat: document.getElementById('custFlat').value.trim(),
-                address: document.getElementById('custAddress').value.trim(),
-                pin: document.getElementById('custPin').value.trim()
-            };
+				flat: document.getElementById('custFlat').value.trim(),
+				address: document.getElementById('custAddress').value.trim(),
+				pin: document.getElementById('custPin').value.trim()
+			};
 
-            const orderId = "INV-" + Math.floor(100000 + Math.random() * 900000);
-            const dateString = new Date().toLocaleDateString('en-IN', { dateStyle: 'long' });
+			const orderId = "INV-" + Math.floor(100000 + Math.random() * 900000);
+			const dateString = new Date().toLocaleDateString('en-IN', { dateStyle: 'long' });
 
-            let aggregateOrderValue = 0;
-            let itemsRowsHTML = '';
-            
-            Object.values(shoppingCartState).forEach((item, index) => {
-                let numericPrice = parseFloat(item.metadata.price.replace(/[^0-9.]/g, '')) || 0;
-                let costSum = numericPrice * item.qty;
-                aggregateOrderValue += costSum;
-                itemsRowsHTML += `
-                    <tr>
-                        <td>${item.metadata.name}</td>
-                        <td>${item.metadata.id}</td>
-                        <td>₹${numericPrice.toFixed(2)}</td>
-                        <td>${item.qty}</td>
-                        <td>₹${costSum.toFixed(2)}</td>
-                    </tr>`;
-            });
-
-            const baseTaxableAmount = (aggregateOrderValue / 1.18).toFixed(2);
-            const calculatedGstSlice = (aggregateOrderValue - baseTaxableAmount).toFixed(2);
-            const grossValueStr = aggregateOrderValue.toFixed(2);
-
-            const canvas = document.getElementById('invoiceRenderCanvas');
-            canvas.innerHTML = `
-                <div class="inv-header">
-                    <div>
-                        <h2 class="inv-title">PRINTELIVERY</h2>
-                        <p style="font-size:12px; margin:4px 0; color:#718096;">Premium Printing & Custom Designs</p>
-                    </div>
-                    <div style="text-align:right; font-size:12px;">
-                        <p style="margin:0;"><strong>Invoice No:</strong> ${orderId}</p>
-                        <p style="margin:4px 0;"><strong>Date:</strong> ${dateString}</p>
-                    </div>
-                </div>
-                <div class="inv-grid">
-                    <div>
-                        <strong style="color:#075E54;">Invoiced To:</strong>
-                        <p style="margin:5px 0;">${customerDetails.name}<br>Phone: ${customerDetails.phone}<br>email:${customerDetails.email} </p>
-                    </div>
-                    <div>
-                        <strong style="color:#075E54;">Delivery Destination:</strong>
-                        <p style="margin:5px 0;">${customerDetails.flat},<br>${customerDetails.address}<br>PIN: ${customerDetails.pin}</p>
-                    </div>
-                </div>
-                <table class="inv-table">
-                    <thead>
-                        <tr>
-                            <th>Item Description</th>
-                            <th>Product ID</th>
-                            <th>Unit Price</th>
-                            <th>Qty</th>
-                            <th>Total Gross</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${itemsRowsHTML}
-                    </tbody>
-                </table>
-                <div class="inv-summary">
-                    <div class="inv-summary-row"><span>Taxable Net Amount:</span><span>₹${baseTaxableAmount}</span></div>
-                    <div class="inv-summary-row"><span>Integrated GST (18%):</span><span>₹${calculatedGstSlice}</span></div>
-                    <div class="inv-summary-row bold"><span>Gross Total:</span><span>₹${grossValueStr}</span></div>
-                </div>
-            `;
-
-            const pdfOptions = {
-                margin: 10,
-                filename: `Printelivery_${customerDetails.name.replace(/\s+/g, '_')}_Invoice.pdf`,
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2 },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            };
-
-            // Force display for html2pdf to capture correctly
-            canvas.style.display = "block";
+			let aggregateOrderValue = 0;
+			let itemsRowsHTML = '';
+			let whatsappProductsList = []; 
 			
-
-			try {
-				// 1. Generate PDF data in memory for the email
-				const pdfDataUri = await html2pdf().from(canvas).set(pdfOptions).output('datauristring');
-				const base64Pdf = pdfDataUri.split(',')[1];
-
-				// 2. Trigger the User Download
-				await html2pdf().from(canvas).set(pdfOptions).save();
-				canvas.style.display = "none";
+			Object.values(shoppingCartState).forEach((item) => {
+				let numericPrice = parseFloat(item.metadata.price.replace(/[^0-9.]/g, '')) || 0;
+				let costSum = numericPrice * item.qty;
+				aggregateOrderValue += costSum;
 				
-				// 3. Prepare summary text
-				// Generate the HTML table string for the email
-				let itemsSummaryHtml = `
-				<table border="1" style="border-collapse: collapse; width: 100%; font-family: sans-serif; text-align: left;">
+				itemsRowsHTML += `
+					<tr>
+						<td>${item.metadata.name}</td>
+						<td>${item.metadata.id}</td>
+						<td>₹${numericPrice.toFixed(2)}</td>
+						<td>${item.qty}</td>
+						<td>₹${costSum.toFixed(2)}</td>
+					</tr>`;
+				
+				whatsappProductsList.push(`- ${item.metadata.name} (${item.qty} x ${item.metadata.price})`);
+			});
+
+			const baseTaxableAmount = (aggregateOrderValue / 1.18).toFixed(2);
+			const calculatedGstSlice = (aggregateOrderValue - baseTaxableAmount).toFixed(2);
+			const grossValueStr = aggregateOrderValue.toFixed(2);
+
+			const canvas = document.getElementById('invoiceRenderCanvas');
+			// Added CSS for page-break-inside avoid
+			canvas.innerHTML = `
+				<style>
+					.inv-table { width: 100%; border-collapse: collapse; }
+					.inv-table tr { page-break-inside: avoid; }
+					.inv-table th { background-color: #f2f2f2; padding: 10px; border: 1px solid #ddd; }
+					.inv-table td { padding: 10px; border: 1px solid #ddd; }
+				</style>
+				<div class="inv-header">
+					<div>
+						<h2 class="inv-title">PRINTELIVERY</h2>
+						<p style="font-size:12px; margin:4px 0; color:#718096;">Premium Printing & Custom Designs</p>
+					</div>
+					<div style="text-align:right; font-size:12px;">
+						<p style="margin:0;"><strong>Invoice No:</strong> ${orderId}</p>
+						<p style="margin:4px 0;"><strong>Date:</strong> ${dateString}</p>
+					</div>
+				</div>
+				<div class="inv-grid">
+					<div>
+						<strong style="color:#075E54;">Invoiced To:</strong>
+						<p style="margin:5px 0;">${customerDetails.name}<br>Phone: ${customerDetails.phone}<br>email: ${customerDetails.email} </p>
+					</div>
+					<div>
+						<strong style="color:#075E54;">Delivery Destination:</strong>
+						<p style="margin:5px 0;">${customerDetails.flat},<br>${customerDetails.address}<br>PIN: ${customerDetails.pin}</p>
+					</div>
+				</div>
+				<table class="inv-table">
 					<thead>
-						<tr style="background-color: #f2f2f2;">
-							<th style="padding: 8px;">Product</th>
-							<th style="padding: 8px;">Description</th>
-							<th style="padding: 8px;">Price</th>
-							<th style="padding: 8px;">Qty</th>
-							<th style="padding: 8px;">Total</th>
+						<tr>
+							<th>Item Description</th>
+							<th>Product ID</th>
+							<th>Unit Price</th>
+							<th>Qty</th>
+							<th>Total Gross</th>
 						</tr>
 					</thead>
 					<tbody>
-						${Object.values(shoppingCartState).map(i => `
-							<tr>
-								<td style="padding: 8px;">
-									<img src="${
-										(i.metadata.loadedImages && i.metadata.loadedImages.length > 0) 
-										? i.metadata.loadedImages[0] 
-										: `https://print-hub-suite.vercel.app/images/${i.metadata.id}.jpg`
-									}" 
-									width="50" height="50" 
-									style="border-radius: 4px;"
-									onerror="this.style.display='none'">
-								</td>
-								<td style="padding: 8px;">${i.metadata.name}</td>
-								<td style="padding: 8px;">${i.metadata.price}</td>
-								<td style="padding: 8px;">${i.qty}</td>
-								<td style="padding: 8px;">₹${(parseFloat(i.metadata.price.replace(/[^0-9.]/g, '')) * i.qty).toFixed(2)}</td>
-							</tr>
-						`).join('')}
+						${itemsRowsHTML}
 					</tbody>
-				</table>`;
+				</table>
+				<div class="inv-summary">
+					<div class="inv-summary-row"><span>Taxable Net Amount:</span><span>₹${baseTaxableAmount}</span></div>
+					<div class="inv-summary-row"><span>Integrated GST (18%):</span><span>₹${calculatedGstSlice}</span></div>
+					<div class="inv-summary-row bold"><span>Gross Total:</span><span>₹${grossValueStr}</span></div>
+				</div>
+			`;
 
-				// 4. Send to Email Backend
+			const pdfOptions = {
+				margin: 10,
+				filename: `Printelivery_${customerDetails.name.replace(/\s+/g, '_')}_Invoice.pdf`,
+				image: { type: 'jpeg', quality: 0.98 },
+				html2canvas: { scale: 2 },
+				jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+			};
+
+			canvas.style.display = "block";
+
+			try {
+				const pdfDataUri = await html2pdf().from(canvas).set(pdfOptions).output('datauristring');
+				const base64Pdf = pdfDataUri.split(',')[1];
+				await html2pdf().from(canvas).set(pdfOptions).save();
+				canvas.style.display = "none";
+				
+				
+				
+				// 4. Prepare Summary HTML
+				const summaryHtml = `
+					<div style="margin-top: 20px; border-top: 2px solid #075E54; padding-top: 15px; font-family: sans-serif; width: 100%; max-width: 400px; margin-left: auto;">
+						<div style="display: flex; justify-content: space-between; margin-bottom: 8px;"><span>Taxable Net Amount:</span> <span>₹${baseTaxableAmount}</span></div>
+						<div style="display: flex; justify-content: space-between; margin-bottom: 8px;"><span>Integrated GST (18%):</span> <span>₹${calculatedGstSlice}</span></div>
+						<div style="display: flex; justify-content: space-between; font-weight: bold; border-top: 1px solid #075E54; padding-top: 8px; color: #075E54;"><span>Gross Total:</span> <span>₹${grossValueStr}</span></div>
+					</div>`;
+
+				// Combine table and summary
+				let itemsSummaryHtml = `
+					<div style="font-family: sans-serif;">
+						<table border="1" style="border-collapse: collapse; width: 100%; text-align: left;">
+							<thead>
+								<tr style="background-color: #f2f2f2;">
+									<th style="padding: 8px;">Product</th>
+									<th style="padding: 8px;">Description</th>
+									<th style="padding: 8px;">Price</th>
+									<th style="padding: 8px;">Qty</th>
+									<th style="padding: 8px;">Total</th>
+								</tr>
+							</thead>
+							<tbody>
+								${Object.values(shoppingCartState).map(i => `
+									<tr>
+										<td style="padding: 8px;">
+											<img src="${(i.metadata.loadedImages && i.metadata.loadedImages.length > 0) ? i.metadata.loadedImages[0] : `https://print-hub-suite.vercel.app/images/${i.metadata.id}.jpg`}" 
+											width="50" height="50" style="border-radius: 4px;" onerror="this.style.display='none'">
+										</td>
+										<td style="padding: 8px;">${i.metadata.name}</td>
+										<td style="padding: 8px;">${i.metadata.price}</td>
+										<td style="padding: 8px;">${i.qty}</td>
+										<td style="padding: 8px;">₹${(parseFloat(i.metadata.price.replace(/[^0-9.]/g, '')) * i.qty).toFixed(2)}</td>
+									</tr>
+								`).join('')}
+							</tbody>
+						</table>
+						${summaryHtml}
+					</div>`;
+
 				triggerEmailBackend(customerDetails, orderId, base64Pdf, itemsSummaryHtml, grossValueStr);
+
+				// Fixed WhatsApp generation logic
+				let whatsappTextMsg = `*New Order Confirmed - Printelivery*\n\n`;
+				whatsappTextMsg += `*Order ID:* ${orderId}\n`;
+				whatsappTextMsg += `*Date:* ${dateString}\n\n`;
+				whatsappTextMsg += `*Customer Information:*\n`;
+				whatsappTextMsg += `Name: ${customerDetails.name}\n`;
+				whatsappTextMsg += `Phone: ${customerDetails.phone}\n\n`;
+				whatsappTextMsg += `*Delivery Address:*\n`;
+				whatsappTextMsg += `${customerDetails.flat}, ${customerDetails.address}, PIN: ${customerDetails.pin}\n\n`;
+				whatsappTextMsg += `*Items Ordered:*\n${whatsappProductsList.join('\n')}\n\n`;
+				whatsappTextMsg += `*Grand Total Amount:* ₹${grossValueStr}\n\n`;
+				whatsappTextMsg += `Thank you! Your invoice copy has been downloaded automatically.`;
+				
+				window.open(`https://wa.me/918920755505?text=${encodeURIComponent(whatsappTextMsg)}`, '_blank');
 
 				actionSubmitBtn.disabled = false;
 				actionSubmitBtn.innerText = "Confirm Order, Download Invoice & Send";
 				closeAddressCollectionModal();
 				alert("Invoice generated and emailed successfully!");
-				
-				// 5. Send Order Infomration to WhatsApp
-				let whatsappTextMsg = `*New Order Confirmed - Printelivery*\n\n`;
-                    whatsappTextMsg += `*Order ID:* ${orderId}\n`;
-                    whatsappTextMsg += `*Date:* ${currentDateStamp}\n\n`;
-                    whatsappTextMsg += `*Customer Information:*\n`;
-                    whatsappTextMsg += `Name: ${name}\n`;
-                    whatsappTextMsg += `Phone: ${phone}\n\n`;
-                    whatsappTextMsg += `*Delivery Address:*\n`;
-                    whatsappTextMsg += `${flat}, ${address}, PIN: ${pin}\n\n`;
-                    whatsappTextMsg += `*Items Ordered:*\n${whatsappProductsString}\n`;
-                    whatsappTextMsg += `*Grand Total Amount:* ₹${grandTotal.toFixed(2)}\n\n`;
-                    whatsappTextMsg += `Thank you! Your invoice copy has been downloaded automatically. Please look over the details.`;
-					const encodedMessageURL = encodeURIComponent(whatsappTextMsg);
-					window.open(`https://wa.me/918920755505?text=${encodeURIComponent(encodedMessageURL)}`, '_blank');
-                
 			} catch (err) {
 				console.error(err);
 				canvas.style.display = "none";
