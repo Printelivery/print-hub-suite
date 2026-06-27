@@ -82,13 +82,17 @@
         }
         .cart-badge { background: var(--accent-color); color: white; border-radius: 50%; padding: 2px 8px; font-size: 0.8rem; }
 
-        .catalog-grid { 
-			display: grid; 
-			gap: 30px; 
-			max-width: 100%; 
-			margin: 0 auto; 
-			transition: all 0.3s ease; 
-			padding: 0 20px;
+        .catalog-grid {
+			display: grid;
+			/* This creates as many columns as fit, but never lets cards get smaller than 280px or larger than 1fr */
+			grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+			gap: 25px;
+			padding: 20px;
+			max-width: 1400px; /* Limits the total width so they don't become huge on 4K monitors */
+			margin: 0 auto;    /* Centers the entire grid */
+		}
+			
+			
 		}
         .cols-1 { grid-template-columns: repeat(1, 1fr); }
         .cols-2 { grid-template-columns: repeat(2, 1fr); }
@@ -103,6 +107,8 @@
 			/* Make the card square by matching width and height */
 			width: 100%;           /* Will fill the grid column */
 			aspect-ratio: 1 / 1;   /* Forces the element to be a perfect square */
+			max-width: 350px; /* Cards will never exceed 350px wide */
+			margin: 0 auto;   /* Keeps the card centered in its grid cell */
 			background: #ffffff;
 			border-radius: 16px;
 			box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
