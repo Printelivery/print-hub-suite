@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Product Catalogue - Printelivery</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         :root {
             --primary-color: #075E54;
@@ -27,9 +26,18 @@
             margin-left: auto;
             margin-right: auto;
         }
-        .header h1 { color: var(--primary-color); font-size: 2.5rem; margin-bottom: 10px; }
-        .header p { color: #718096; font-size: 1.1rem; margin: 0; }
+        .header h1 {
+            color: var(--primary-color);
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        .header p {
+            color: #718096;
+            font-size: 1.1rem;
+            margin: 0;
+        }
         
+        /* Top Control Bar */
         .controls-bar {
             display: flex;
             justify-content: space-between;
@@ -39,9 +47,13 @@
             flex-wrap: wrap;
             gap: 15px;
         }
-        .selectors-group { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
-        .control-item { display: flex; align-items: center; gap: 8px; font-weight: 600; }
-        .custom-select {
+        .column-selector-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+        }
+        .column-select {
             padding: 8px 12px;
             border-radius: 6px;
             border: 1px solid #cbd5e0;
@@ -62,9 +74,22 @@
             gap: 8px;
             font-size: 0.95rem;
         }
-        .cart-badge { background: var(--accent-color); color: white; border-radius: 50%; padding: 2px 8px; font-size: 0.8rem; }
+        .cart-badge {
+            background: var(--accent-color);
+            color: white;
+            border-radius: 50%;
+            padding: 2px 8px;
+            font-size: 0.8rem;
+        }
 
-        .catalog-grid { display: grid; gap: 30px; max-width: 1200px; margin: 0 auto; transition: all 0.3s ease; }
+        /* Dynamic Catalog Grid Layouts */
+        .catalog-grid {
+            display: grid;
+            gap: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+            transition: all 0.3s ease;
+        }
         .cols-1 { grid-template-columns: repeat(1, 1fr); }
         .cols-2 { grid-template-columns: repeat(2, 1fr); }
         .cols-3 { grid-template-columns: repeat(3, 1fr); }
@@ -83,119 +108,212 @@
             flex-direction: column;
             border: 1px solid #e2e8f0;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+        }
+        .image-container {
+            width: 100%;
+            height: 260px;
+            background-color: #edf2f7;
+            position: relative;
+            overflow: hidden;
+            cursor: zoom-in;
+        }
+        .slider-wrapper {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.3s ease-in-out;
+        }
+        .product-image {
+            min-width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .slider-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
             cursor: pointer;
+            font-weight: bold;
+            display: none;
+            z-index: 10;
         }
-        .product-card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1); }
-        .image-container { width: 100%; height: 260px; background-color: #edf2f7; position: relative; overflow: hidden; }
-        .product-image { width: 100%; height: 100%; object-fit: cover; display: block; }
-        
-        .product-details { padding: 24px; display: flex; flex-direction: column; flex-grow: 1; }
-        .product-group-tag { font-size: 0.75rem; font-weight: 700; color: var(--primary-color); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px; }
-        .product-id { font-size: 0.8rem; font-weight: 600; color: #a0aec0; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
-        .product-title { font-size: 1.2rem; font-weight: 700; margin: 0 0 10px 0; color: #1a202c; line-height: 1.4; }
-        .product-desc { font-size: 0.9rem; color: #4a5568; line-height: 1.5; margin: 0 0 20px 0; flex-grow: 1; white-space: pre-line; }
-        
-        .action-row { display: flex; align-items: center; justify-content: space-between; margin-top: auto; height: 42px; }
-        .price { font-size: 1.25rem; font-weight: 800; color: var(--primary-color); }
-        .order-button { background-color: var(--accent-color); color: white; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 600; font-size: 0.9rem; cursor: pointer; transition: background-color 0.2s ease; height: 100%; box-sizing: border-box; }
+        .slider-btn.prev { left: 10px; }
+        .slider-btn.next { right: 10px; }
+        .product-details {
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+        .product-group-tag {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 2px;
+        }
+        .product-id {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #a0aec0;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 6px;
+        }
+        .product-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin: 0 0 10px 0;
+            color: #1a202c;
+            line-height: 1.4;
+        }
+        .product-desc {
+            font-size: 0.9rem;
+            color: #4a5568;
+            line-height: 1.5;
+            margin: 0 0 20px 0;
+            flex-grow: 1;
+            white-space: pre-line;
+        }
+        .action-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: auto;
+        }
+        .price {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--primary-color);
+        }
+        .order-button {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
         .order-button:hover { background-color: #20ba59; }
-        
-        .inline-qty-control { display: flex; align-items: center; gap: 8px; background: #edf2f7; border-radius: 8px; padding: 4px 8px; height: 100%; box-sizing: border-box; }
-        .inline-qty-btn { background: white; border: 1px solid #cbd5e0; width: 32px; height: 32px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; }
-        .inline-qty-val { font-weight: 700; width: 25px; text-align: center; font-size: 1rem; }
-
-        .pagination-container { display: flex; justify-content: center; align-items: center; gap: 5px; margin: 40px auto 0 auto; max-width: 1200px; flex-wrap: wrap; }
-        .page-btn { padding: 8px 14px; border: 1px solid #cbd5e0; background: white; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.9rem; transition: all 0.2s; }
-        .page-btn:hover:not(:disabled) { background: #edf2f7; border-color: #a0aec0; }
-        .page-btn.active { background: var(--primary-color); color: white; border-color: var(--primary-color); }
-        .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.75); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 20px; box-sizing: border-box; overflow: hidden; }
-        .modal-body { background: white; padding: 30px; border-radius: 16px; max-width: 600px; width: 100%; position: relative; max-height: 90vh; overflow-y: auto; }
-        .close-modal { position: absolute; top: 20px; right: 25px; font-size: 2.5rem; cursor: pointer; color: #ffffff; z-index: 1050; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
-        .close-modal:hover { color: var(--accent-color); }
-
-        #mediaViewModal .modal-body { background: transparent; box-shadow: none; padding: 0; max-width: 80vw; max-height: 85vh; width: auto; height: auto; display: flex; justify-content: center; align-items: center; position: relative; overflow: visible; }
-        #expandedMediaFrame { max-width: 100%; max-height: 85vh; width: auto; height: auto; border-radius: 8px; object-fit: contain; display: block; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
-        .modal-slider-btn {
-            position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0, 0, 0, 0.6);
-            color: white; border: none; width: 50px; height: 50px; border-radius: 50%; cursor: pointer; font-weight: bold; font-size: 1.6rem; display: none; z-index: 1020; transition: background 0.2s, transform 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-        }
-        .modal-slider-btn:hover { background: var(--primary-color); transform: translateY(-50%) scale(1.05); }
-        .modal-slider-btn.prev { left: -75px; }
-        .modal-slider-btn.next { right: -75px; }
-
-        #productDetailModal .modal-body { background: white; max-width: 800px; width: 100%; border-radius: 16px; padding: 0; overflow: hidden; display: flex; flex-direction: row; max-height: 80vh; }
-        .detail-media-pane { width: 50%; background: #edf2f7; position: relative; display: flex; align-items: center; justify-content: center; }
-        .detail-main-img { width: 100%; height: 100%; object-fit: cover; cursor: pointer; }
-        .detail-info-pane { width: 50%; padding: 35px; display: flex; flex-direction: column; overflow-y: auto; box-sizing: border-box; }
-        
-        @media (max-width: 768px) {
-            #mediaViewModal .modal-body { max-width: 95vw; }
-            .modal-slider-btn.prev { left: 15px; }
-            .modal-slider-btn.next { right: 15px; }
-            #productDetailModal .modal-body { flex-direction: column; max-height: 90vh; }
-            .detail-media-pane { width: 100%; height: 300px; }
-            .detail-info-pane { width: 100%; padding: 20px; }
+        .loading {
+            text-align: center;
+            grid-column: 1 / -1;
+            font-size: 1.2rem;
+            color: #718096;
+            padding: 40px;
         }
 
-        .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #edf2f7; }
+        /* Overlay Modals Frame */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .modal-body {
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            max-width: 600px;
+            width: 100%;
+            position: relative;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 1.8rem;
+            cursor: pointer;
+            color: #a0aec0;
+        }
+        .close-modal:hover { color: #2d3748; }
+
+        /* Media View Modal Frame */
+        #mediaViewModal .modal-body {
+            background: transparent;
+            box-shadow: none;
+            padding: 0;
+            max-width: 85vw;
+            display: flex;
+            justify-content: center;
+        }
+        #mediaViewModal img {
+            max-width: 100%;
+            max-height: 85vh;
+            border-radius: 8px;
+            object-fit: contain;
+        }
+
+        /* Cart & Checkout Elements */
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #edf2f7;
+        }
         .cart-item-meta h4 { margin: 0 0 4px 0; color: #1a202c; }
         .cart-item-meta p { margin: 0; color: #718096; font-size: 0.9rem; }
         .qty-controls { display: flex; align-items: center; gap: 8px; }
-        .qty-btn { background: #edf2f7; border: none; width: 28px; height: 28px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .qty-btn {
+            background: #edf2f7;
+            border: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .qty-btn:hover { background: #e2e8f0; }
         .cart-summary { margin-top: 20px; border-top: 2px solid #edf2f7; padding-top: 15px; }
         .summary-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.95rem; }
         .summary-row.total { font-size: 1.2rem; font-weight: 800; color: var(--primary-color); border-top: 1px dashed #cbd5e0; padding-top: 8px; }
         
         .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
         .form-group label { font-weight: 600; font-size: 0.85rem; color: #4a5568; }
-        .form-group input, .form-group textarea { padding: 10px; border: 1px solid #cbd5e0; border-radius: 6px; font-size: 0.95rem; }
-        .checkout-btn { background-color: var(--accent-color); color: white; border: none; width: 100%; padding: 12px; border-radius: 8px; font-weight: 700; font-size: 1rem; cursor: pointer; margin-top: 10px; }
-        .checkout-btn:hover { background-color: #20ba59; }
-        .loading { text-align: center; grid-column: 1 / -1; font-size: 1.2rem; color: #718096; padding: 40px; }
-
-        #invoiceRenderCanvas { 
-            position: absolute; 
-            left: -9999px; 
-            top: 0; 
-            display: block; 
-            width: 790px; 
-            color: #333; 
-            background-color: #ffffff;
-            box-sizing: border-box;
+        .form-group input, .form-group textarea {
+            padding: 10px;
+            border: 1px solid #cbd5e0;
+            border-radius: 6px;
+            font-size: 0.95rem;
         }
-        .invoice-pdf-container {
-            position: relative;
+        .checkout-btn {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
             width: 100%;
-            padding: 45px;
-            box-sizing: border-box;
-            background: #ffffff;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 10px;
         }
-        .invoice-watermark {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 420px;
-            height: auto;
-            opacity: 0.07;
-            z-index: 0;
-            pointer-events: none;
-        }
-        .invoice-content-layer {
-            position: relative;
-            z-index: 1;
-        }
-        .inv-header { display: flex; justify-content: space-between; border-bottom: 3px solid #075E54; padding-bottom: 15px; margin-bottom: 25px; }
-        .inv-title { color: #075E54; font-size: 28px; font-weight: 900; margin: 0; letter-spacing: 0.5px; }
-        .inv-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 35px; font-size: 14px; line-height: 1.5; }
-        .inv-table { width: 100%; border-collapse: collapse; margin-bottom: 30px; font-size: 13px; background: transparent; }
-        .inv-table th { background-color: #075E54; color: white; font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; padding: 12px; border: 1px solid #075E54; }
-        .inv-table td { border: 1px solid #e2e8f0; padding: 12px; text-align: left; background: rgba(255,255,255,0.7); }
-        .inv-summary { margin-left: auto; width: 45%; font-size: 14px; margin-top: 20px; }
-        .inv-summary-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #edf2f7; }
-        .inv-summary-row.bold { font-weight: 800; border-top: 2px solid #075E54; border-bottom: 2px solid #075E54; color: #075E54; padding: 10px 0; font-size: 16px; }
+        .checkout-btn:hover { background-color: #20ba59; }
     </style>
 </head>
 <body>
@@ -206,26 +324,15 @@
     </div>
 
     <div class="controls-bar">
-        <div class="selectors-group">
-            <div class="control-item">
-                <label for="colSelect">Items per row:</label>
-                <select id="colSelect" class="custom-select" onchange="alterGridLayout(this.value)">
-                    <option value="1">1 Product</option>
-                    <option value="2">2 Products</option>
-                    <option value="3" selected>3 Products</option>
-                    <option value="4">4 Products</option>
-                    <option value="5">5 Products</option>
-                </select>
-            </div>
-            <div class="control-item">
-                <label for="pageSizeSelect">Items per page:</label>
-                <select id="pageSizeSelect" class="custom-select" onchange="alterPageSize(this.value)">
-                    <option value="1">1</option>
-                    <option value="5">5</option>
-                    <option value="10" selected>10</option>
-                    <option value="20">20</option>
-                </select>
-            </div>
+        <div class="column-selector-group">
+            <label for="colSelect">Items per row:</label>
+            <select id="colSelect" class="column-select" onchange="alterGridLayout(this.value)">
+                <option value="1">1 Product</option>
+                <option value="2">2 Products</option>
+                <option value="3" selected>3 Products</option>
+                <option value="4">4 Products</option>
+                <option value="5">5 Products</option>
+            </select>
         </div>
         <button class="cart-toggle-btn" onclick="openCartViewModal()">
             🛒 View Cart <span id="cartCountBadge" class="cart-badge">0</span>
@@ -236,99 +343,59 @@
         <div class="loading">Loading products live...</div>
     </div>
 
-    <div id="pagination" class="pagination-container"></div>
-
     <div id="mediaViewModal" class="modal-overlay" onclick="closeMediaViewModal()">
-        <span class="close-modal" onclick="closeMediaViewModal()">&times;</span>
-        <div class="modal-body" onclick="event.stopPropagation()">
-            <button id="modalPrevBtn" class="modal-slider-btn prev" onclick="navigateModalImage(-1)">&#10094;</button>
+        <div class="modal-body">
             <img id="expandedMediaFrame" src="" alt="Expanded View">
-            <button id="modalNextBtn" class="modal-slider-btn next" onclick="navigateModalImage(1)">&#10095;</button>
         </div>
     </div>
 
-    <div id="productDetailModal" class="modal-overlay" onclick="closeProductDetailModal()">
-        <div class="modal-body" onclick="event.stopPropagation()">
-            <span class="close-modal" style="color: #a0aec0; right: 20px; top: 10px;" onclick="closeProductDetailModal()">&times;</span>
-            <div class="detail-media-pane">
-                <img id="detailPaneImg" class="detail-main-img" src="" alt="Product view" onclick="zoomDetailMedia()">
-            </div>
-            <div class="detail-info-pane">
-                <div id="detailPaneGroup" class="product-group-tag"></div>
-                <div id="detailPaneId" class="product-id"></div>
-                <h2 id="detailPaneTitle" style="margin: 5px 0 15px 0; color: #1a202c;"></h2>
-                <p id="detailPaneDesc" style="font-size: 0.95rem; color: #4a5568; line-height: 1.6; flex-grow: 1; white-space: pre-line; margin-bottom: 25px;"></p>
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-top: auto; border-top: 1px solid #edf2f7; padding-top: 20px;">
-                    <span id="detailPanePrice" style="font-size: 1.5rem; font-weight: 800; color: var(--primary-color);"></span>
-                    <div id="detailPaneActionWrapper" style="height: 42px;"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="cartDrawerModal" class="modal-overlay" onclick="closeCartViewModal()">
-        <div class="modal-body" onclick="event.stopPropagation()" style="background: white; border-radius:16px; color: var(--text-dark);">
-            <span class="close-modal" style="color:#a0aec0;" onclick="closeCartViewModal()">&times;</span>
+    <div id="cartDrawerModal" class="modal-overlay">
+        <div class="modal-body">
+            <span class="close-modal" onclick="closeCartViewModal()">&times;</span>
             <h3>Your Shopping Cart</h3>
-            <div id="cartItemsContainer"></div>
-            <div id="cartSummaryBlock" class="cart-summary"></div>
+            <div id="cartItemsContainer">
+                </div>
+            <div id="cartSummaryBlock" class="cart-summary">
+                </div>
             <button id="proceedCheckoutActionBtn" class="checkout-btn" onclick="openAddressCollectionModal()">Proceed to Delivery Details</button>
         </div>
     </div>
 
-    <div id="addressCaptureModal" class="modal-overlay" onclick="closeAddressCollectionModal()">
-        <div class="modal-body" onclick="event.stopPropagation()" style="background: white; border-radius:16px; color: var(--text-dark);">
-            <span class="close-modal" style="color:#a0aec0;" onclick="closeAddressCollectionModal()">&times;</span>
+    <div id="addressCaptureModal" class="modal-overlay">
+        <div class="modal-body">
+            <span class="close-modal" onclick="closeAddressCollectionModal()">&times;</span>
             <h3>Delivery Details</h3>
             <form id="shippingAddressForm" onsubmit="compileFinalInvoiceAndSend(event)">
                 <div class="form-group">
                     <label for="custName">Full Name</label>
-                    <input type="text" id="custName" required placeholder="Vijayakumar Periyasamy">
-                </div>
-                <div class="form-group">
-                    <label for="custPhone">Phone Number</label>
-                    <input type="tel" id="custPhone" required placeholder="09891462248">
+                    <input type="text" id="custName" required placeholder="John Doe">
                 </div>
                 <div class="form-group">
                     <label for="custFlat">Flat No. / Building / Company</label>
-                    <input type="text" id="custFlat" required placeholder="Printelivery, L107, L Block">
+                    <input type="text" id="custFlat" required placeholder="e.g., Block 2A, Flat 402">
                 </div>
                 <div class="form-group">
                     <label for="custAddress">Street Address / Area</label>
-                    <textarea id="custAddress" rows="3" required placeholder="KG Earth Homes MK, Stalin St. Thazhambur"></textarea>
+                    <textarea id="custAddress" rows="3" required placeholder="Enter your full street details"></textarea>
                 </div>
                 <div class="form-group">
                     <label for="custPin">Pin Code</label>
                     <input type="text" id="custPin" required placeholder="600130">
                 </div>
-                <button type="submit" class="checkout-btn">Confirm Order, Download Invoice & Send</button>
+                <div class="form-group">
+                    <label for="custPhone">Phone Number</label>
+                    <input type="tel" id="custPhone" required placeholder="9876543210">
+                </div>
+                <button type="submit" class="checkout-btn">Confirm Order & Send to WhatsApp</button>
             </form>
         </div>
     </div>
 
-    <div id="invoiceRenderCanvas"></div>
-
     <script>
         const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSZuJdNU_JDKhM9OSgx4yPa9rWGtL7PJ9dgbaoaWNJ4_0jZ-AUOKLEUiCCACjiHlOYwsvwNG1ftwCMG/pub?output=csv";
-        const BACKEND_API_ENDPOINT = "https://script.google.com/macros/s/YOUR_DEPLOYED_GAPPS_SCRIPT_ID/exec"; 
-
+        
         let localProductsRegistry = [];
         let shoppingCartState = {};
-        let currentPage = 1;
-        let pageSize = 10;
-
-        let activeModalProductPhotos = [];
-        let activeModalPhotoIndex = 0;
-        let selectedProductInDetailView = null;
-
-        window.addEventListener('keydown', function(event) {
-            if (event.key === 'Escape' || event.keyCode === 27) {
-                closeMediaViewModal();
-                closeProductDetailModal();
-                closeCartViewModal();
-                closeAddressCollectionModal();
-            }
-        });
 
         function parseCSV(text) {
             let p = '', r = []; let q = false; let row = [''];
@@ -352,20 +419,15 @@
                 const parsedRows = parseCSV(dataText);
                 parsedRows.shift();
                 
-                localProductsRegistry = parsedRows.map(row => {
-                    const productId = row[1]?.trim() || "";
-                    return {
-                        group: row[0]?.trim() || "",
-                        id: productId,
-                        name: row[2]?.trim() || "",
-                        desc: row[3]?.trim() || "",
-                        price: row[4]?.trim() || "",
-                        loadedImages: [`../images/${productId}.jpg`]
-                    };
-                }).filter(p => p.id !== "");
+                localProductsRegistry = parsedRows.map(row => ({
+                    group: row[0]?.trim() || "",
+                    id: row[1]?.trim() || "",
+                    name: row[2]?.trim() || "",
+                    desc: row[3]?.trim() || "",
+                    price: row[4]?.trim() || ""
+                })).filter(p => p.id !== "");
 
-                currentPage = 1;
-                renderCatalogViewEngine();
+                renderCatalog(localProductsRegistry);
             } catch (error) {
                 console.error("Error connecting to data layer:", error);
                 document.getElementById('catalog').innerHTML = `<div class="loading" style="color: #9b1c1c;">Failed to load data stream dynamically.</div>`;
@@ -373,221 +435,139 @@
         }
 
         function alterGridLayout(columnsNumber) {
-            document.getElementById('catalog').className = `catalog-grid cols-${columnsNumber}`;
+            const catalog = document.getElementById('catalog');
+            catalog.className = `catalog-grid cols-${columnsNumber}`;
         }
 
-        function alterPageSize(size) {
-            pageSize = parseInt(size);
-            currentPage = 1;
-            renderCatalogViewEngine();
-        }
-
-        function renderCatalogViewEngine() {
+        function renderCatalog(productsList) {
             const catalogContainer = document.getElementById('catalog');
             catalogContainer.innerHTML = '';
 
-            if (localProductsRegistry.length === 0) {
+            if (productsList.length === 0) {
                 catalogContainer.innerHTML = '<div class="loading">No products discovered in your data sheets.</div>';
                 return;
             }
 
-            const startIndex = (currentPage - 1) * pageSize;
-            const endIndex = startIndex + pageSize;
-            const paginatedItems = localProductsRegistry.slice(startIndex, endIndex);
-
-            paginatedItems.forEach((prod, index) => {
-                const globalIndex = startIndex + index;
-                const cartItem = shoppingCartState[prod.id];
-                
-                let actionWidgetHTML = `<button class="order-button" onclick="addItemToCart('${prod.id}'); event.stopPropagation();">Add to Cart</button>`;
-                if (cartItem && cartItem.qty > 0) {
-                    actionWidgetHTML = `
-                        <div class="inline-qty-control" onclick="event.stopPropagation()">
-                            <button class="inline-qty-btn" onclick="alterItemQuantity('${prod.id}', -1)">-</button>
-                            <span class="inline-qty-val">${cartItem.qty}</span>
-                            <button class="inline-qty-btn" onclick="alterItemQuantity('${prod.id}', 1)">+</button>
-                        </div>
-                    `;
-                }
-
+            productsList.forEach((prod, index) => {
+                const cardId = `card-${index}`;
                 const cardHTML = `
-                    <div class="product-card" onclick="launchProductDetailModal('${prod.id}')">
-                        <div class="image-container">
-                            <img id="card-img-${prod.id}" class="product-image" src="../images/${prod.id}.jpg" onerror="this.onerror=null; this.src='https://placehold.co/600x400/075E54/white?text=${encodeURIComponent(prod.name)}'">
+                    <div class="product-card">
+                        <div class="image-container" id="${cardId}" onclick="handleImageContainerClick(event, '${cardId}')">
+                            <button class="slider-btn prev" onclick="moveSlide('${cardId}', -1); event.stopPropagation();">&#10094;</button>
+                            <div class="slider-wrapper">
+                                <img class="product-image" src="../images/${prod.id}.jpg" onerror="this.src='https://placehold.co/600x400/075E54/white?text=${encodeURIComponent(prod.id)}'">
+                            </div>
+                            <button class="slider-btn next" onclick="moveSlide('${cardId}', 1); event.stopPropagation();">&#10095;</button>
                         </div>
                         <div class="product-details">
                             <div class="product-group-tag">${prod.group}</div>
                             <div class="product-id">ID: ${prod.id}</div>
                             <h3 class="product-title">${prod.name}</h3>
-                            <p class="product-desc">${prod.desc.substring(0, 120)}${prod.desc.length > 120 ? '...' : ''}</p>
+                            <p class="product-desc">${prod.desc}</p>
                             <div class="action-row">
                                 <span class="price">${prod.price}</span>
-                                <div id="action-wrapper-${prod.id}">${actionWidgetHTML}</div>
+                                <button class="order-button" onclick="addItemToCart('${prod.id}')">Add to Cart</button>
                             </div>
                         </div>
                     </div>
                 `;
                 catalogContainer.innerHTML += cardHTML;
-                checkMultiImages(prod.id, globalIndex);
+                checkMultiImages(prod.id, cardId);
             });
-
-            buildPaginationControlsUI();
         }
 
-        function buildPaginationControlsUI() {
-            const container = document.getElementById('pagination');
-            container.innerHTML = '';
-            
-            const totalPages = Math.ceil(localProductsRegistry.length / pageSize);
-            if(totalPages <= 1) return;
-
-            container.innerHTML += `<button class="page-btn" onclick="jumpToPage(1)" ${currentPage === 1 ? 'disabled' : ''}><<</button>`;
-            container.innerHTML += `<button class="page-btn" onclick="jumpToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}><</button>`;
-
-            let rangeStart = Math.max(1, currentPage - 2);
-            let rangeEnd = Math.min(totalPages, rangeStart + 4);
-            if (rangeEnd - rangeStart < 4) rangeStart = Math.max(1, rangeEnd - 4);
-
-            for (let i = rangeStart; i <= rangeEnd; i++) {
-                container.innerHTML += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="jumpToPage(${i})">${i}</button>`;
-            }
-
-            container.innerHTML += `<button class="page-btn" onclick="jumpToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>></button>`;
-            container.innerHTML += `<button class="page-btn" onclick="jumpToPage(${totalPages})" ${currentPage === totalPages ? 'disabled' : ''}>>></button>`;
-        }
-
-        function jumpToPage(targetPageNumber) {
-            currentPage = targetPageNumber;
-            renderCatalogViewEngine();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        function checkMultiImages(productId, globalIndex) {
+        function checkMultiImages(productId, cardId) {
             setTimeout(() => {
-                const product = localProductsRegistry[globalIndex];
-                if (!product) return;
+                const card = document.getElementById(cardId);
+                if (!card) return;
+                const container = card.querySelector('.slider-wrapper');
                 
-                const baseImage = `../images/${productId}.jpg`;
-                let foundPhotos = [baseImage];
-                let checksCompleted = 0;
+                const multiCheck = new Image();
+                multiCheck.src = `../images/1_${productId}.jpg`;
                 
-                for (let i = 1; i <= 4; i++) {
-                    const extraImg = new Image();
-                    const alternatePath = `../images/${i}_${productId}.jpg`;
-                    extraImg.src = alternatePath;
-                    
-                    extraImg.onload = function() {
-                        if (!foundPhotos.includes(this.src)) {
-                            foundPhotos.push(this.src);
-                        }
-                        checksCompleted++;
-                        if(checksCompleted === 4) saveTrackedPhotos(product, foundPhotos, productId);
-                    };
-                    extraImg.onerror = function() {
-                        checksCompleted++;
-                        if(checksCompleted === 4) saveTrackedPhotos(product, foundPhotos, productId);
-                    };
-                }
+                multiCheck.onload = function() {
+                    container.innerHTML = '';
+                    for (let i = 1; i <= 4; i++) {
+                        const extraImg = document.createElement('img');
+                        extraImg.className = 'product-image';
+                        extraImg.src = `../images/${i}_${productId}.jpg`;
+                        
+                        extraImg.onerror = function() { 
+                            this.remove(); 
+                            updateSliderControls(card); 
+                        };
+                        extraImg.onload = function() { 
+                            updateSliderControls(card); 
+                        };
+                        container.appendChild(extraImg);
+                    }
+                };
             }, 50);
         }
 
-        function saveTrackedPhotos(product, photos, productId) {
-            if(photos.length > 1) {
-                product.loadedImages = photos;
-            }
-        }
-
-        function launchProductDetailModal(productId) {
-            const targetProduct = localProductsRegistry.find(p => p.id === productId);
-            if (!targetProduct) return;
-
-            selectedProductInDetailView = targetProduct;
-
-            document.getElementById('detailPaneImg').src = `../images/${productId}.jpg`;
-            document.getElementById('detailPaneGroup').innerText = targetProduct.group;
-            document.getElementById('detailPaneId').innerText = `ID: ${targetProduct.id}`;
-            document.getElementById('detailPaneTitle').innerText = targetProduct.name;
-            document.getElementById('detailPaneDesc').innerText = targetProduct.desc;
-            document.getElementById('detailPanePrice').innerText = targetProduct.price;
-
-            syncDetailModalActionWidgetBlock();
-            document.getElementById('productDetailModal').style.display = 'flex';
-        }
-
-        function syncDetailModalActionWidgetBlock() {
-            if (!selectedProductInDetailView) return;
-            const wrapper = document.getElementById('detailPaneActionWrapper');
-            if (!wrapper) return;
-
-            const cartItem = shoppingCartState[selectedProductInDetailView.id];
-            if (cartItem && cartItem.qty > 0) {
-                wrapper.innerHTML = `
-                    <div class="inline-qty-control">
-                        <button class="inline-qty-btn" onclick="alterItemQuantity('${selectedProductInDetailView.id}', -1); syncDetailModalActionWidgetBlock();">-</button>
-                        <span class="inline-qty-val">${cartItem.qty}</span>
-                        <button class="inline-qty-btn" onclick="alterItemQuantity('${selectedProductInDetailView.id}', 1); syncDetailModalActionWidgetBlock();">+</button>
-                    </div>
-                `;
+        function updateSliderControls(container) {
+            if (!container) return;
+            const imgs = container.querySelectorAll('.product-image');
+            const prevBtn = container.querySelector('.slider-btn.prev');
+            const nextBtn = container.querySelector('.slider-btn.next');
+            if (imgs.length > 1) {
+                prevBtn.style.display = 'block';
+                nextBtn.style.display = 'block';
             } else {
-                wrapper.innerHTML = `<button class="order-button" onclick="addItemToCart('${selectedProductInDetailView.id}'); syncDetailModalActionWidgetBlock();">Add to Cart</button>`;
+                prevBtn.style.display = 'none';
+                nextBtn.style.display = 'none';
             }
         }
 
-        function closeProductDetailModal() {
-            document.getElementById('productDetailModal').style.display = 'none';
-            selectedProductInDetailView = null;
+        function moveSlide(containerId, direction) {
+            const container = document.getElementById(containerId);
+            const wrapper = container.querySelector('.slider-wrapper');
+            const imgs = wrapper.querySelectorAll('.product-image');
+            
+            let currentSlide = parseInt(container.getAttribute('data-current-slide') || "0");
+            currentSlide += direction;
+            
+            if (currentSlide >= imgs.length) currentSlide = 0;
+            if (currentSlide < 0) currentSlide = imgs.length - 1;
+            
+            container.setAttribute('data-current-slide', currentSlide);
+            wrapper.style.transform = `translateX(-${currentSlide * 100}%)`;
         }
 
-        function zoomDetailMedia() {
-            if (!selectedProductInDetailView) return;
-            launchFullPageMediaModal(selectedProductInDetailView.id);
-        }
-
-        function launchFullPageMediaModal(productId) {
-            const targetProduct = localProductsRegistry.find(p => p.id === productId);
-            if (!targetProduct) return;
-
-            activeModalProductPhotos = targetProduct.loadedImages;
-            activeModalPhotoIndex = 0;
-
-            const frame = document.getElementById('expandedMediaFrame');
-            frame.src = activeModalProductPhotos[activeModalPhotoIndex];
+        // Expanded Image Modals Logic
+        function handleImageContainerClick(event, cardId) {
+            const container = document.getElementById(cardId);
+            const wrapper = container.querySelector('.slider-wrapper');
+            const imgs = wrapper.querySelectorAll('.product-image');
             
-            const prevArrow = document.getElementById('modalPrevBtn');
-            const nextArrow = document.getElementById('modalNextBtn');
+            if(imgs.length === 0) return;
             
-            if (activeModalProductPhotos.length > 1) {
-                prevArrow.style.display = 'block';
-                nextArrow.style.display = 'block';
-            } else {
-                prevArrow.style.display = 'none';
-                nextArrow.style.display = 'none';
-            }
-
+            let currentSlide = parseInt(container.getAttribute('data-current-slide') || "0");
+            if(currentSlide >= imgs.length) currentSlide = 0;
+            
+            const targetSrc = imgs[currentSlide].src;
+            document.getElementById('expandedMediaFrame').src = targetSrc;
             document.getElementById('mediaViewModal').style.display = 'flex';
         }
 
-        function navigateModalImage(direction) {
-            if (activeModalProductPhotos.length <= 1) return;
-            
-            activeModalPhotoIndex += direction;
-            if (activeModalPhotoIndex >= activeModalProductPhotos.length) activeModalPhotoIndex = 0;
-            if (activeModalPhotoIndex < 0) activeModalPhotoIndex = activeModalProductPhotos.length - 1;
-            
-            document.getElementById('expandedMediaFrame').src = activeModalProductPhotos[activeModalPhotoIndex];
+        function closeMediaViewModal() {
+            document.getElementById('mediaViewModal').style.display = 'none';
         }
 
-        function closeMediaViewModal() { 
-            document.getElementById('mediaViewModal').style.display = 'none'; 
-        }
-
+        // Cart Actions Engine
         function addItemToCart(productId) {
             const targetProduct = localProductsRegistry.find(p => p.id === productId);
             if (!targetProduct) return;
 
-            shoppingCartState[productId] = { metadata: targetProduct, qty: 1 };
+            if (shoppingCartState[productId]) {
+                shoppingCartState[productId].qty += 1;
+            } else {
+                shoppingCartState[productId] = {
+                    metadata: targetProduct,
+                    qty: 1
+                };
+            }
             synchronizeCartBadgeUI();
-            updateCardActionWidget(productId);
         }
 
         function alterItemQuantity(productId, modificationDelta) {
@@ -597,41 +577,31 @@
             if (shoppingCartState[productId].qty <= 0) {
                 delete shoppingCartState[productId];
             }
+            
             synchronizeCartBadgeUI();
-            updateCardActionWidget(productId);
-            if (document.getElementById('cartDrawerModal').style.display === 'flex') {
-                renderCartDrawerListContent();
-            }
+            rebuildCartContentsMarkup();
         }
 
-        function updateCardActionWidget(productId) {
-            const wrapper = document.getElementById(`action-wrapper-${productId}`);
-            if (!wrapper) return;
-
-            const cartItem = shoppingCartState[productId];
-            if (cartItem && cartItem.qty > 0) {
-                wrapper.innerHTML = `
-                    <div class="inline-qty-control" onclick="event.stopPropagation()">
-                        <button class="inline-qty-btn" onclick="alterItemQuantity('${productId}', -1)">-</button>
-                        <span class="inline-qty-val">${cartItem.qty}</span>
-                        <button class="inline-qty-btn" onclick="alterItemQuantity('${productId}', 1)">+</button>
-                    </div>
-                `;
-            } else {
-                wrapper.innerHTML = `<button class="order-button" onclick="addItemToCart('${productId}'); event.stopPropagation();">Add to Cart</button>`;
-            }
+        function clearItemFromCart(productId) {
+            delete shoppingCartState[productId];
+            synchronizeCartBadgeUI();
+            rebuildCartContentsMarkup();
         }
 
         function synchronizeCartBadgeUI() {
-            let totalCount = 0;
-            for (let id in shoppingCartState) {
-                totalCount += shoppingCartState[id].qty;
+            let aggregateUnits = 0;
+            for (let item in shoppingCartState) {
+                aggregateUnits += shoppingCartState[item].qty;
             }
-            document.getElementById('cartCountBadge').innerText = totalCount;
+            document.getElementById('cartCountBadge').innerText = aggregateUnits;
+        }
+
+        function cleanNumericPricing(priceString) {
+            return parseFloat(priceString.replace(/[^0-9.]/g, '')) || 0;
         }
 
         function openCartViewModal() {
-            renderCartDrawerListContent();
+            rebuildCartContentsMarkup();
             document.getElementById('cartDrawerModal').style.display = 'flex';
         }
 
@@ -639,45 +609,56 @@
             document.getElementById('cartDrawerModal').style.display = 'none';
         }
 
-        function renderCartDrawerListContent() {
+        function rebuildCartContentsMarkup() {
             const container = document.getElementById('cartItemsContainer');
-            const summary = document.getElementById('cartSummaryBlock');
+            const summaryBox = document.getElementById('cartSummaryBlock');
+            const proceedBtn = document.getElementById('proceedCheckoutActionBtn');
+            
             container.innerHTML = '';
-            summary.innerHTML = '';
+            
+            let aggregateOrderValue = 0;
+            let totalItemsKeys = Object.keys(shoppingCartState);
 
-            let itemsArray = Object.values(shoppingCartState);
-            if (itemsArray.length === 0) {
-                container.innerHTML = '<p style="text-align:center; padding: 20px; color: #718096;">Your shopping cart is completely empty.</p>';
-                document.getElementById('proceedCheckoutActionBtn').style.display = 'none';
+            if (totalItemsKeys.length === 0) {
+                container.innerHTML = '<p style="text-align:center; padding: 20px; color:#718096;">Your cart feels empty!</p>';
+                summaryBox.innerHTML = '';
+                proceedBtn.style.display = 'none';
                 return;
             }
 
-            document.getElementById('proceedCheckoutActionBtn').style.display = 'block';
-            let grandTotal = 0;
+            proceedBtn.style.display = 'block';
 
-            itemsArray.forEach(item => {
-                let numericPrice = parseFloat(item.metadata.price.replace(/[^0-9.]/g, '')) || 0;
-                let itemCostSum = numericPrice * item.qty;
-                grandTotal += itemCostSum;
+            totalItemsKeys.forEach(key => {
+                const item = shoppingCartState[key];
+                const cleanUnitValue = cleanNumericPricing(item.metadata.price);
+                const combinedRowCost = cleanUnitValue * item.qty;
+                aggregateOrderValue += combinedRowCost;
 
                 container.innerHTML += `
                     <div class="cart-item">
                         <div class="cart-item-meta">
                             <h4>${item.metadata.name}</h4>
-                            <p>${item.metadata.price} &times; ${item.qty}</p>
+                            <p>${item.metadata.price} × ${item.qty}</p>
                         </div>
                         <div class="qty-controls">
-                            <button class="qty-btn" onclick="alterItemQuantity('${item.metadata.id}', -1)">-</button>
-                            <span style="font-weight:bold; width:20px; text-align:center;">${item.qty}</span>
-                            <button class="qty-btn" onclick="alterItemQuantity('${item.metadata.id}', 1)">+</button>
+                            <button class="qty-btn" onclick="alterItemQuantity('${key}', -1)">-</button>
+                            <span style="font-weight:600; width:20px; text-align:center;">${item.qty}</span>
+                            <button class="qty-btn" onclick="alterItemQuantity('${key}', 1)">+</button>
+                            <button class="qty-btn" style="background:#fff; color:#e53e3e; margin-left:8px;" onclick="clearItemFromCart('${key}')">✕</button>
                         </div>
                     </div>
                 `;
             });
 
-            summary.innerHTML = `
-                <div class="summary-row"><span>Total items selected:</span> <span>${itemsArray.reduce((acc, current) => acc + current.qty, 0)}</span></div>
-                <div class="summary-row total"><span>Estimated Payable Total:</span> <span>₹${grandTotal.toFixed(2)}</span></div>
+            // live GST backward valuation extract layout logic
+            const inclusiveTaxRate = 0.18; 
+            const baseTaxableAmount = aggregateOrderValue / (1 + inclusiveTaxRate);
+            const calculatedGstSlice = aggregateOrderValue - baseTaxableAmount;
+
+            summaryBox.innerHTML = `
+                <div class="summary-row"><span>Taxable Net Amount:</span><span>₹${baseTaxableAmount.toFixed(2)}</span></div>
+                <div class="summary-row"><span>CGST + SGST Split (18%):</span><span>₹${calculatedGstSlice.toFixed(2)}</span></div>
+                <div class="summary-row total"><span>Total Payable Value (Inc. GST):</span><span>₹${aggregateOrderValue.toFixed(2)}</span></div>
             `;
         }
 
@@ -690,148 +671,52 @@
             document.getElementById('addressCaptureModal').style.display = 'none';
         }
 
+        // Output Generation & Whatsapp Transfer Handler
         function compileFinalInvoiceAndSend(event) {
             event.preventDefault();
 
-            const name = document.getElementById('custName').value.trim();
-            const phone = document.getElementById('custPhone').value.trim();
-            const flat = document.getElementById('custFlat').value.trim();
-            const address = document.getElementById('custAddress').value.trim();
-            const pin = document.getElementById('custPin').value.trim();
+            const targetName = document.getElementById('custName').value.trim();
+            const targetFlat = document.getElementById('custFlat').value.trim();
+            const targetStreet = document.getElementById('custAddress').value.trim();
+            const targetPin = document.getElementById('custPin').value.trim();
+            const targetPhone = document.getElementById('custPhone').value.trim();
 
-            const orderId = "INV-" + Math.floor(100000 + Math.random() * 900000);
-            const currentDateStamp = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' });
+            let txtMessage = `📦 *NEW INBOUND ORDER - PRINTELIVERY*\n\n`;
+            txtMessage += `👤 *Customer Details:*\n`;
+            txtMessage += `Name: ${targetName}\n`;
+            txtMessage += `Phone: ${targetPhone}\n`;
+            txtMessage += `Address: ${targetFlat}, ${targetStreet}, PIN: ${targetPin}\n\n`;
+            txtMessage += `🛒 *Items Ordered:*\n`;
 
-            let itemsTableRows = '';
-            let grandTotal = 0;
-            let totalQty = 0;
-            let whatsappProductsString = '';
+            let aggregateOrderValue = 0;
 
-            Object.values(shoppingCartState).forEach((item, index) => {
-                let numericPrice = parseFloat(item.metadata.price.replace(/[^0-9.]/g, '')) || 0;
-                let costSum = numericPrice * item.qty;
-                grandTotal += costSum;
-                totalQty += item.qty;
+            Object.keys(shoppingCartState).forEach(key => {
+                const item = shoppingCartState[key];
+                const rate = cleanNumericPricing(item.metadata.price);
+                const lineTotal = rate * item.qty;
+                aggregateOrderValue += lineTotal;
 
-                itemsTableRows += `
-                    <tr>
-                        <td style="text-align: center;">${index + 1}</td>
-                        <td><strong>[${item.metadata.id}]</strong> ${item.metadata.name}</td>
-                        <td style="text-align: center;">${item.qty}</td>
-                        <td style="text-align: right;">₹${numericPrice.toFixed(2)}</td>
-                        <td style="text-align: right; font-weight: bold;">₹${costSum.toFixed(2)}</td>
-                    </tr>
-                `;
-
-                whatsappProductsString += `${index + 1}. [${item.metadata.id}] ${item.metadata.name} x ${item.qty} = ₹${costSum.toFixed(2)}\n`;
+                txtMessage += `▪️ ${item.metadata.name} [ID: ${item.metadata.id}]\n`;
+                txtMessage += `   Qty: ${item.qty} @ ${item.metadata.price} = ₹${lineTotal.toFixed(2)}\n`;
             });
 
-            const canvas = document.getElementById('invoiceRenderCanvas');
-            canvas.innerHTML = `
-                <div class="invoice-pdf-container">
-                    <img class="invoice-watermark" src="../images/LOGO.jpg">
-                    <div class="invoice-content-layer">
-                        <div class="inv-header">
-                            <div>
-                                <h2 class="inv-title">PRINTELIVERY</h2>
-                                <p style="margin: 4px 0 0 0; font-size: 12px; color: #718096;">Premium Custom Custom Printing Hub</p>
-                            </div>
-                            <div style="text-align: right;">
-                                <span style="font-size: 12px; text-transform: uppercase; letter-spacing:1px; color:#718096; font-weight:700;">Invoice Reference</span>
-                                <p style="margin: 2px 0 0 0; font-size: 16px; font-weight: 800; color: #075E54;">${orderId}</p>
-                            </div>
-                        </div>
+            const baseTaxableAmount = aggregateOrderValue / 1.18;
+            const calculatedGstSlice = aggregateOrderValue - baseTaxableAmount;
 
-                        <div class="inv-grid">
-                            <div>
-                                <h4 style="margin: 0 0 8px 0; color: #075E54; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px;">Billed To / Delivery Location:</h4>
-                                <strong style="font-size: 15px; color: #1a202c;">${name}</strong><br>
-                                ${flat},<br>
-                                ${address}<br>
-                                <strong>PIN: ${pin}</strong><br>
-                                Contact: ${phone}
-                            </div>
-                            <div style="text-align: right;">
-                                <h4 style="margin: 0 0 8px 0; color: #075E54; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px;">Statement Details:</h4>
-                                <strong>Date of Issue:</strong> ${currentDateStamp}<br>
-                                <strong>Payment Method:</strong> Cash on Delivery (COD)<br>
-                                <strong>Order Status:</strong> Pending Fulfillment
-                            </div>
-                        </div>
+            txtMessage += `\n🧾 *Tax Invoice Summary:*\n`;
+            txtMessage += `Net Taxable Value: ₹${baseTaxableAmount.toFixed(2)}\n`;
+            txtMessage += `Integrated GST Value (18%): ₹${calculatedGstSlice.toFixed(2)}\n`;
+            txtMessage += `*Gross Payable Total: ₹${aggregateOrderValue.toFixed(2)}* (Inclusive of GST)\n`;
 
-                        <table class="inv-table">
-                            <thead>
-                                <tr>
-                                    <th style="width: 8%; text-align: center;">Sl.No</th>
-                                    <th style="width: 52%; text-align: left;">Item & Description</th>
-                                    <th style="width: 10%; text-align: center;">Qty</th>
-                                    <th style="width: 15%; text-align: right;">Rate</th>
-                                    <th style="width: 15%; text-align: right;">Amount</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${itemsTableRows}
-                            </tbody>
-                        </table>
+            const finalUrlTarget = `https://wa.me/918920755505?text=${encodeURIComponent(txtMessage)}`;
+            
+            // Wipe data states on submission exit paths
+            shoppingCartState = {};
+            synchronizeCartBadgeUI();
+            closeAddressCollectionModal();
+            document.getElementById('shippingAddressForm').reset();
 
-                        <div class="inv-summary">
-                            <div class="inv-summary-row">
-                                <span>Total Item Quantities:</span>
-                                <span>${totalQty}</span>
-                            </div>
-                            <div class="inv-summary-row bold">
-                                <span>Grand Total:</span>
-                                <span>₹${grandTotal.toFixed(2)}</span>
-                            </div>
-                        </div>
-
-                        <div style="margin-top: 60px; border-top: 1px solid #e2e8f0; padding-top: 15px; text-align: center; font-size: 11px; color: #a0aec0;">
-                            Thank you for partnering with Printelivery. If you have any inquiries regarding this dispatch statement, please reach out via WhatsApp immediately.
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            const pdfConfigurationOptions = {
-                margin: 0,
-                filename: `${orderId}_Printelivery.pdf`,
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { 
-                    scale: 2, 
-                    useCORS: true, 
-                    allowTaint: true,
-                    logging: false 
-                },
-                jsPDF: { unit: 'pt', format: 'a4', orientation: 'portrait' }
-            };
-
-            html2pdf().from(canvas).set(pdfConfigurationOptions).save().then(() => {
-                let whatsappTextMsg = `*New Order Confirmed - Printelivery*\n\n`;
-                whatsappTextMsg += `*Order ID:* ${orderId}\n`;
-                whatsappTextMsg += `*Date:* ${currentDateStamp}\n\n`;
-                whatsappTextMsg += `*Customer Information:*\n`;
-                whatsappTextMsg += `Name: ${name}\n`;
-                whatsappTextMsg += `Phone: ${phone}\n\n`;
-                whatsappTextMsg += `*Delivery Address:*\n`;
-                whatsappTextMsg += `${flat}, ${address}, PIN: ${pin}\n\n`;
-                whatsappTextMsg += `*Items Ordered:*\n${whatsappProductsString}\n`;
-                whatsappTextMsg += `*Grand Total Amount:* ₹${grandTotal.toFixed(2)}\n\n`;
-                whatsappTextMsg += `Thank you! Your invoice copy has been downloaded automatically. Please look over the details.`;
-
-                const encodedMessageURL = encodeURIComponent(whatsappTextMsg);
-                const targetWhatsAppContactPhone = "919891462248";
-                const baseWhatsAppLinkString = `https://api.whatsapp.com/send?phone=${targetWhatsAppContactPhone}&text=${encodedMessageURL}`;
-
-                shoppingCartState = {};
-                synchronizeCartBadgeUI();
-                renderCatalogViewEngine();
-                closeAddressCollectionModal();
-
-                window.open(baseWhatsAppLinkString, '_blank');
-            }).catch(err => {
-                console.error("PDF engine crash encountered:", err);
-                alert("An error occurred during invoice compilation.");
-            });
+            window.open(finalUrlTarget, '_blank');
         }
 
         fetchProducts();
