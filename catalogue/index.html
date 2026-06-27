@@ -82,17 +82,15 @@
         }
         .cart-badge { background: var(--accent-color); color: white; border-radius: 50%; padding: 2px 8px; font-size: 0.8rem; }
 
-		/* 1. Constraint the Grid Container */
+		/* 1. The Grid: Defines the maximum and minimum size of the WHOLE card */
 		.catalog-grid {
 			display: grid;
-			/* This makes cards fluid between 250px and 400px wide */
-			grid-template-columns: repeat(auto-fill, minmax(clamp(250px, 25vw, 400px), 1fr));
-			gap: 2vw; /* Gap scales with screen size */
-			padding: 2vw;
-			max-width: 95vw; /* Keeps the grid from touching edges */
+			/* This defines how many cards fit and their size range */
+			grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+			gap: 30px;
+			padding: 20px;
+			max-width: 1400px;
 			margin: 0 auto;
-		}	
-			
 		}
         .cols-1 { grid-template-columns: repeat(1, 1fr); }
         .cols-2 { grid-template-columns: repeat(2, 1fr); }
@@ -103,43 +101,51 @@
         @media (max-width: 1024px) { .catalog-grid { grid-template-columns: repeat(2, 1fr) !important; } }
         @media (max-width: 650px) { .catalog-grid { grid-template-columns: repeat(1, 1fr) !important; } }
 
-		/* 2. Force Square Aspect Ratio on the Card */
+		/* 2. The Card: Locked as a single square unit */
 		.product-card {
 			background: #ffffff;
-			border-radius: 1.5vw; /* Border-radius scales with size */
-			box-shadow: 0 0.5vw 1vw rgba(0,0,0,0.1);
-			overflow: hidden;
+			border-radius: 16px;
+			box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+			
+			/* THE KEY: Locks the card aspect ratio */
+			aspect-ratio: 1 / 1; 
+			
+			/* Ensures nothing inside breaks the card's square shape */
 			display: flex;
 			flex-direction: column;
-			aspect-ratio: 1 / 1; /* Maintains perfect square regardless of size */
+			overflow: hidden; 
 			border: 1px solid #e2e8f0;
-			transition: transform 0.2s;
+			
+			/* Smooth scaling effect */
+			transition: transform 0.2s ease;
 		}
         .product-card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1); }
-		/* 3. Image Area - Always takes the top square half */
+		
+		/* 3. The Image: Now a simple child of the block */
 		.image-container {
 			width: 100%;
-			height: 70%; 
+			/* Instead of percentage, we give it a fixed flex proportion */
+			flex: 3; 
 			overflow: hidden;
-			position: relative;
 		}
+
 		.product-image {
 			width: 100%;
 			height: 100%;
-			object-fit: cover; /* Keeps it square without distortion */
+			object-fit: cover; /* Image fills its container perfectly */
 		}
         .product-details { padding: 24px; display: flex; flex-direction: column; flex-grow: 1; }
         .product-group-tag { font-size: 0.75rem; font-weight: 700; color: var(--primary-color); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px; }
         .product-id { font-size: 0.8rem; font-weight: 600; color: #a0aec0; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
         .product-title { font-size: 1.2rem; font-weight: 700; margin: 0 0 10px 0; color: #1a202c; line-height: 1.4; }
-		/* 4. Text Area - Fixed at bottom */
+		/* 4. The Info: Always stays below the image */
 		.product-desc {
-			height: 30%;
-			padding: 1vw;
+			flex: 1; /* Always takes 1/4 of the card space */
+			padding: 15px;
 			display: flex;
 			flex-direction: column;
 			justify-content: center;
-			overflow: hidden;
+			background: #ffffff;
 		}
         
         .action-row { display: flex; align-items: center; justify-content: space-between; margin-top: auto; height: 42px; }
