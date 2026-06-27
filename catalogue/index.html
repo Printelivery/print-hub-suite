@@ -801,23 +801,64 @@
 
             // Force display for html2pdf to capture correctly
             canvas.style.display = "block";
+			
+			let itemsSummaryText = Object.values(shoppingCartState)
+				.map(i => `${i.metadata.name} (x${i.qty}) - ₹${(parseFloat(i.metadata.price.replace(/[^0-9.]/g, '')) * i.qty).toFixed(2)}`)
+				.join('\n');
 
-            try {
-                await html2pdf().from(canvas).set(pdfOptions).save();
-                canvas.style.display = "none";
-                
-                actionSubmitBtn.disabled = false;
-                actionSubmitBtn.innerText = "Confirm Order, Download Invoice & Send";
-                closeAddressCollectionModal();
-                alert("Invoice generated!");
-            } catch (err) {
-                console.error(err);
-                canvas.style.display = "none";
-                alert("Failed to generate PDF.");
-                actionSubmitBtn.disabled = false;
-                actionSubmitBtn.innerText = "Confirm Order, Download Invoice & Send";
-            }
-        }
+			try {
+				// 1. Generate PDF data in memory for the email
+				const pdfDataUri = await html2pdf().from(canvas).set(pdfOptions).output('datauristring');
+				const base64Pdf = pdfDataUri.split(',')[1];
+
+				// 2. Trigger the User Download
+				await html2pdf().from(canvas).set(pdfOptions).save();
+				canvas.style.display = "none";
+				
+				// 3. Prepare summary text
+				let itemsSummaryText = Object.values(shoppingCartState)
+					.map(i => `${i.metadata.name} (x${i.qty})`)
+					.join(', ');
+
+				// 4. Send to Email Backend
+				triggerEmailBackend(customerDetails, orderId, base64Pdf, itemsSummaryText, grossValueStr);
+
+				actionSubmitBtn.disabled = false;
+				actionSubmitBtn.innerText = "Confirm Order, Download Invoice & Send";
+				closeAddressCollectionModal();
+				alert("Invoice generated and emailed successfully!");
+			} catch (err) {
+				console.error(err);
+				canvas.style.display = "none";
+				alert("Failed to generate PDF.");
+				actionSubmitBtn.disabled = false;
+			}
+		}
+		// This function now handles the PDF attachment data
+		async function triggerEmailBackend(customerDetails, orderId, pdfBase64, itemsSummary, total) {
+			const payload = {
+				name: customerDetails.name,
+				phone: customerDetails.phone,
+				email: customerDetails.email || "customer@example.com", 
+				orderId: orderId,
+				itemsText: itemsSummary,
+				grandTotal: total,
+				addressBlock: `${customerDetails.flat}, ${customerDetails.address}, ${customerDetails.pin}`,
+				pdfBase64: pdfBase64 // This is the magic key for your Google Script
+			};
+
+			try {
+				await fetch("https://script.google.com/macros/s/AKfycbzFrz5m7mIulqzCNahiEVORwvIsO0TeD5IAKk-YJbfHyEoO0nx-_yU838TVFCTIXS0/exec", {
+					method: 'POST',
+					mode: 'no-cors',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify(payload)
+				});
+				console.log("PDF attachment sent to backend.");
+			} catch (err) {
+				console.error("Email/PDF attachment failed:", err);
+			}
+		}
     fetchProducts();
     </script>
 </body>
