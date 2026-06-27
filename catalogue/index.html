@@ -286,7 +286,7 @@
 
     <script>
         const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSZuJdNU_JDKhM9OSgx4yPa9rWGtL7PJ9dgbaoaWNJ4_0jZ-AUOKLEUiCCACjiHlOYwsvwNG1ftwCMG/pub?output=csv";
-        const BACKEND_API_ENDPOINT = "https://script.google.com/macros/s/AKfycbzFrz5m7mIulqzCNahiEVORwvIsO0TeD5IAKk-YJbfHyEoO0nx-_yU838TVFCTIXS0/exec"; 
+        const BACKEND_API_ENDPOINT = "https://script.google.com/macros/s/AKfycbzLibjUvLRGy-frR3HoTreEDdfJcYdFHo_Of4UTP_v4A55coHUpuirYecWMIj9kao4/exec"; 
 
         let localProductsRegistry = [];
         let shoppingCartState = {};
@@ -832,6 +832,11 @@
 				actionSubmitBtn.innerText = "Confirm Order, Download Invoice & Send";
 				closeAddressCollectionModal();
 				alert("Invoice generated and emailed successfully!");
+				
+				// 5. Send Order Infomration to WhatsApp
+				const txtMessage = `*New Order: ${orderId}*\n\nCustomer: ${customerDetails.name}\nPhone: ${customerDetails.phone}\nEmail: ${customerDetails.email}\nAddress: ${customerDetails.flat}, ${customerDetails.address}`;
+                window.open(`https://wa.me/918920755505?text=${encodeURIComponent(txtMessage)}`, '_blank');
+                
 			} catch (err) {
 				console.error(err);
 				canvas.style.display = "none";
@@ -853,7 +858,7 @@
 			};
 
 			try {
-				await fetch("https://script.google.com/macros/s/AKfycbzFrz5m7mIulqzCNahiEVORwvIsO0TeD5IAKk-YJbfHyEoO0nx-_yU838TVFCTIXS0/exec", {
+				await fetch("https://script.google.com/macros/s/AKfycbzLibjUvLRGy-frR3HoTreEDdfJcYdFHo_Of4UTP_v4A55coHUpuirYecWMIj9kao4/exec", {
 					method: 'POST',
 					mode: 'no-cors',
 					headers: { 'Content-Type': 'application/json' },
