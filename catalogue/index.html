@@ -261,6 +261,10 @@
                     <label for="custPhone">Phone Number</label>
                     <input type="tel" id="custPhone" required placeholder="09891462248">
                 </div>
+				<div class="form-group">
+					<label for="custEmail">Email Address</label>
+					<input type="email" id="custEmail" required placeholder="customer@example.com">
+				</div>
                 <div class="form-group">
                     <label for="custFlat">Flat No. / Building / Company</label>
                     <input type="text" id="custFlat" required placeholder="Printelivery, L107, L Block">
@@ -719,6 +723,7 @@
             const customerDetails = {
                 name: document.getElementById('custName').value.trim(),
                 phone: document.getElementById('custPhone').value.trim(),
+				email: document.getElementById('custEmail').value.trim();
                 flat: document.getElementById('custFlat').value.trim(),
                 address: document.getElementById('custAddress').value.trim(),
                 pin: document.getElementById('custPin').value.trim()
@@ -763,7 +768,7 @@
                 <div class="inv-grid">
                     <div>
                         <strong style="color:#075E54;">Invoiced To:</strong>
-                        <p style="margin:5px 0;">${customerDetails.name}<br>Phone: ${customerDetails.phone}</p>
+                        <p style="margin:5px 0;">${customerDetails.name}<br>Phone: ${customerDetails.phone}<br>email:${customerDetails.email} </p>
                     </div>
                     <div>
                         <strong style="color:#075E54;">Delivery Destination:</strong>
