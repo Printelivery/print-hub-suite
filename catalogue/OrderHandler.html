@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+<body>
+    <div id="invoiceRenderCanvas" style="display:none;"></div>
+
+    <script>
+        window.addEventListener('message', async (event) => {
+            if (event.data.type === 'PROCESS_ORDER') {
+                const { payload } = event.data;
+                await runOrderService(payload);
+            }
+        });
+
+        async function runOrderService(data) {
+            const { customerDetails, itemsHtml, orderId, dateString, grossValueStr, baseTaxableAmount, calculatedGstSlice, whatsappProductsList } = data;
+            
+            const canvas = document.getElementById('invoiceRenderCanvas');
+            canvas.style.display = "block";
+            
+            // Build PDF Content
+            canvas.innerHTML = `
+                <div style="font-family:sans-serif; padding:40px;">
+                    <h2 style="color:#075E54;">PRINTELIVERY - Invoice ${orderId}</h2>
+                    <p><strong>Customer:</strong> ${customerDetails.name} | <strong>Date:</strong> ${dateString}</p>
+                    <table border="1" style="width:100%; border-collapse:collapse;">
+                        <thead><tr><th>Item</th><th>ID</th><th>Price</th><th>Qty</th><th>Total</th></tr></thead>
+                        <tbody>${itemsHtml}</tbody>
+                    </table>
+                    <div style="margin-top:20px;">
+                        <p>Net: ₹${baseTaxableAmount}</p>
+                        <p>GST: ₹${calculatedGstSlice}</p>
+                        <p><strong>Total: ₹${grossValueStr}</strong></p>
+                    </div>
+                </div>
+            `;
+
+            // Generate PDF
+            const opt = { margin: 10, filename: `Invoice_${orderId}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4' } };
+            const pdfBlob = await html2pdf().from(canvas).output('datauristring');
+            const base64Pdf = pdfBlob.split(',')[1];
+            await html2pdf().from(canvas).set(opt).save();
+
+            // Trigger Email API
+            await fetch("https://script.google.com/macros/s/AKfycbyYJdFH5XAyo0LJSO7QsW7KxDToH7SIprX4uZzUhu4GvPn9BHq-LYOYnqOf18A_EYc/exec", {
+                method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ...customerDetails, orderId, pdfBase64: base64Pdf, grandTotal: grossValueStr, itemsText: itemsHtml })
+            });
+
+            // Signal WhatsApp Redirection
+            const msg = `*New Order Confirmed - Printelivery*\nOrder ID: ${orderId}\nCustomer: ${customerDetails.name}\n\n*Items:*\n${whatsappProductsList.join('\n')}\n\n*Total: ₹${grossValueStr}*`;
+            window.parent.postMessage({ type: 'REDIRECT_WA', text: msg }, '*');
+        }
+    </script>
+</body>
+</html>
