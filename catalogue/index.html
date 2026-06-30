@@ -552,27 +552,25 @@
 
                 const fallbackSrcString = `https://placehold.co/600x400/075E54/white?text=${encodeURIComponent(prod.name)}`;
                 const displaySrc = (prod.loadedImages && prod.loadedImages.length > 0) ? prod.loadedImages[0] : fallbackSrcString;
-
-                const cardHTML = `
-                    <div class="product-card" onclick="launchProductDetailModal('${prod.id}')">
+				const cardHTML = `
+					<div class="product-card" onclick="launchProductDetailModal('${prod.id}')">
 						<div class="image-container" onclick="event.stopPropagation()">
 							<img id="card-img-${prod.id}" class="product-image" src="${displaySrc}" onclick="launchProductDetailModal('${prod.id}')">
-							<div id="action-wrapper-${prod.id}">
-								<button class="quick-add-btn" onclick="quickAddHandler('${prod.id}')">+</button>
+						</div>
+						<div class="product-details">
+							<div class="product-group-tag">${prod.group}</div>
+							<div class="product-id">ID: ${prod.id}</div>
+							<h3 class="product-title">${prod.name}</h3>
+							<p class="product-desc">${prod.desc.substring(0, 120)}${prod.desc.length > 120 ? '...' : ''}</p>
+							<div class="action-row">
+								<span class="price">${prod.price}</span>
+								<div id="action-wrapper-${prod.id}">
+									<button class="quick-add-btn" onclick="convertToQuantitySelector('${prod.id}')">+</button>
+								</div>
 							</div>
 						</div>
-                        <div class="product-details">
-                            <div class="product-group-tag">${prod.group}</div>
-                            <div class="product-id">ID: ${prod.id}</div>
-                            <h3 class="product-title">${prod.name}</h3>
-                            <p class="product-desc">${prod.desc.substring(0, 120)}${prod.desc.length > 120 ? '...' : ''}</p>
-                            <div class="action-row">
-                                <span class="price">${prod.price}</span>
-                                <div id="action-wrapper-${prod.id}">${actionWidgetHTML}</div>
-                            </div>
-                        </div>
-                    </div>
-                `;
+					</div>
+				`;
                 catalogContainer.innerHTML += cardHTML;
                 checkMultiImages(prod.id, globalIndex);
             });
