@@ -1,58 +1,200 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Catalogue - Printelivery</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        :root { --primary-color: #075E54; --accent-color: #25D366; --bg-color: #f8f9fa; --text-dark: #2d3748; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--bg-color); margin: 0; padding: 40px 20px; color: var(--text-dark); position: relative; z-index: 1; }
+        body::before { content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; background: url('https://print-hub-suite.vercel.app/images/BG_CATALOGUE.jpg') no-repeat center center fixed; background-size: cover; opacity: 0.3; }
+        .header { text-align: center; margin-bottom: 50px; position: relative; max-width: 100%; padding: 0 20px; margin-left: auto; margin-right: auto; }
+        .header h1 { color: var(--primary-color); font-size: 2.5rem; margin-bottom: 10px; }
+        .header p { color: #718096; font-size: 1.1rem; margin: 0; }
+        .controls-bar { display: flex; justify-content: space-between; align-items: center; max-width: 100%; margin: 0 auto 30px auto; flex-wrap: wrap; gap: 15px; padding: 0 20px; }
+        .selectors-group { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+        .control-item { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+        .custom-select { padding: 8px 12px; border-radius: 6px; border: 1px solid #cbd5e0; font-size: 0.95rem; background: #fff; cursor: pointer; }
+        .cart-toggle-btn { background-color: var(--primary-color); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 0.95rem; }
+        .cart-badge { background: var(--accent-color); color: white; border-radius: 50%; padding: 2px 8px; font-size: 0.8rem; }
+        .catalog-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 2rem; padding: 2rem; max-width: 1400px; margin: 0 auto; }
+        .cols-1 { grid-template-columns: repeat(1, 1fr); }
+        .cols-2 { grid-template-columns: repeat(2, 1fr); }
+        .cols-3 { grid-template-columns: repeat(3, 1fr); }
+        .cols-4 { grid-template-columns: repeat(4, 1fr); }
+        .cols-5 { grid-template-columns: repeat(5, 1fr); }
+        @media (max-width: 1024px) { .catalog-grid { grid-template-columns: repeat(2, 1fr) !important; } }
+        @media (max-width: 650px) { .catalog-grid { grid-template-columns: repeat(1, 1fr) !important; } }
+        .product-card { display: flex; flex-direction: column; aspect-ratio: 1 / 1; background: #ffffff; border-radius: 1rem; box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1); overflow: hidden; border: 1px solid #e2e8f0; position: relative; box-sizing: border-box; }
+        .image-container { flex: 0 0 70%; overflow: hidden; position: relative; }
+        .product-image { width: 100%; height: 100%; object-fit: cover; }
+        .product-details { padding: 24px; display: flex; flex-direction: column; flex-grow: 1; }
+        .product-group-tag { font-size: 0.75rem; font-weight: 700; color: var(--primary-color); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px; }
+        .product-id { font-size: 0.8rem; font-weight: 600; color: #a0aec0; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+        .product-title { font-size: 1.2rem; font-weight: 700; margin: 0 0 10px 0; color: #1a202c; line-height: 1.4; }
+        .product-desc { flex: 0 0 30%; padding: 1rem; display: flex; flex-direction: column; justify-content: center; overflow: hidden; box-sizing: border-box; }
+        .action-row { display: flex; align-items: center; justify-content: space-between; margin-top: auto; height: 42px; }
+        .price { font-size: 1.25rem; font-weight: 800; color: var(--primary-color); }
+        .order-button { background-color: var(--accent-color); color: white; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 600; font-size: 0.9rem; cursor: pointer; height: 100%; box-sizing: border-box; }
+        .inline-qty-control { display: flex; align-items: center; gap: 8px; background: #edf2f7; border-radius: 8px; padding: 4px 8px; height: 100%; box-sizing: border-box; }
+        .inline-qty-btn { background: white; border: 1px solid #cbd5e0; width: 32px; height: 32px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; }
+        .inline-qty-val { font-weight: 700; width: 25px; text-align: center; font-size: 1rem; }
+        .pagination-container { display: flex; justify-content: center; align-items: center; gap: 5px; margin: 40px auto 0 auto; max-width: 100%; flex-wrap: wrap; }
+        .page-btn { padding: 8px 14px; border: 1px solid #cbd5e0; background: white; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.9rem; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #ffffff; display: none; z-index: 1000; overflow-y: auto; }
+        .modal-body { background: white; padding: 30px; border-radius: 16px; max-width: 600px; width: 100%; position: relative; max-height: 90vh; overflow-y: auto; }
+        .close-modal { position: absolute; top: 20px; right: 25px; font-size: 2.5rem; cursor: pointer; color: #a0aec0; z-index: 1050; }
+        .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+        .form-group input { padding: 10px; border: 1px solid #cbd5e0; border-radius: 6px; }
+        .checkout-btn { background-color: var(--accent-color); color: white; border: none; width: 100%; padding: 12px; border-radius: 8px; font-weight: 700; cursor: pointer; }
+    </style>
 </head>
 <body>
-    <div id="invoiceRenderCanvas" style="display:none;"></div>
+
+    <iframe id="orderServiceFrame" src="catalogue/OrderHandler.html" style="display:none;"></iframe>
+
+    <div class="header"><h1>Our Product Catalogue</h1><p>Premium Printing Tools, Custom Designs & Prints</p></div>
+    
+    <div class="controls-bar">
+        <button class="cart-toggle-btn" onclick="openCartViewModal()">🛒 View Cart <span id="cartCountBadge" class="cart-badge">0</span></button>
+    </div>
+
+    <div class="catalog-grid cols-3" id="catalog"><div class="loading">Loading...</div></div>
+    <div id="pagination" class="pagination-container"></div>
+
+    <div id="addressCaptureModal" class="modal-overlay">
+        <div class="modal-body">
+            <span class="close-modal" onclick="closeAddressCollectionModal()">&times;</span>
+            <h3>Delivery Details</h3>
+            <form id="shippingAddressForm" onsubmit="compileFinalInvoiceAndSend(event)">
+                <div class="form-group"><label>Full Name</label><input type="text" id="custName" required></div>
+                <div class="form-group"><label>Phone</label><input type="tel" id="custPhone" required></div>
+                <div class="form-group"><label>Email</label><input type="email" id="custEmail" required></div>
+                <div class="form-group"><label>Flat/Building</label><input type="text" id="custFlat" required></div>
+                <div class="form-group"><label>Address</label><textarea id="custAddress" rows="3" required></textarea></div>
+                <div class="form-group"><label>Pin Code</label><input type="text" id="custPin" required></div>
+                <button type="submit" id="submitOrderActionBtn" class="checkout-btn">Confirm Order, Download Invoice & Send</button>
+            </form>
+        </div>
+    </div>
 
     <script>
-        window.addEventListener('message', async (event) => {
-            if (event.data.type === 'PROCESS_ORDER') {
-                const { payload } = event.data;
-                await runOrderService(payload);
+        let localProductsRegistry = [];
+        let shoppingCartState = {};
+        const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSZuJdNU_JDKhM9OSgx4yPa9rWGtL7PJ9dgbaoaWNJ4_0jZ-AUOKLEUiCCACjiHlOYwsvwNG1ftwCMG/pub?output=csv";
+
+        // --- UPDATED SUBMISSION FUNCTION ---
+        async function compileFinalInvoiceAndSend(event) {
+            event.preventDefault();
+            const actionSubmitBtn = document.getElementById('submitOrderActionBtn');
+            actionSubmitBtn.disabled = true;
+            actionSubmitBtn.innerText = "Processing...";
+
+            const customerDetails = {
+                name: document.getElementById('custName').value.trim(),
+                phone: document.getElementById('custPhone').value.trim(),
+                email: document.getElementById('custEmail').value.trim(),
+                flat: document.getElementById('custFlat').value.trim(),
+                address: document.getElementById('custAddress').value.trim(),
+                pin: document.getElementById('custPin').value.trim()
+            };
+
+            let aggregateOrderValue = 0;
+            let itemsHtml = '';
+            let whatsappProductsList = [];
+            
+            Object.values(shoppingCartState).forEach((item) => {
+                let numericPrice = parseFloat(item.metadata.price.replace(/[^0-9.]/g, '')) || 0;
+                let costSum = numericPrice * item.qty;
+                aggregateOrderValue += costSum;
+                itemsHtml += `<tr><td>${item.metadata.name}</td><td>${item.metadata.id}</td><td>₹${numericPrice.toFixed(2)}</td><td>${item.qty}</td><td>₹${costSum.toFixed(2)}</td></tr>`;
+                whatsappProductsList.push(`- ${item.metadata.name} (${item.qty} x ${item.metadata.price})`);
+            });
+
+            // Pass data to iframe
+            document.getElementById('orderServiceFrame').contentWindow.postMessage({
+                type: 'PROCESS_ORDER',
+                payload: {
+                    customerDetails,
+                    itemsHtml,
+                    whatsappProductsList,
+                    orderId: "INV-" + Math.floor(100000 + Math.random() * 900000),
+                    dateString: new Date().toLocaleDateString(),
+                    grossValueStr: aggregateOrderValue.toFixed(2),
+                    baseTaxableAmount: (aggregateOrderValue / 1.18).toFixed(2),
+                    calculatedGstSlice: (aggregateOrderValue - (aggregateOrderValue / 1.18)).toFixed(2)
+                }
+            }, '*');
+        }
+
+        // --- LISTENER FOR WA REDIRECT ---
+        window.addEventListener('message', (event) => {
+            if (event.data.type === 'REDIRECT_WA') {
+                window.open(`https://wa.me/918920755505?text=${encodeURIComponent(event.data.text)}`, '_blank');
+                document.getElementById('submitOrderActionBtn').disabled = false;
+                document.getElementById('submitOrderActionBtn').innerText = "Confirm Order, Download Invoice & Send";
+                closeAddressCollectionModal();
+                alert("Order processed successfully!");
             }
         });
 
-        async function runOrderService(data) {
-            const { customerDetails, itemsHtml, orderId, dateString, grossValueStr, baseTaxableAmount, calculatedGstSlice, whatsappProductsList } = data;
-            
-            const canvas = document.getElementById('invoiceRenderCanvas');
-            canvas.style.display = "block";
-            
-            // Build PDF Content
-            canvas.innerHTML = `
-                <div style="font-family:sans-serif; padding:40px;">
-                    <h2 style="color:#075E54;">PRINTELIVERY - Invoice ${orderId}</h2>
-                    <p><strong>Customer:</strong> ${customerDetails.name} | <strong>Date:</strong> ${dateString}</p>
-                    <table border="1" style="width:100%; border-collapse:collapse;">
-                        <thead><tr><th>Item</th><th>ID</th><th>Price</th><th>Qty</th><th>Total</th></tr></thead>
-                        <tbody>${itemsHtml}</tbody>
-                    </table>
-                    <div style="margin-top:20px;">
-                        <p>Net: ₹${baseTaxableAmount}</p>
-                        <p>GST: ₹${calculatedGstSlice}</p>
-                        <p><strong>Total: ₹${grossValueStr}</strong></p>
+        // --- ORIGINAL UTILITY FUNCTIONS ---
+        function parseCSV(text) {
+            let p = '', r = []; let q = false; let row = [''];
+            for (let i=0; i<text.length; i++) {
+                let c = text[i]; let next = text[i+1];
+                if (c === '"') { if (q && next === '"') { row[row.length-1] += '"'; i++; } else { q = !q; } }
+                else if (c === ',' && !q) { row.push(''); }
+                else if ((c === '\r' || c === '\n') && !q) {
+                    if (c === '\r' && next === '\n') { i++; }
+                    r.push(row); row = [''];
+                } else { row[row.length-1] += c; }
+            }
+            if (row.length > 1 || row[0] !== '') { r.push(row); }
+            return r;
+        }
+
+        async function fetchProducts() {
+            const response = await fetch(CSV_URL);
+            const dataText = await response.text();
+            const parsedRows = parseCSV(dataText);
+            parsedRows.shift();
+            localProductsRegistry = parsedRows.map(row => ({
+                group: row[0], id: row[1], name: row[2], desc: row[3], price: row[4]
+            }));
+            renderCatalogViewEngine();
+        }
+
+        function renderCatalogViewEngine() {
+            const catalog = document.getElementById('catalog');
+            catalog.innerHTML = localProductsRegistry.map(prod => `
+                <div class="product-card">
+                    <div class="product-details">
+                        <div class="product-group-tag">${prod.group}</div>
+                        <h3 class="product-title">${prod.name}</h3>
+                        <p class="product-desc">${prod.desc}</p>
+                        <div class="action-row">
+                            <span class="price">${prod.price}</span>
+                            <button class="order-button" onclick="addItemToCart('${prod.id}')">Add to Cart</button>
+                        </div>
                     </div>
                 </div>
-            `;
-
-            // Generate PDF
-            const opt = { margin: 10, filename: `Invoice_${orderId}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4' } };
-            const pdfBlob = await html2pdf().from(canvas).output('datauristring');
-            const base64Pdf = pdfBlob.split(',')[1];
-            await html2pdf().from(canvas).set(opt).save();
-
-            // Trigger Email API
-            await fetch("https://script.google.com/macros/s/AKfycbyYJdFH5XAyo0LJSO7QsW7KxDToH7SIprX4uZzUhu4GvPn9BHq-LYOYnqOf18A_EYc/exec", {
-                method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...customerDetails, orderId, pdfBase64: base64Pdf, grandTotal: grossValueStr, itemsText: itemsHtml })
-            });
-
-            // Signal WhatsApp Redirection
-            const msg = `*New Order Confirmed - Printelivery*\nOrder ID: ${orderId}\nCustomer: ${customerDetails.name}\n\n*Items:*\n${whatsappProductsList.join('\n')}\n\n*Total: ₹${grossValueStr}*`;
-            window.parent.postMessage({ type: 'REDIRECT_WA', text: msg }, '*');
+            `).join('');
         }
+
+        function addItemToCart(id) {
+            const product = localProductsRegistry.find(p => p.id === id);
+            shoppingCartState[id] = { metadata: product, qty: 1 };
+            document.getElementById('cartCountBadge').innerText = Object.keys(shoppingCartState).length;
+        }
+
+        function openCartViewModal() { document.getElementById('cartDrawerModal').style.display = 'flex'; }
+        function closeCartViewModal() { document.getElementById('cartDrawerModal').style.display = 'none'; }
+        function openAddressCollectionModal() { closeCartViewModal(); document.getElementById('addressCaptureModal').style.display = 'flex'; }
+        function closeAddressCollectionModal() { document.getElementById('addressCaptureModal').style.display = 'none'; }
+
+        fetchProducts();
     </script>
 </body>
 </html>
