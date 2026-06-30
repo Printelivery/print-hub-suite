@@ -146,6 +146,9 @@
         .price { font-size: 1.25rem; font-weight: 800; color: var(--primary-color); }
         .order-button { background-color: var(--accent-color); color: white; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 600; font-size: 0.9rem; cursor: pointer; transition: background-color 0.2s ease; height: 100%; box-sizing: border-box; }
         .order-button:hover { background-color: #20ba59; }
+		.inline-qty-control { display: flex; align-items: center; gap: 8px; background: #f0f0f0; border-radius: 20px; padding: 4px; justify-content: center; }
+		.inline-qty-btn { border: none; background: white; border-radius: 50%; width: 25px; height: 25px; cursor: pointer; font-weight: bold; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+		.inline-qty-val { font-weight: bold; min-width: 20px; text-align: center; }
 		/* Quick Add Button Styles */
 		.quick-add-btn {
 			position: absolute;
@@ -552,10 +555,12 @@
 
                 const cardHTML = `
                     <div class="product-card" onclick="launchProductDetailModal('${prod.id}')">
-                        <div class="image-container">
-                            <img id="card-img-${prod.id}" class="product-image" src="${displaySrc}" onerror="this.onerror=null; this.src='${fallbackSrcString}'">
-							<button class="quick-add-btn" onclick="addToCartFromHome('${prod.id}')" title="Add to Cart">+</button>
-                        </div>
+						<div class="image-container" onclick="event.stopPropagation()">
+							<img id="card-img-${prod.id}" class="product-image" src="${displaySrc}" onclick="launchProductDetailModal('${prod.id}')">
+							<div id="action-wrapper-${prod.id}">
+								<button class="quick-add-btn" onclick="convertToQuantitySelector('${prod.id}')">+</button>
+							</div>
+						</div>
                         <div class="product-details">
                             <div class="product-group-tag">${prod.group}</div>
                             <div class="product-id">ID: ${prod.id}</div>
@@ -1068,9 +1073,32 @@
 				console.error("Email/PDF attachment failed:", err);
 			}
 		}
-	function addToCartFromHome(productId) {
-		event.stopPropagation(); // Prevents the modal from opening
-		addItemToCart(productId); // Reuses your existing cart function
+		function addToCartFromHome(productId) {
+			event.stopPropagation(); // Prevents the modal from opening
+			addItemToCart(productId); // Reuses your existing cart function
+		}
+		function convertToQuantitySelector(prodId) {
+		addItemToCart(prodId);
+		const wrapper = document.getElementById(`action-wrapper-${prodId}`);
+		wrapper.innerHTML = `
+			<div class="inline-qty-control">
+				<button class="inline-qty-btn" onclick="updateQtyFromHome('${prodId}', -1)">-</button>
+				<span id="qty-val-${prodId}" class="inline-qty-val">${shoppingCartState[prodId].qty}</span>
+				<button class="inline-qty-btn" onclick="updateQtyFromHome('${prodId}', 1)">+</button>
+			</div>
+		`;
+	}
+
+	function updateQtyFromHome(prodId, delta) {
+		shoppingCartState[prodId].qty += delta;
+		if (shoppingCartState[prodId].qty <= 0) {
+			delete shoppingCartState[prodId];
+			document.getElementById(`action-wrapper-${prodId}`).innerHTML = 
+				`<button class="quick-add-btn" onclick="convertToQuantitySelector('${prodId}')">+</button>`;
+		} else {
+			document.getElementById(`qty-val-${prodId}`).innerText = shoppingCartState[prodId].qty;
+		}
+		synchronizeCartBadgeUI();
 	}
     fetchProducts();
     </script>
