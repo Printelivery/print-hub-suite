@@ -82,13 +82,13 @@
         }
         .cart-badge { background: var(--accent-color); color: white; border-radius: 50%; padding: 2px 8px; font-size: 0.8rem; }
 
-		/* 1. The Grid: Defines the maximum and minimum size of the WHOLE card */
+		/* 1. The Container: Force uniform grid scaling */
 		.catalog-grid {
 			display: grid;
-			/* This defines how many cards fit and their size range */
+			/* 'fr' units allow cards to grow together perfectly */
 			grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-			gap: 30px;
-			padding: 20px;
+			gap: 2rem; 
+			padding: 2rem;
 			max-width: 1400px;
 			margin: 0 auto;
 		}
@@ -101,53 +101,47 @@
         @media (max-width: 1024px) { .catalog-grid { grid-template-columns: repeat(2, 1fr) !important; } }
         @media (max-width: 650px) { .catalog-grid { grid-template-columns: repeat(1, 1fr) !important; } }
 
-		/* 2. The Card: Locked as a single square unit */
+		/* 2. The Grouped Object: Locked aspect ratio */
 		.product-card {
-			background: #ffffff;
-			border-radius: 16px;
-			box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-			
-			/* THE KEY: Locks the card aspect ratio */
-			aspect-ratio: 1 / 1; 
-			
-			/* Ensures nothing inside breaks the card's square shape */
 			display: flex;
 			flex-direction: column;
-			overflow: hidden; 
+			aspect-ratio: 1 / 1; /* This locks the ENTIRE group's proportions */
+			
+			background: #ffffff;
+			border-radius: 1rem;
+			box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1);
+			overflow: hidden;
 			border: 1px solid #e2e8f0;
 			
-			/* Smooth scaling effect */
-			transition: transform 0.2s ease;
+			/* This ensures nothing inside forces the card to break shape */
+			box-sizing: border-box; 
 		}
-        .product-card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1); }
-		
-		/* 3. The Image: Now a simple child of the block */
+		/* 3. The Image and Text: Locked proportions of the total area */
 		.image-container {
-			width: 100%;
-			/* Instead of percentage, we give it a fixed flex proportion */
-			flex: 3; 
+			flex: 0 0 70%; /* Image is hard-locked to 70% of card height */
 			overflow: hidden;
+			position: relative;
 		}
 
 		.product-image {
 			width: 100%;
 			height: 100%;
-			object-fit: cover; /* Image fills its container perfectly */
+			object-fit: cover;
 		}
         .product-details { padding: 24px; display: flex; flex-direction: column; flex-grow: 1; }
         .product-group-tag { font-size: 0.75rem; font-weight: 700; color: var(--primary-color); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px; }
         .product-id { font-size: 0.8rem; font-weight: 600; color: #a0aec0; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
         .product-title { font-size: 1.2rem; font-weight: 700; margin: 0 0 10px 0; color: #1a202c; line-height: 1.4; }
-		/* 4. The Info: Always stays below the image */
 		.product-desc {
-			flex: 1; /* Always takes 1/4 of the card space */
-			padding: 15px;
+			flex: 0 0 30%; /* Text is hard-locked to 30% of card height */
+			padding: 1rem;
 			display: flex;
 			flex-direction: column;
 			justify-content: center;
-			background: #ffffff;
+			overflow: hidden;
+			box-sizing: border-box;
 		}
-        
+				
         .action-row { display: flex; align-items: center; justify-content: space-between; margin-top: auto; height: 42px; }
         .price { font-size: 1.25rem; font-weight: 800; color: var(--primary-color); }
         .order-button { background-color: var(--accent-color); color: white; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 600; font-size: 0.9rem; cursor: pointer; transition: background-color 0.2s ease; height: 100%; box-sizing: border-box; }
