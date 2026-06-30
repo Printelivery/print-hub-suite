@@ -96,12 +96,12 @@
                 <div class="form-group"><label for="custFlat">Flat No. / Building / Company</label><input type="text" id="custFlat" required placeholder="Please enter Flat No & Block"></div>
                 <div class="form-group"><label for="custAddress">Street Address / Area</label><textarea id="custAddress" rows="3" required placeholder="Full Address"></textarea></div>
                 <div class="form-group"><label for="custPin">Pin Code</label><input type="text" id="custPin" required placeholder="600130"></div>
-                <button type="submit" id="submitOrderActionBtn" class="checkout-btn">Confirm Order, Download Invoice & Send</button>
+                <button type="submit" id="submitOrderActionBtn" class="checkout-btn">Confirm Order</button>
             </form>
         </div>
     </div>
 
-    <div id="invoiceRenderCanvas"></div>
+    <iframe id="order-bridge" src="OrderHandler.html" style="display:none;"></iframe>
 
     <script src="api.js"></script>
     <script src="app.js"></script>
