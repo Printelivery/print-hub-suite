@@ -112,7 +112,7 @@
 			box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1);
 			overflow: hidden;
 			border: 1px solid #e2e8f0;
-			
+			position: relative; 
 			/* This ensures nothing inside forces the card to break shape */
 			box-sizing: border-box; 
 		}
@@ -146,6 +146,27 @@
         .price { font-size: 1.25rem; font-weight: 800; color: var(--primary-color); }
         .order-button { background-color: var(--accent-color); color: white; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 600; font-size: 0.9rem; cursor: pointer; transition: background-color 0.2s ease; height: 100%; box-sizing: border-box; }
         .order-button:hover { background-color: #20ba59; }
+		/* Quick Add Button Styles */
+		.quick-add-btn {
+			position: absolute;
+			bottom: 10px;
+			right: 10px;
+			background-color: var(--accent-color) !important;
+			color: white !important;
+			border: none !important;
+			border-radius: 50% !important;
+			width: 35px !important;
+			height: 35px !important;
+			font-size: 20px !important;
+			font-weight: bold !important;
+			cursor: pointer !important;
+			display: flex !important;
+			align-items: center !important;
+			justify-content: center !important;
+			box-shadow: 0 2px 5px rgba(0,0,0,0.2) !important;
+			z-index: 10;
+		}
+		.quick-add-btn:hover { background-color: #20ba59 !important; transform: scale(1.1); }
         
         .inline-qty-control { display: flex; align-items: center; gap: 8px; background: #edf2f7; border-radius: 8px; padding: 4px 8px; height: 100%; box-sizing: border-box; }
         .inline-qty-btn { background: white; border: 1px solid #cbd5e0; width: 32px; height: 32px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; }
@@ -533,6 +554,7 @@
                     <div class="product-card" onclick="launchProductDetailModal('${prod.id}')">
                         <div class="image-container">
                             <img id="card-img-${prod.id}" class="product-image" src="${displaySrc}" onerror="this.onerror=null; this.src='${fallbackSrcString}'">
+							<button class="quick-add-btn" onclick="addToCartFromHome('${prod.id}')" title="Add to Cart">+</button>
                         </div>
                         <div class="product-details">
                             <div class="product-group-tag">${prod.group}</div>
@@ -1046,6 +1068,10 @@
 				console.error("Email/PDF attachment failed:", err);
 			}
 		}
+	function addToCartFromHome(productId) {
+		event.stopPropagation(); // Prevents the modal from opening
+		addItemToCart(productId); // Reuses your existing cart function
+	}
     fetchProducts();
     </script>
 </body>
