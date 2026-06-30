@@ -5,55 +5,69 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Printelivery | Product Catalogue</title>
     <style>
-        :root { --primary: #075E54; --accent: #25D366; --bg: #f8f9fa; }
-        body { font-family: sans-serif; background: var(--bg); margin: 0; padding: 0; }
+        :root { --primary: #075E54; --bg: #f8f9fa; --text: #333; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; padding: 0; color: var(--text); }
         
-        /* Header / Cart Button */
-        .top-nav { display: flex; justify-content: flex-end; padding: 20px; position: sticky; top: 0; z-index: 100; background: rgba(255,255,255,0.9); }
-        .cart-btn { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 20px; cursor: pointer; }
+        /* Navigation & Top Controls */
+        .top-nav { display: flex; justify-content: space-between; align-items: center; padding: 20px 40px; background: white; border-bottom: 1px solid #ddd; position: sticky; top: 0; z-index: 100; }
+        .cart-btn { background: var(--primary); color: white; border: none; padding: 12px 25px; border-radius: 25px; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 8px; }
         
         /* Catalog Grid */
-        .catalog-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; padding: 20px; }
-        .product-card { background: white; border-radius: 12px; padding: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); cursor: pointer; text-align: center; }
-        .product-image { width: 100%; height: 200px; object-fit: cover; border-radius: 8px; }
-        .qty-controls { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 10px; }
+        .catalog-container { padding: 40px; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 30px; }
+        .product-card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 10px 15px rgba(0,0,0,0.1); text-align: center; transition: transform 0.2s; }
+        .product-card:hover { transform: translateY(-5px); }
+        .product-img { width: 100%; height: 220px; object-fit: cover; border-radius: 10px; cursor: pointer; }
+        .qty-controls { display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 15px; }
         
-        /* Modals */
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center; }
-        .modal-content { background: white; width: 90%; max-width: 600px; padding: 20px; border-radius: 12px; position: relative; max-height: 80vh; overflow-y: auto; }
+        /* Modal Infrastructure */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-content { background: white; width: 90%; max-width: 600px; padding: 40px; border-radius: 20px; position: relative; max-height: 90vh; overflow-y: auto; }
         
-        /* Image Carousel */
-        .carousel { position: relative; width: 100%; }
-        .carousel img { width: 100%; padding: 5%; box-sizing: border-box; }
-        .nav-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.5); color: white; border: none; padding: 10px; cursor: pointer; }
-        .prev { left: 10px; } .next { right: 10px; }
+        /* Carousel Specifics (The 5% Padding Requirement) */
+        .carousel-view { width: 100%; padding: 5%; box-sizing: border-box; text-align: center; }
+        .carousel-img { width: 100%; border-radius: 10px; }
+        .nav-arrow { position: absolute; top: 50%; background: rgba(0,0,0,0.5); color: white; border: none; padding: 20px; cursor: pointer; font-size: 24px; }
+        .nav-arrow.prev { left: 20px; }
+        .nav-arrow.next { right: 20px; }
+        
+        /* Checkout Form */
+        .form-group { margin-bottom: 20px; text-align: left; }
+        .form-group label { display: block; font-weight: bold; margin-bottom: 8px; }
+        .form-group input, .form-group textarea { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
+        .action-btn { background: var(--primary); color: white; width: 100%; padding: 15px; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; }
     </style>
 </head>
 <body>
 
-    <iframe id="orderServiceFrame" src="https://print-hub-suite.vercel.app/catalogue/OrderHandler.html" style="display:none;"></iframe>
+    <iframe id="orderHandlerFrame" src="OrderHandler.html" style="display:none;"></iframe>
 
-    <div class="top-nav">
+    <nav class="top-nav">
+        <h1>Printelivery</h1>
         <button class="cart-btn" onclick="openCartModal()">🛒 Cart (<span id="cartCount">0</span>)</button>
-    </div>
+    </nav>
 
-    <div class="catalog-grid" id="catalog">Loading Catalog...</div>
+    <main class="catalog-container" id="catalog">
+        </main>
 
     <div id="detailModal" class="modal" onclick="closeModal('detailModal')">
-        <div class="modal-content" onclick="event.stopPropagation()" id="detailContent"></div>
+        <div class="modal-content" onclick="event.stopPropagation()" id="detailBody"></div>
     </div>
 
     <div id="cartModal" class="modal" onclick="closeModal('cartModal')">
-        <div class="modal-content" onclick="event.stopPropagation()" id="cartItemsList"></div>
+        <div class="modal-content" onclick="event.stopPropagation()" id="cartBody"></div>
     </div>
 
     <div id="checkoutModal" class="modal" onclick="closeModal('checkoutModal')">
         <div class="modal-content" onclick="event.stopPropagation()">
-            <h3>Checkout</h3>
-            <form id="checkoutForm" onsubmit="submitOrder(event)">
-                <input type="text" id="custName" placeholder="Name" required style="width:100%; margin-bottom:10px; padding:8px;">
-                <input type="text" id="custPhone" placeholder="Phone" required style="width:100%; margin-bottom:10px; padding:8px;">
-                <button type="submit" class="cart-btn" style="width:100%;">Confirm & Send Invoice</button>
+            <h3>Delivery Details</h3>
+            <form onsubmit="submitOrder(event)">
+                <div class="form-group"><label>Full Name</label><input type="text" id="custName" required></div>
+                <div class="form-group"><label>Phone Number</label><input type="tel" id="custPhone" required></div>
+                <div class="form-group"><label>Email Address</label><input type="email" id="custEmail" required></div>
+                <div class="form-group"><label>Flat No./Building</label><input type="text" id="custFlat" required></div>
+                <div class="form-group"><label>Street Address</label><textarea id="custAddress" rows="3" required></textarea></div>
+                <div class="form-group"><label>Pin Code</label><input type="text" id="custPin" required></div>
+                <button type="submit" class="action-btn">Confirm & Process</button>
             </form>
         </div>
     </div>
@@ -61,76 +75,78 @@
     <script>
         const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSZuJdNU_JDKhM9OSgx4yPa9rWGtL7PJ9dgbaoaWNJ4_0jZ-AUOKLEUiCCACjiHlOYwsvwNG1ftwCMG/pub?output=csv";
         const IMG_BASE = "https://print-hub-suite.vercel.app/images/";
+        
         let products = [];
         let cart = {};
-        let currentImgIdx = 0;
+        let currentImgIdx = 1;
 
-        // 1. Read Products
         async function init() {
             const res = await fetch(CSV_URL);
-            const data = await res.text();
-            products = data.split('\n').slice(1).map(r => {
-                const c = r.split(',');
-                return { group: c[0], id: c[1], name: c[2], desc: c[3], price: c[4] };
-            }).filter(p => p.id);
+            const raw = await res.text();
+            products = raw.split('\n').slice(1).map(r => r.split(',')).filter(c => c[1]).map(c => ({
+                id: c[1], name: c[2], desc: c[3], price: c[4]
+            }));
             renderCatalog();
         }
 
-        // 2. Render Catalog
         function renderCatalog() {
-            document.getElementById('catalog').innerHTML = products.map(p => `
-                <div class="product-card" onclick="openDetails('${p.id}')">
-                    <img src="${IMG_BASE}${p.id}_1.jpg" class="product-image">
-                    <h4>${p.name}</h4>
-                    <p>₹${p.price}</p>
-                    <div id="action-${p.id}" onclick="event.stopPropagation()">
-                        <button class="cart-btn" onclick="addToCart('${p.id}')">Add to Cart</button>
+            const container = document.getElementById('catalog');
+            container.innerHTML = products.map(p => `
+                <div class="product-card">
+                    <img src="${IMG_BASE}${p.id}_1.jpg" class="product-img" onclick="openDetails('${p.id}')">
+                    <h3>${p.name}</h3>
+                    <p>Price: ₹${p.price}</p>
+                    <div id="btn-wrap-${p.id}">
+                        <button class="action-btn" onclick="addToCart('${p.id}')">Add to Cart</button>
                     </div>
                 </div>
             `).join('');
         }
 
-        // 3. Add to Cart / +/- Controls
+        // --- QTY LOGIC ---
         function addToCart(id) {
-            cart[id] = { ...products.find(p => p.id === id), qty: 1 };
-            updateUI(id);
-            updateBadge();
+            const p = products.find(x => x.id === id);
+            cart[id] = { ...p, qty: 1 };
+            updateProductUI(id);
+            updateCartBadge();
         }
 
         function changeQty(id, delta) {
-            cart[id].qty += delta;
-            if(cart[id].qty <= 0) { delete cart[id]; renderAddBtn(id); }
-            else { updateUI(id); }
-            updateBadge();
+            if (cart[id]) {
+                cart[id].qty += delta;
+                if (cart[id].qty <= 0) {
+                    delete cart[id];
+                    resetProductUI(id);
+                } else {
+                    updateProductUI(id);
+                }
+            }
+            updateCartBadge();
         }
 
-        function updateUI(id) {
-            document.getElementById(`action-${id}`).innerHTML = `
+        function updateProductUI(id) {
+            document.getElementById(`btn-wrap-${id}`).innerHTML = `
                 <div class="qty-controls">
-                    <button class="cart-btn" onclick="changeQty('${id}', -1)">-</button>
+                    <button class="action-btn" onclick="changeQty('${id}', -1)">-</button>
                     <span>${cart[id].qty}</span>
-                    <button class="cart-btn" onclick="changeQty('${id}', 1)">+</button>
+                    <button class="action-btn" onclick="changeQty('${id}', 1)">+</button>
                 </div>
             `;
         }
 
-        function renderAddBtn(id) {
-            document.getElementById(`action-${id}`).innerHTML = `<button class="cart-btn" onclick="addToCart('${id}')">Add to Cart</button>`;
+        function resetProductUI(id) {
+            document.getElementById(`btn-wrap-${id}`).innerHTML = `<button class="action-btn" onclick="addToCart('${id}')">Add to Cart</button>`;
         }
 
-        function updateBadge() {
-            document.getElementById('cartCount').innerText = Object.values(cart).reduce((a, b) => a + b.qty, 0);
-        }
-
-        // 4. Detail Page with Carousel
+        // --- CAROUSEL LOGIC ---
         function openDetails(id) {
             const p = products.find(x => x.id === id);
             currentImgIdx = 1;
-            document.getElementById('detailContent').innerHTML = `
-                <div class="carousel">
-                    <img id="mainImg" src="${IMG_BASE}${p.id}_1.jpg">
-                    <button class="nav-btn prev" onclick="moveImg('${p.id}', -1)">❮</button>
-                    <button class="nav-btn next" onclick="moveImg('${p.id}', 1)">❯</button>
+            document.getElementById('detailBody').innerHTML = `
+                <div class="carousel-view">
+                    <img id="mainImg" class="carousel-img" src="${IMG_BASE}${p.id}_1.jpg">
+                    <button class="nav-arrow prev" onclick="moveSlide('${p.id}', -1)">❮</button>
+                    <button class="nav-arrow next" onclick="moveSlide('${p.id}', 1)">❯</button>
                 </div>
                 <h2>${p.name}</h2>
                 <p>${p.desc}</p>
@@ -138,37 +154,44 @@
             document.getElementById('detailModal').style.display = 'flex';
         }
 
-        function moveImg(id, dir) {
-            currentImgIdx += dir;
-            if(currentImgIdx < 1) currentImgIdx = 3; // Loop logic
-            if(currentImgIdx > 3) currentImgIdx = 1;
+        function moveSlide(id, dir) {
+            currentImgIdx = (currentImgIdx + dir < 1) ? 3 : (currentImgIdx + dir > 3 ? 1 : currentImgIdx + dir);
             document.getElementById('mainImg').src = `${IMG_BASE}${id}_${currentImgIdx}.jpg`;
         }
 
-        // 5. Cart View
+        // --- CART/CHECKOUT LOGIC ---
         function openCartModal() {
-            document.getElementById('cartItemsList').innerHTML = `
+            document.getElementById('cartBody').innerHTML = `
                 <h3>Your Cart</h3>
-                ${Object.values(cart).map(i => `<p>${i.name} (x${i.qty}) - ₹${i.price}</p>`).join('')}
-                <button class="cart-btn" onclick="closeModal('cartModal'); document.getElementById('checkoutModal').style.display='flex'">Checkout</button>
+                ${Object.values(cart).map(i => `<p>${i.name} (x${i.qty}) - ₹${i.price * i.qty}</p>`).join('')}
+                <button class="action-btn" onclick="closeModal('cartModal'); document.getElementById('checkoutModal').style.display='flex'">Proceed to Checkout</button>
             `;
             document.getElementById('cartModal').style.display = 'flex';
         }
 
-        // 6. Checkout & Bridge
         function submitOrder(e) {
             e.preventDefault();
-            const customer = { name: document.getElementById('custName').value, phone: document.getElementById('custPhone').value };
-            // Bridge: Send data to iframe
-            document.getElementById('orderServiceFrame').contentWindow.postMessage({
+            const customer = {
+                name: document.getElementById('custName').value,
+                phone: document.getElementById('custPhone').value,
+                email: document.getElementById('custEmail').value,
+                flat: document.getElementById('custFlat').value,
+                address: document.getElementById('custAddress').value,
+                pin: document.getElementById('custPin').value
+            };
+            
+            // Bridge
+            document.getElementById('orderHandlerFrame').contentWindow.postMessage({
                 type: 'PROCESS_ORDER',
                 cart: cart,
                 customer: customer
             }, '*');
-            alert("Order processing initiated...");
+            
+            alert("Order sent to processing...");
             closeModal('checkoutModal');
         }
 
+        function updateCartBadge() { document.getElementById('cartCount').innerText = Object.values(cart).reduce((a, b) => a + b.qty, 0); }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
         init();
