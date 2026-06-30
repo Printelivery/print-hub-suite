@@ -558,7 +558,7 @@
 						<div class="image-container" onclick="event.stopPropagation()">
 							<img id="card-img-${prod.id}" class="product-image" src="${displaySrc}" onclick="launchProductDetailModal('${prod.id}')">
 							<div id="action-wrapper-${prod.id}">
-								<button class="quick-add-btn" onclick="convertToQuantitySelector('${prod.id}')">+</button>
+								<button class="quick-add-btn" onclick="quickAddHandler('${prod.id}')">+</button>
 							</div>
 						</div>
                         <div class="product-details">
@@ -1077,29 +1077,23 @@
 			event.stopPropagation(); // Prevents the modal from opening
 			addItemToCart(productId); // Reuses your existing cart function
 		}
-		function convertToQuantitySelector(prodId) {
-		addItemToCart(prodId);
-		const wrapper = document.getElementById(`action-wrapper-${prodId}`);
-		wrapper.innerHTML = `
-			<div class="inline-qty-control">
-				<button class="inline-qty-btn" onclick="updateQtyFromHome('${prodId}', -1)">-</button>
-				<span id="qty-val-${prodId}" class="inline-qty-val">${shoppingCartState[prodId].qty}</span>
-				<button class="inline-qty-btn" onclick="updateQtyFromHome('${prodId}', 1)">+</button>
-			</div>
-		`;
-	}
-
-	function updateQtyFromHome(prodId, delta) {
-		shoppingCartState[prodId].qty += delta;
-		if (shoppingCartState[prodId].qty <= 0) {
-			delete shoppingCartState[prodId];
-			document.getElementById(`action-wrapper-${prodId}`).innerHTML = 
-				`<button class="quick-add-btn" onclick="convertToQuantitySelector('${prodId}')">+</button>`;
-		} else {
-			document.getElementById(`qty-val-${prodId}`).innerText = shoppingCartState[prodId].qty;
+		function quickAddHandler(prodId) {
+			event.stopPropagation();
+			addItemToCart(prodId); // Adds item to cart
+			updateCardActionWidget(prodId); // Uses your existing logic to draw the +/- widget
 		}
-		synchronizeCartBadgeUI();
-	}
+
+		function updateQtyFromHome(prodId, delta) {
+			shoppingCartState[prodId].qty += delta;
+			if (shoppingCartState[prodId].qty <= 0) {
+				delete shoppingCartState[prodId];
+				document.getElementById(`action-wrapper-${prodId}`).innerHTML = 
+					`<button class="quick-add-btn" onclick="convertToQuantitySelector('${prodId}')">+</button>`;
+			} else {
+				document.getElementById(`qty-val-${prodId}`).innerText = shoppingCartState[prodId].qty;
+			}
+			synchronizeCartBadgeUI();
+		}
     fetchProducts();
     </script>
 </body>
