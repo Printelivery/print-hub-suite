@@ -564,8 +564,8 @@
 							<p class="product-desc">${prod.desc.substring(0, 120)}${prod.desc.length > 120 ? '...' : ''}</p>
 							<div class="action-row">
 								<span class="price">${prod.price}</span>
-								<div id="action-wrapper-${prod.id}">
-									<button class="quick-add-btn" onclick="convertToQuantitySelector('${prod.id}')">+</button>
+								<div id="action-wrapper-${prod.id}" onclick="event.stopPropagation()">
+									${actionWidgetHTML}
 								</div>
 							</div>
 						</div>
@@ -1082,6 +1082,7 @@
 		}
 
 		function updateQtyFromHome(prodId, delta) {
+			event.stopPropagation();
 			shoppingCartState[prodId].qty += delta;
 			if (shoppingCartState[prodId].qty <= 0) {
 				delete shoppingCartState[prodId];
