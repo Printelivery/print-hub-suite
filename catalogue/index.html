@@ -115,7 +115,6 @@
 			position: relative; 
 			/* This ensures nothing inside forces the card to break shape */
 			box-sizing: border-box; 
-            cursor: pointer;
 		}
 		/* 3. The Image and Text: Locked proportions of the total area */
 		.image-container {
@@ -147,7 +146,31 @@
         .price { font-size: 1.25rem; font-weight: 800; color: var(--primary-color); }
         .order-button { background-color: var(--accent-color); color: white; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 600; font-size: 0.9rem; cursor: pointer; transition: background-color 0.2s ease; height: 100%; box-sizing: border-box; }
         .order-button:hover { background-color: #20ba59; }
-
+		.inline-qty-control { display: flex; align-items: center; gap: 8px; background: #f0f0f0; border-radius: 20px; padding: 4px; justify-content: center; }
+		.inline-qty-btn { border: none; background: white; border-radius: 50%; width: 25px; height: 25px; cursor: pointer; font-weight: bold; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+		.inline-qty-val { font-weight: bold; min-width: 20px; text-align: center; }
+		/* Quick Add Button Styles */
+		.quick-add-btn {
+			position: absolute;
+			bottom: 10px;
+			right: 10px;
+			background-color: var(--accent-color) !important;
+			color: white !important;
+			border: none !important;
+			border-radius: 50% !important;
+			width: 35px !important;
+			height: 35px !important;
+			font-size: 20px !important;
+			font-weight: bold !important;
+			cursor: pointer !important;
+			display: flex !important;
+			align-items: center !important;
+			justify-content: center !important;
+			box-shadow: 0 2px 5px rgba(0,0,0,0.2) !important;
+			z-index: 10;
+		}
+		.quick-add-btn:hover { background-color: #20ba59 !important; transform: scale(1.1); }
+        
         .inline-qty-control { display: flex; align-items: center; gap: 8px; background: #edf2f7; border-radius: 8px; padding: 4px 8px; height: 100%; box-sizing: border-box; }
         .inline-qty-btn { background: white; border: 1px solid #cbd5e0; width: 32px; height: 32px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; }
         .inline-qty-val { font-weight: 700; width: 25px; text-align: center; font-size: 1rem; }
@@ -172,24 +195,83 @@
 			left: 0; 
 			width: 100%; 
 			height: 100%; 
-			background: #ffffff; 
+			background: #ffffff; /* Changed from rgba(0, 0, 0, 0.75) to white */
 			display: none; 
 			z-index: 1000; 
-			padding: 0; 
+			padding: 0; /* Remove padding to go edge-to-edge */
 			overflow-y: auto; 
 		}
+		
+		
         .modal-body { background: white; padding: 30px; border-radius: 16px; max-width: 600px; width: 100%; position: relative; max-height: 90vh; overflow-y: auto; }
         .close-modal { position: absolute; top: 20px; right: 25px; font-size: 2.5rem; cursor: pointer; color: #ffffff; z-index: 1050; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
-        
+        .close-modal:hover { color: var(--accent-color); }
+
         #mediaViewModal { z-index: 2000; background: rgba(0, 0, 0, 0.85) !important; }
-		#mediaViewModal .modal-body { position: absolute !important; top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) !important; max-width: 90vw !important; max-height: 90vh !important; background: transparent; box-shadow: none; width: auto; height: auto; padding: 0; overflow: hidden !important; }
+		#mediaViewModal .modal-body {
+			/* Forces dead-center alignment */
+			position: absolute !important;
+			top: 50% !important;
+			left: 50% !important;
+			transform: translate(-50%, -50%) !important;
+			
+			/* 90% size leaves exactly 5% padding on all 4 sides */
+			max-width: 90vw !important;
+			max-height: 90vh !important;
+			
+			background: transparent;
+			box-shadow: none;
+			width: auto;
+			height: auto;
+			padding: 0;
+			overflow: hidden !important; /* THIS REMOVES THE SCROLLBARS */
+		}
         #expandedMediaFrame { max-width: 100%; max-height: 85vh; width: auto; height: auto; border-radius: 8px; object-fit: contain; display: block; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
-        .modal-slider-btn { position: absolute !important; top: 50% !important; transform: translateY(-50%) !important; background: rgba(0, 0, 0, 0.6) !important; color: white !important; border: none !important; width: 50px !important; height: 50px !important; border-radius: 50% !important; cursor: pointer !important; font-weight: bold !important; font-size: 1.6rem !important; display: none; z-index: 2020 !important; transition: background 0.2s, transform 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+        .modal-slider-btn {
+			position: absolute !important;
+			top: 50% !important;
+			transform: translateY(-50%) !important;
+			background: rgba(0, 0, 0, 0.6) !important;
+			color: white !important;
+			border: none !important;
+			width: 50px !important;
+			height: 50px !important;
+			border-radius: 50% !important;
+			cursor: pointer !important;
+			font-weight: bold !important;
+			font-size: 1.6rem !important;
+			display: none; /* JS will toggle this to 'block' */
+			z-index: 2020 !important;
+			transition: background 0.2s, transform 0.2s;
+			box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+		}
 		.modal-slider-btn:hover { background: var(--primary-color) !important; transform: translateY(-50%) scale(1.05); }
 		.modal-slider-btn.prev { left: 10px !important; }
 		.modal-slider-btn.next { right: 10px !important; }
-
-        #productDetailModal .modal-body { background: white; width: 90vw !important; height: 90vh !important; max-width: 100% !important; position: absolute !important; top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) !important; border-radius: 8px; padding: 0; overflow: hidden; display: flex; flex-direction: row; }
+        #productDetailModal .modal-body { 
+			background: white; 
+			/* 90vw/vh leaves exactly 10% remaining space, centered into a 5% margin on all sides */
+			width: 90vw !important; 
+			height: 90vh !important; 
+			max-width: 100% !important;
+			position: absolute !important;
+			top: 50% !important;
+			left: 50% !important;
+			transform: translate(-50%, -50%) !important;
+			
+			border-radius: 8px; /* Optional: tiny rounded corner for a premium look */
+			padding: 0; 
+			overflow: hidden; 
+			display: flex; 
+			flex-direction: row;
+		}
+		/* Ensures the image scales properly within the 5% padding */
+		#mediaViewModal .modal-body img {
+			max-width: 100%;
+			max-height: 100%;
+			object-fit: contain;
+			display: block;
+		}
         .detail-media-pane { width: 55%; background: #edf2f7; position: relative; display: flex; align-items: center; justify-content: center; height: 100%; }
         .detail-main-img { width: 100%; height: 100%; object-fit: cover; cursor: pointer; }
         .detail-info-pane { width: 45%; padding: 40px; display: flex; flex-direction: column; overflow-y: auto; box-sizing: border-box; height: 100%; }
@@ -199,7 +281,11 @@
 			.modal-slider-btn { width: 40px !important; height: 40px !important; font-size: 1.2rem !important; }
             .modal-slider-btn.prev { left: 15px !important; }
 			.modal-slider-btn.next { right: 15px !important; }
-            #productDetailModal .modal-body { flex-direction: column; width: 90vw !important; height: 90vh !important; }
+            #productDetailModal .modal-body { 
+				flex-direction: column; 
+				width: 90vw !important; 
+				height: 90vh !important;
+			}
             .detail-media-pane { width: 100%; height: 350px; }
             .detail-info-pane { width: 100%; padding: 25px; height: auto; }
         }
@@ -218,8 +304,10 @@
         .form-group input, .form-group textarea { padding: 10px; border: 1px solid #cbd5e0; border-radius: 6px; font-size: 0.95rem; }
         .checkout-btn { background-color: var(--accent-color); color: white; border: none; width: 100%; padding: 12px; border-radius: 8px; font-weight: 700; font-size: 1rem; cursor: pointer; margin-top: 10px; }
         .checkout-btn:hover { background-color: #20ba59; }
+        .checkout-btn:disabled { opacity: 0.6; cursor: not-allowed; }
         .loading { text-align: center; grid-column: 1 / -1; font-size: 1.2rem; color: #718096; padding: 40px; }
 
+        /* Hidden Invoice Container for PDF generation */
         #invoiceRenderCanvas { display: none; font-family: Arial, sans-serif; padding: 40px; color: #333; }
         .inv-header { display: flex; justify-content: space-between; border-bottom: 2px solid #075E54; padding-bottom: 15px; margin-bottom: 20px; }
         .inv-title { color: #075E54; font-size: 24px; font-weight: bold; margin: 0; }
@@ -449,13 +537,21 @@
 
             paginatedItems.forEach((prod, index) => {
                 const globalIndex = startIndex + index;
+                const cartItem = shoppingCartState[prod.id];
                 
-                // Helper to build the Add-to-cart button block
-                const actionHTML = getActionWidgetHTML(prod.id);
+                let actionWidgetHTML = `<button class="order-button" onclick="addItemToCart('${prod.id}'); event.stopPropagation();">Add to Cart</button>`;
+                if (cartItem && cartItem.qty > 0) {
+                    actionWidgetHTML = `
+                        <div class="inline-qty-control" onclick="event.stopPropagation()">
+                            <button class="inline-qty-btn" onclick="alterItemQuantity('${prod.id}', -1)">-</button>
+                            <span class="inline-qty-val">${cartItem.qty}</span>
+                            <button class="inline-qty-btn" onclick="alterItemQuantity('${prod.id}', 1)">+</button>
+                        </div>
+                    `;
+                }
 
                 const fallbackSrcString = `https://placehold.co/600x400/075E54/white?text=${encodeURIComponent(prod.name)}`;
                 const displaySrc = (prod.loadedImages && prod.loadedImages.length > 0) ? prod.loadedImages[0] : fallbackSrcString;
-                
 				const cardHTML = `
 					<div class="product-card" onclick="launchProductDetailModal('${prod.id}')">
 						<div class="image-container" onclick="event.stopPropagation()">
@@ -469,7 +565,7 @@
 							<div class="action-row">
 								<span class="price">${prod.price}</span>
 								<div id="action-wrapper-${prod.id}" onclick="event.stopPropagation()">
-									${actionHTML}
+									${actionWidgetHTML}
 								</div>
 							</div>
 						</div>
@@ -480,26 +576,6 @@
             });
 
             buildPaginationControlsUI();
-        }
-
-        // Logic that was missing/broken: centralize the Action Widget creation
-        function getActionWidgetHTML(productId) {
-            const cartItem = shoppingCartState[productId];
-            if (cartItem && cartItem.qty > 0) {
-                return `
-                    <div class="inline-qty-control" onclick="event.stopPropagation()">
-                        <button class="inline-qty-btn" onclick="alterItemQuantity('${productId}', -1)">-</button>
-                        <span class="inline-qty-val">${cartItem.qty}</span>
-                        <button class="inline-qty-btn" onclick="alterItemQuantity('${productId}', 1)">+</button>
-                    </div>
-                `;
-            }
-            return `<button class="order-button" onclick="addItemToCart('${productId}'); event.stopPropagation();">Add to Cart</button>`;
-        }
-
-        function updateCardActionWidget(productId) {
-            const wrapper = document.getElementById(`action-wrapper-${productId}`);
-            if (wrapper) wrapper.innerHTML = getActionWidgetHTML(productId);
         }
 
         function buildPaginationControlsUI() {
@@ -705,6 +781,24 @@
             }
         }
 
+        function updateCardActionWidget(productId) {
+            const wrapper = document.getElementById(`action-wrapper-${productId}`);
+            if (!wrapper) return;
+
+            const cartItem = shoppingCartState[productId];
+            if (cartItem && cartItem.qty > 0) {
+                wrapper.innerHTML = `
+                    <div class="inline-qty-control" onclick="event.stopPropagation()">
+                        <button class="inline-qty-btn" onclick="alterItemQuantity('${productId}', -1)">-</button>
+                        <span class="inline-qty-val">${cartItem.qty}</span>
+                        <button class="inline-qty-btn" onclick="alterItemQuantity('${productId}', 1)">+</button>
+                    </div>
+                `;
+            } else {
+                wrapper.innerHTML = `<button class="order-button" onclick="addItemToCart('${productId}'); event.stopPropagation();">Add to Cart</button>`;
+            }
+        }
+
         function synchronizeCartBadgeUI() {
             let totalCount = 0;
             for (let id in shoppingCartState) {
@@ -818,6 +912,7 @@
 			const grossValueStr = aggregateOrderValue.toFixed(2);
 
 			const canvas = document.getElementById('invoiceRenderCanvas');
+			// Added CSS for page-break-inside avoid
 			canvas.innerHTML = `
 				<style>
 					.inv-table { width: 100%; border-collapse: collapse; }
@@ -882,6 +977,9 @@
 				await html2pdf().from(canvas).set(pdfOptions).save();
 				canvas.style.display = "none";
 				
+				
+				
+				// 4. Prepare Summary HTML
 				const summaryHtml = `
 					<div style="margin-top: 20px; border-top: 2px solid #075E54; padding-top: 15px; font-family: sans-serif; width: 100%; max-width: 400px; margin-left: auto;">
 						<div style="display: flex; justify-content: space-between; margin-bottom: 8px;"><span>Taxable Net Amount:</span> <span>₹${baseTaxableAmount}</span></div>
@@ -889,8 +987,40 @@
 						<div style="display: flex; justify-content: space-between; font-weight: bold; border-top: 1px solid #075E54; padding-top: 8px; color: #075E54;"><span>Gross Total:</span> <span>₹${grossValueStr}</span></div>
 					</div>`;
 
-				triggerEmailBackend(customerDetails, orderId, base64Pdf, summaryHtml, grossValueStr);
+				// Combine table and summary
+				let itemsSummaryHtml = `
+					<div style="font-family: sans-serif;">
+						<table border="1" style="border-collapse: collapse; width: 100%; text-align: left;">
+							<thead>
+								<tr style="background-color: #f2f2f2;">
+									<th style="padding: 8px;">Product</th>
+									<th style="padding: 8px;">Description</th>
+									<th style="padding: 8px;">Price</th>
+									<th style="padding: 8px;">Qty</th>
+									<th style="padding: 8px;">Total</th>
+								</tr>
+							</thead>
+							<tbody>
+								${Object.values(shoppingCartState).map(i => `
+									<tr>
+										<td style="padding: 8px;">
+											<img src="${(i.metadata.loadedImages && i.metadata.loadedImages.length > 0) ? i.metadata.loadedImages[0] : `https://print-hub-suite.vercel.app/images/${i.metadata.id}.jpg`}" 
+											width="50" height="50" style="border-radius: 4px;" onerror="this.style.display='none'">
+										</td>
+										<td style="padding: 8px;">${i.metadata.name}</td>
+										<td style="padding: 8px;">${i.metadata.price}</td>
+										<td style="padding: 8px;">${i.qty}</td>
+										<td style="padding: 8px;">₹${(parseFloat(i.metadata.price.replace(/[^0-9.]/g, '')) * i.qty).toFixed(2)}</td>
+									</tr>
+								`).join('')}
+							</tbody>
+						</table>
+						${summaryHtml}
+					</div>`;
 
+				triggerEmailBackend(customerDetails, orderId, base64Pdf, itemsSummaryHtml, grossValueStr);
+
+				// Fixed WhatsApp generation logic
 				let whatsappTextMsg = `*New Order Confirmed - Printelivery*\n\n`;
 				whatsappTextMsg += `*Order ID:* ${orderId}\n`;
 				whatsappTextMsg += `*Date:* ${dateString}\n\n`;
@@ -916,7 +1046,7 @@
 				actionSubmitBtn.disabled = false;
 			}
 		}
-
+		// This function now handles the PDF attachment data
 		async function triggerEmailBackend(customerDetails, orderId, pdfBase64, itemsSummary, total) {
 			const payload = {
 				name: customerDetails.name,
@@ -926,11 +1056,11 @@
 				itemsText: itemsSummary,
 				grandTotal: total,
 				addressBlock: `${customerDetails.flat}, ${customerDetails.address}, ${customerDetails.pin}`,
-				pdfBase64: pdfBase64
+				pdfBase64: pdfBase64 // This is the magic key for your Google Script
 			};
 
 			try {
-				await fetch(BACKEND_API_ENDPOINT, {
+				await fetch("https://script.google.com/macros/s/AKfycbyYJdFH5XAyo0LJSO7QsW7KxDToH7SIprX4uZzUhu4GvPn9BHq-LYOYnqOf18A_EYc/exec", {
 					method: 'POST',
 					mode: 'no-cors',
 					headers: { 'Content-Type': 'application/json' },
@@ -941,8 +1071,34 @@
 				console.error("Email/PDF attachment failed:", err);
 			}
 		}
+		function addToCartFromHome(productId) {
+			event.stopPropagation(); // Prevents the modal from opening
+			addItemToCart(productId); // Reuses your existing cart function
+		}
+		function convertToQuantitySelector(prodId) {
+		addItemToCart(prodId);
+		const wrapper = document.getElementById(`action-wrapper-${prodId}`);
+		wrapper.innerHTML = `
+			<div class="inline-qty-control">
+				<button class="inline-qty-btn" onclick="updateQtyFromHome('${prodId}', -1)">-</button>
+				<span id="qty-val-${prodId}" class="inline-qty-val">${shoppingCartState[prodId].qty}</span>
+				<button class="inline-qty-btn" onclick="updateQtyFromHome('${prodId}', 1)">+</button>
+			</div>
+		`;
+	}
 
-        fetchProducts();
+	function updateQtyFromHome(prodId, delta) {
+		shoppingCartState[prodId].qty += delta;
+		if (shoppingCartState[prodId].qty <= 0) {
+			delete shoppingCartState[prodId];
+			document.getElementById(`action-wrapper-${prodId}`).innerHTML = 
+				`<button class="quick-add-btn" onclick="convertToQuantitySelector('${prodId}')">+</button>`;
+		} else {
+			document.getElementById(`qty-val-${prodId}`).innerText = shoppingCartState[prodId].qty;
+		}
+		synchronizeCartBadgeUI();
+	}
+    fetchProducts();
     </script>
 </body>
 </html>
