@@ -94,10 +94,9 @@ function closeAddressCollectionModal() { document.getElementById('addressCapture
 
 function renderCartDrawerListContent() {
     const container = document.getElementById('cartItemsContainer');
-    const summary = document.getElementById('cartSummaryBlock');
     container.innerHTML = '';
     Object.values(shoppingCartState).forEach(item => {
-        container.innerHTML += `<div class="cart-item"><h4>${item.metadata.name}</h4><p>${item.qty} x ${item.metadata.price}</p><div class="qty-controls"><button class="qty-btn" onclick="alterItemQuantity('${item.metadata.id}', -1)">-</button>${item.qty}<button class="qty-btn" onclick="alterItemQuantity('${item.metadata.id}', 1)">+</button></div></div>`;
+        container.innerHTML += `<div class="cart-item"><h4>${item.metadata.name}</h4><p>${item.qty} x ${item.metadata.price}</p><div class="qty-controls"><button class="qty-btn" onclick="alterItemQuantity('${item.metadata.id}', -1); renderCartDrawerListContent();">-</button>${item.qty}<button class="qty-btn" onclick="alterItemQuantity('${item.metadata.id}', 1); renderCartDrawerListContent();">+</button></div></div>`;
     });
 }
 
@@ -109,15 +108,42 @@ function buildPaginationControlsUI() {
         container.innerHTML += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="jumpToPage(${i})">${i}</button>`;
     }
 }
+
 function jumpToPage(p) { currentPage = p; renderCatalogViewEngine(); }
+
+// UPDATED FUNCTION TO LINK OrderHandler.html
 async function compileFinalInvoiceAndSend(event) {
     event.preventDefault();
-    const canvas = document.getElementById('invoiceRenderCanvas');
-    canvas.innerHTML = `<h3>Invoice Generated</h3><p>Order processed.</p>`;
-    const pdfOptions = { filename: 'Invoice.pdf', html2canvas: { scale: 2 } };
-    const pdf = await html2pdf().from(canvas).set(pdfOptions).output('datauristring');
-    triggerEmailBackend({name: document.getElementById('custName').value}, "INV-123", pdf.split(',')[1], "Items", "Total");
-    alert("Order processed!");
+
+    const payload = {
+        customerDetails: {
+            name: document.getElementById('custName').value,
+            phone: document.getElementById('custPhone').value,
+            email: document.getElementById('custEmail').value,
+            flat: document.getElementById('custFlat').value,
+            address: document.getElementById('custAddress').value,
+            pin: document.getElementById('custPin').value
+        },
+        orderId: "INV-" + Date.now(),
+        itemsHtml: Object.values(shoppingCartState).map(item => 
+            `<tr><td>${item.metadata.name}</td><td>${item.metadata.id}</td><td>${item.metadata.price}</td><td>${item.qty}</td></tr>`
+        ).join(''),
+        dateString: new Date().toLocaleDateString(),
+        grossValueStr: "0.00", 
+        baseTaxableAmount: "0.00",
+        calculatedGstSlice: "0.00",
+        whatsappProductsList: Object.values(shoppingCartState).map(i => `${i.metadata.name} x ${i.qty}`)
+    };
+
+    // This targets the iframe id="order-bridge" that you added to Index.html
+    const bridge = document.getElementById('order-bridge');
+    if (bridge && bridge.contentWindow) {
+        bridge.contentWindow.postMessage({ type: 'PROCESS_ORDER', payload: payload }, '*');
+        alert("Processing your order in the background...");
+    } else {
+        alert("Error: Order Handler bridge not found. Ensure the iframe is in Index.html.");
+    }
+
     closeAddressCollectionModal();
 }
 
