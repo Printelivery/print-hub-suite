@@ -32,7 +32,6 @@
 			z-index: -1; /* Place behind everything */
 			background: url('https://print-hub-suite.vercel.app/images/BG_CATALOGUE.jpg') no-repeat center center fixed;
 			background-size: cover;
-			/* CONTROL THE OPACITY HERE (0.0 to 1.0) */
 			opacity: 0.3; 
 		}
         .header {
@@ -82,10 +81,9 @@
         }
         .cart-badge { background: var(--accent-color); color: white; border-radius: 50%; padding: 2px 8px; font-size: 0.8rem; }
 
-		/* 1. The Grid: Defines the maximum and minimum size of the WHOLE card */
+		/* 1. The Grid */
 		.catalog-grid {
 			display: grid;
-			/* This defines how many cards fit and their size range */
 			grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
 			gap: 30px;
 			padding: 20px;
@@ -114,7 +112,7 @@
 		}
         .product-card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1); }
 		
-		/* 3. Fixed Image Container (Prevents flexbox collapse) */
+		/* 3. Fixed Image Container */
 		.image-container {
 			width: 100%;
 			height: 220px; 
@@ -149,15 +147,7 @@
         .inline-qty-btn { background: white; border: 1px solid #cbd5e0; width: 32px; height: 32px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; }
         .inline-qty-val { font-weight: 700; width: 25px; text-align: center; font-size: 1rem; }
 
-        .pagination-container { 
-			display: flex; 
-			justify-content: center; 
-			align-items: center; 
-			gap: 5px; 
-			margin: 40px auto 0 auto; 
-			max-width: 100%; 
-			flex-wrap: wrap; 
-		}
+        .pagination-container { display: flex; justify-content: center; align-items: center; gap: 5px; margin: 40px auto 0 auto; max-width: 100%; flex-wrap: wrap; }
         .page-btn { padding: 8px 14px; border: 1px solid #cbd5e0; background: white; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.9rem; transition: all 0.2s; }
         .page-btn:hover:not(:disabled) { background: #edf2f7; border-color: #a0aec0; }
         .page-btn.active { background: var(--primary-color); color: white; border-color: var(--primary-color); }
@@ -171,10 +161,7 @@
         #mediaViewModal { z-index: 2000; }
         #mediaViewModal .modal-body { background: transparent; box-shadow: none; padding: 0; max-width: 80vw; max-height: 85vh; width: auto; height: auto; display: flex; justify-content: center; align-items: center; position: relative; overflow: visible; }
         #expandedMediaFrame { max-width: 100%; max-height: 85vh; width: auto; height: auto; border-radius: 8px; object-fit: contain; display: block; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
-        .modal-slider-btn {
-            position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0, 0, 0, 0.6);
-            color: white; border: none; width: 50px; height: 50px; border-radius: 50%; cursor: pointer; font-weight: bold; font-size: 1.6rem; display: none; z-index: 2020; transition: background 0.2s, transform 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-        }
+        .modal-slider-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0, 0, 0, 0.6); color: white; border: none; width: 50px; height: 50px; border-radius: 50%; cursor: pointer; font-weight: bold; font-size: 1.6rem; display: none; z-index: 2020; transition: background 0.2s, transform 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
         .modal-slider-btn:hover { background: var(--primary-color); transform: translateY(-50%) scale(1.05); }
         .modal-slider-btn.prev { left: -75px; }
         .modal-slider-btn.next { right: -75px; }
@@ -196,6 +183,7 @@
         .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #edf2f7; }
         .cart-item-meta h4 { margin: 0 0 4px 0; color: #1a202c; }
         .cart-item-meta p { margin: 0; color: #718096; font-size: 0.9rem; }
+        .cart-price-input { width: 75px; padding: 4px 6px; border: 1px solid #cbd5e0; border-radius: 4px; font-size: 0.95rem; margin: 0 4px; text-align: center; }
         .qty-controls { display: flex; align-items: center; gap: 8px; }
         .qty-btn { background: #edf2f7; border: none; width: 28px; height: 28px; border-radius: 4px; cursor: pointer; font-weight: bold; }
         .cart-summary { margin-top: 20px; border-top: 2px solid #edf2f7; padding-top: 15px; }
@@ -210,7 +198,6 @@
         .checkout-btn:disabled { opacity: 0.6; cursor: not-allowed; }
         .loading { text-align: center; grid-column: 1 / -1; font-size: 1.2rem; color: #718096; padding: 40px; }
 
-        /* Hidden Invoice Container for PDF generation */
         #invoiceRenderCanvas { display: none; font-family: Arial, sans-serif; padding: 40px; color: #333; }
         .inv-header { display: flex; justify-content: space-between; border-bottom: 2px solid #075E54; padding-bottom: 15px; margin-bottom: 20px; }
         .inv-title { color: #075E54; font-size: 24px; font-weight: bold; margin: 0; }
@@ -482,10 +469,8 @@
                 `;
             });
 
-            // Render all HTML strings safely once
             catalogContainer.innerHTML = catalogHTML;
 
-            // Load images after DOM is fully constructed
             paginatedItems.forEach((prod, index) => {
                 checkMultiImages(prod.id, startIndex + index);
             });
@@ -696,6 +681,19 @@
             }
         }
 
+        function updateItemUnitPrice(productId, newPrice) {
+            if (!shoppingCartState[productId]) return;
+            let parsedPrice = parseFloat(newPrice);
+            
+            // If the user clears the input or types an invalid number, revert to original spreadsheet price behavior
+            if (isNaN(parsedPrice) || parsedPrice < 0) {
+                delete shoppingCartState[productId].overriddenPrice;
+            } else {
+                shoppingCartState[productId].overriddenPrice = parsedPrice;
+            }
+            renderCartDrawerListContent(); 
+        }
+
         function updateCardActionWidget(productId) {
             const wrapper = document.getElementById(`action-wrapper-${productId}`);
             if (!wrapper) return;
@@ -749,19 +747,36 @@
 
             itemsArray.forEach(item => {
                 let numericPrice = parseFloat(String(item.metadata.price).replace(/[^0-9.]/g, '')) || 0;
-                let itemCostSum = numericPrice * item.qty;
+                let dpString = item.metadata.discountedPrice;
+                let parsedDp = dpString ? parseFloat(String(dpString).replace(/[^0-9.]/g, '')) : NaN;
+                let baseDiscountedPrice = isNaN(parsedDp) ? numericPrice : parsedDp;
+                
+                // Use overridden price if admin typed a new one, else default to csv data
+                let effectivePrice = item.overriddenPrice !== undefined ? item.overriddenPrice : baseDiscountedPrice;
+
+                let itemCostSum = effectivePrice * item.qty;
                 grandTotal += itemCostSum;
 
                 container.innerHTML += `
-                    <div class="cart-item">
-                        <div class="cart-item-meta">
+                    <div class="cart-item" style="flex-wrap: wrap; gap: 10px;">
+                        <div class="cart-item-meta" style="flex: 1; min-width: 150px;">
                             <h4>${item.metadata.name}</h4>
-                            <p>${item.metadata.price} &times; ${item.qty}</p>
+                            <div style="display: flex; align-items: center; margin-top: 4px;">
+                                <span style="color: #718096; font-size: 0.9rem;">₹</span>
+                                <input type="number" step="0.01" min="0" value="${effectivePrice.toFixed(2)}"
+                                       class="cart-price-input" 
+                                       title="Override Unit Price"
+                                       onchange="updateItemUnitPrice('${item.metadata.id}', this.value)">
+                                <span style="color: #718096; font-size: 0.9rem;">&times; ${item.qty}</span>
+                            </div>
                         </div>
                         <div class="qty-controls">
                             <button class="qty-btn" onclick="alterItemQuantity('${item.metadata.id}', -1)">-</button>
                             <span style="font-weight:bold; width:20px; text-align:center;">${item.qty}</span>
                             <button class="qty-btn" onclick="alterItemQuantity('${item.metadata.id}', 1)">+</button>
+                        </div>
+                        <div style="font-weight: bold; width: 100%; text-align: right; color: var(--primary-color);">
+                            ₹${itemCostSum.toFixed(2)}
                         </div>
                     </div>
                 `;
@@ -806,12 +821,14 @@
             let whatsappProductsList = []; 
 
             Object.values(shoppingCartState).forEach((item) => {
-                // Ensure strings are fully scrubbed of currency symbols before parsing
                 let numericPrice = parseFloat(String(item.metadata.price).replace(/[^0-9.]/g, '')) || 0;
                 
                 let dpString = item.metadata.discountedPrice;
                 let parsedDp = dpString ? parseFloat(String(dpString).replace(/[^0-9.]/g, '')) : NaN;
-                let discountedPrice = isNaN(parsedDp) ? numericPrice : parsedDp;
+                let baseDiscountedPrice = isNaN(parsedDp) ? numericPrice : parsedDp;
+                
+                // Prioritize overridden price applied in the cart
+                let discountedPrice = item.overriddenPrice !== undefined ? item.overriddenPrice : baseDiscountedPrice;
                 
                 let costSum = discountedPrice * item.qty;
                 aggregateOrderValue += costSum;
@@ -829,17 +846,12 @@
                 whatsappProductsList.push(`- ${item.metadata.name} (${item.qty} x ₹${discountedPrice.toFixed(2)})`);
             });
             
-            // Read manual flat discount and manual round off inputs
             const flatDiscount = parseFloat(document.getElementById('orderFlatDiscount')?.value) || 0.00;
             const roundOffAmount = parseFloat(document.getElementById('orderRoundOff')?.value) || 0.00;
             
-            // 1. Base Subtotal is purely the sum of item rows
             const subtotal = aggregateOrderValue;
-            
-            // 2. Final Gross Total calculated AFTER flat discount and round off
             const finalGrossTotal = subtotal - flatDiscount + roundOffAmount;
             
-            // 3. Tax is backed out of the final Gross Total as requested
             const baseTaxableAmount = (finalGrossTotal / 1.18).toFixed(2);
             const calculatedGstSlice = (finalGrossTotal - parseFloat(baseTaxableAmount)).toFixed(2);
             const grossValueStr = finalGrossTotal.toFixed(2);
@@ -941,7 +953,8 @@
                                     let np = parseFloat(String(i.metadata.price).replace(/[^0-9.]/g, '')) || 0;
                                     let dpString = i.metadata.discountedPrice;
                                     let parsedDp = dpString ? parseFloat(String(dpString).replace(/[^0-9.]/g, '')) : NaN;
-                                    let dp = isNaN(parsedDp) ? np : parsedDp;
+                                    let baseDp = isNaN(parsedDp) ? np : parsedDp;
+                                    let dp = i.overriddenPrice !== undefined ? i.overriddenPrice : baseDp;
                                     return `
                                     <tr>
                                         <td style="padding: 8px;">
