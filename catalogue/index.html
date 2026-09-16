@@ -101,46 +101,38 @@
         @media (max-width: 1024px) { .catalog-grid { grid-template-columns: repeat(2, 1fr) !important; } }
         @media (max-width: 650px) { .catalog-grid { grid-template-columns: repeat(1, 1fr) !important; } }
 
-		/* 2. The Card: Locked as a single square unit */
+		/* 2. The Card */
 		.product-card {
 			background: #ffffff;
 			border-radius: 16px;
 			box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-			
-			/* THE KEY: Locks the card aspect ratio */
-			aspect-ratio: 1 / 1; 
-			
-			/* Ensures nothing inside breaks the card's square shape */
 			display: flex;
 			flex-direction: column;
 			overflow: hidden; 
 			border: 1px solid #e2e8f0;
-			
-			/* Smooth scaling effect */
 			transition: transform 0.2s ease;
 		}
         .product-card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1); }
 		
-		/* 3. The Image: Now a simple child of the block */
+		/* 3. Fixed Image Container (Prevents flexbox collapse) */
 		.image-container {
 			width: 100%;
-			/* Instead of percentage, we give it a fixed flex proportion */
-			flex: 3; 
+			height: 220px; 
+			flex-shrink: 0;
 			overflow: hidden;
 		}
 
 		.product-image {
 			width: 100%;
 			height: 100%;
-			object-fit: cover; /* Image fills its container perfectly */
+			object-fit: cover; 
 		}
         .product-details { padding: 24px; display: flex; flex-direction: column; flex-grow: 1; }
         .product-group-tag { font-size: 0.75rem; font-weight: 700; color: var(--primary-color); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px; }
         .product-id { font-size: 0.8rem; font-weight: 600; color: #a0aec0; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
         .product-title { font-size: 1.2rem; font-weight: 700; margin: 0 0 10px 0; color: #1a202c; line-height: 1.4; }
-		/* 4. The Info: Always stays below the image */
 		.product-desc {
-			flex: 1; /* Always takes 1/4 of the card space */
+			flex: 1; 
 			padding: 15px;
 			display: flex;
 			flex-direction: column;
@@ -340,11 +332,11 @@
                 </div>
                 <div class="form-group">
                     <label for="orderFlatDiscount">Flat Discount (₹)</label>
-                    <input type="number" id="orderFlatDiscount" min="0" value="0" step="1.0" placeholder="0.00">
+                    <input type="number" id="orderFlatDiscount" min="0" value="0" step="0.01" placeholder="0.00">
                 </div>
                 <div class="form-group">
                     <label for="orderRoundOff">Round Off Adjustment (₹)</label>
-                    <input type="number" id="orderRoundOff" value="0.00" step="1.0" placeholder="e.g. -2.00 or 0.50">
+                    <input type="number" id="orderRoundOff" value="0.00" step="0.01" placeholder="e.g. -2.00 or 0.50">
                 </div>
                 <button type="submit" id="submitOrderActionBtn" class="checkout-btn">Confirm Order, Download Invoice & Send</button>
             </form>
@@ -416,7 +408,7 @@
                         name: row[2]?.trim() || "",
                         desc: row[3]?.trim() || "",
                         price: row[4]?.trim() || "",
-                        discountedPrice: row[5]?.trim() || row[4]?.trim() || "", // Reads 6th CSV column (Column F)
+                        discountedPrice: row[5]?.trim() || row[4]?.trim() || "",
                         loadedImages: [] 
                     };
                 }).filter(p => p.id !== "");
@@ -452,8 +444,9 @@
             const endIndex = startIndex + pageSize;
             const paginatedItems = localProductsRegistry.slice(startIndex, endIndex);
 
-            paginatedItems.forEach((prod, index) => {
-                const globalIndex = startIndex + index;
+            let catalogHTML = '';
+
+            paginatedItems.forEach((prod) => {
                 const cartItem = shoppingCartState[prod.id];
                 
                 let actionWidgetHTML = `<button class="order-button" onclick="addItemToCart('${prod.id}'); event.stopPropagation();">Add to Cart</button>`;
@@ -470,7 +463,7 @@
                 const fallbackSrcString = `https://placehold.co/600x400/075E54/white?text=${encodeURIComponent(prod.name)}`;
                 const displaySrc = (prod.loadedImages && prod.loadedImages.length > 0) ? prod.loadedImages[0] : fallbackSrcString;
 
-                const cardHTML = `
+                catalogHTML += `
                     <div class="product-card" onclick="launchProductDetailModal('${prod.id}')">
                         <div class="image-container">
                             <img id="card-img-${prod.id}" class="product-image" src="${displaySrc}" onerror="this.onerror=null; this.src='${fallbackSrcString}'">
@@ -487,8 +480,14 @@
                         </div>
                     </div>
                 `;
-                catalogContainer.innerHTML += cardHTML;
-                checkMultiImages(prod.id, globalIndex);
+            });
+
+            // Render all HTML strings safely once
+            catalogContainer.innerHTML = catalogHTML;
+
+            // Load images after DOM is fully constructed
+            paginatedItems.forEach((prod, index) => {
+                checkMultiImages(prod.id, startIndex + index);
             });
 
             buildPaginationControlsUI();
@@ -749,7 +748,7 @@
             let grandTotal = 0;
 
             itemsArray.forEach(item => {
-                let numericPrice = parseFloat(item.metadata.price.replace(/[^0-9.]/g, '')) || 0;
+                let numericPrice = parseFloat(String(item.metadata.price).replace(/[^0-9.]/g, '')) || 0;
                 let itemCostSum = numericPrice * item.qty;
                 grandTotal += itemCostSum;
 
@@ -802,47 +801,50 @@
 			const orderId = "INV-" + Math.floor(100000 + Math.random() * 900000);
 			const dateString = new Date().toLocaleDateString('en-IN', { dateStyle: 'long' });
 
-      let aggregateOrderValue = 0;
-      let itemsRowsHTML = '';
-      let whatsappProductsList = []; 
-      
-      // Read manual flat discount and manual round off inputs
-      const flatDiscount = parseFloat(document.getElementById('orderFlatDiscount')?.value) || 0.00;
-      const roundOffAmount = parseFloat(document.getElementById('orderRoundOff')?.value) || 0.00;
+            let aggregateOrderValue = 0;
+            let itemsRowsHTML = '';
+            let whatsappProductsList = []; 
 
-      Object.values(shoppingCartState).forEach((item) => {
-          let numericPrice = parseFloat(item.metadata.price.replace(/[^0-9.]/g, '')) || 0;
-          // Uses item.metadata.discountedPrice if defined; defaults to numericPrice
-          let discountedPrice = item.metadata.discountedPrice ? parseFloat(item.metadata.discountedPrice) : numericPrice;
-          let costSum = discountedPrice * item.qty;
-          aggregateOrderValue += costSum;
-          
-          itemsRowsHTML += `
-              <tr>
-                  <td>${item.metadata.name}</td>
-                  <td>${item.metadata.id}</td>
-                  <td>₹${numericPrice.toFixed(2)}</td>
-                  <td>₹${discountedPrice.toFixed(2)}</td>
-                  <td>${item.qty}</td>
-                  <td>₹${costSum.toFixed(2)}</td>
-              </tr>`;
-          
-          whatsappProductsList.push(`- ${item.metadata.name} (${item.qty} x ₹${discountedPrice.toFixed(2)})`);
-      });
-      
-      // Calculate net after flat discount
-      const netSubtotalAfterDiscount = aggregateOrderValue - flatDiscount;
-      
-      // Add/subtract manual round off directly to arrive at the final Gross Total
-      const finalGrossTotal = netSubtotalAfterDiscount + roundOffAmount;
-      
-      // Calculate base taxable amount & GST from the net subtotal
-      const baseTaxableAmount = (netSubtotalAfterDiscount / 1.18).toFixed(2);
-      const calculatedGstSlice = (netSubtotalAfterDiscount - parseFloat(baseTaxableAmount)).toFixed(2);
-      const grossValueStr = finalGrossTotal.toFixed(2);
+            Object.values(shoppingCartState).forEach((item) => {
+                // Ensure strings are fully scrubbed of currency symbols before parsing
+                let numericPrice = parseFloat(String(item.metadata.price).replace(/[^0-9.]/g, '')) || 0;
+                
+                let dpString = item.metadata.discountedPrice;
+                let parsedDp = dpString ? parseFloat(String(dpString).replace(/[^0-9.]/g, '')) : NaN;
+                let discountedPrice = isNaN(parsedDp) ? numericPrice : parsedDp;
+                
+                let costSum = discountedPrice * item.qty;
+                aggregateOrderValue += costSum;
+                
+                itemsRowsHTML += `
+                    <tr>
+                        <td>${item.metadata.name}</td>
+                        <td>${item.metadata.id}</td>
+                        <td>₹${numericPrice.toFixed(2)}</td>
+                        <td>₹${discountedPrice.toFixed(2)}</td>
+                        <td>${item.qty}</td>
+                        <td>₹${costSum.toFixed(2)}</td>
+                    </tr>`;
+                
+                whatsappProductsList.push(`- ${item.metadata.name} (${item.qty} x ₹${discountedPrice.toFixed(2)})`);
+            });
+            
+            // Read manual flat discount and manual round off inputs
+            const flatDiscount = parseFloat(document.getElementById('orderFlatDiscount')?.value) || 0.00;
+            const roundOffAmount = parseFloat(document.getElementById('orderRoundOff')?.value) || 0.00;
+            
+            // 1. Base Subtotal is purely the sum of item rows
+            const subtotal = aggregateOrderValue;
+            
+            // 2. Final Gross Total calculated AFTER flat discount and round off
+            const finalGrossTotal = subtotal - flatDiscount + roundOffAmount;
+            
+            // 3. Tax is backed out of the final Gross Total as requested
+            const baseTaxableAmount = (finalGrossTotal / 1.18).toFixed(2);
+            const calculatedGstSlice = (finalGrossTotal - parseFloat(baseTaxableAmount)).toFixed(2);
+            const grossValueStr = finalGrossTotal.toFixed(2);
 
 			const canvas = document.getElementById('invoiceRenderCanvas');
-			// Added CSS for page-break-inside avoid
 			canvas.innerHTML = `
 				<style>
 					.inv-table { width: 100%; border-collapse: collapse; }
@@ -870,29 +872,29 @@
 						<p style="margin:5px 0;">${customerDetails.flat},<br>${customerDetails.address}<br>PIN: ${customerDetails.pin}</p>
 					</div>
 				</div>
-        <table class="inv-table">
-            <thead>
-                <tr>
-                    <th>Item Description</th>
-                    <th>Product ID</th>
-                    <th>Unit Price</th>
-                    <th>Discounted Price</th>
-                    <th>Qty</th>
-                    <th>Total Gross</th>
-                </tr>
-            </thead>
-            <tbody>
-                ${itemsRowsHTML}
-            </tbody>
-        </table>
-        <div class="inv-summary">
-            <div class="inv-summary-row"><span>Subtotal:</span><span>₹${aggregateOrderValue.toFixed(2)}</span></div>
-            <div class="inv-summary-row"><span>Flat Discount:</span><span>-₹${flatDiscount.toFixed(2)}</span></div>
-            <div class="inv-summary-row"><span>Round Off:</span><span>${roundOffAmount >= 0 ? '+' : ''}₹${roundOffAmount.toFixed(2)}</span></div>
-            <div class="inv-summary-row"><span>Taxable Net Amount:</span><span>₹${baseTaxableAmount}</span></div>
-            <div class="inv-summary-row"><span>Integrated GST (18%):</span><span>₹${calculatedGstSlice}</span></div>
-            <div class="inv-summary-row bold"><span>Gross Total:</span><span>₹${grossValueStr}</span></div>
-        </div>
+                <table class="inv-table">
+                    <thead>
+                        <tr>
+                            <th>Item Description</th>
+                            <th>Product ID</th>
+                            <th>Unit Price</th>
+                            <th>Discounted Price</th>
+                            <th>Qty</th>
+                            <th>Total Gross</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${itemsRowsHTML}
+                    </tbody>
+                </table>
+                <div class="inv-summary">
+                    <div class="inv-summary-row"><span>Subtotal:</span><span>₹${subtotal.toFixed(2)}</span></div>
+                    <div class="inv-summary-row"><span>Flat Discount:</span><span>-₹${flatDiscount.toFixed(2)}</span></div>
+                    <div class="inv-summary-row"><span>Round Off:</span><span>${roundOffAmount >= 0 ? '+' : ''}₹${roundOffAmount.toFixed(2)}</span></div>
+                    <div class="inv-summary-row"><span>Taxable Net Amount:</span><span>₹${baseTaxableAmount}</span></div>
+                    <div class="inv-summary-row"><span>Integrated GST (18%):</span><span>₹${calculatedGstSlice}</span></div>
+                    <div class="inv-summary-row bold"><span>Gross Total:</span><span>₹${grossValueStr}</span></div>
+                </div>
 			`;
 
 			const pdfOptions = {
@@ -911,56 +913,55 @@
 				await html2pdf().from(canvas).set(pdfOptions).save();
 				canvas.style.display = "none";
 
-				// 4. Prepare Summary HTML
-        const summaryHtml = `
-            <div style="margin-top: 20px; border-top: 2px solid #075E54; padding-top: 15px; font-family: sans-serif; width: 100%; max-width: 400px; margin-left: auto;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;"><span>Subtotal:</span> <span>₹${aggregateOrderValue.toFixed(2)}</span></div>
-                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;"><span>Flat Discount:</span> <span>-₹${flatDiscount.toFixed(2)}</span></div>
-                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;"><span>Round Off:</span> <span>${roundOffAmount >= 0 ? '+' : ''}₹${roundOffAmount.toFixed(2)}</span></div>
-                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;"><span>Taxable Net Amount:</span> <span>₹${baseTaxableAmount}</span></div>
-                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;"><span>Integrated GST (18%):</span> <span>₹${calculatedGstSlice}</span></div>
-                <div style="display: flex; justify-content: space-between; font-weight: bold; border-top: 1px solid #075E54; padding-top: 8px; color: #075E54;"><span>Gross Total:</span> <span>₹${grossValueStr}</span></div>
-            </div>`;
+                const summaryHtml = `
+                    <div style="margin-top: 20px; border-top: 2px solid #075E54; padding-top: 15px; font-family: sans-serif; width: 100%; max-width: 400px; margin-left: auto;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;"><span>Subtotal:</span> <span>₹${subtotal.toFixed(2)}</span></div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;"><span>Flat Discount:</span> <span>-₹${flatDiscount.toFixed(2)}</span></div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;"><span>Round Off:</span> <span>${roundOffAmount >= 0 ? '+' : ''}₹${roundOffAmount.toFixed(2)}</span></div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;"><span>Taxable Net Amount:</span> <span>₹${baseTaxableAmount}</span></div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;"><span>Integrated GST (18%):</span> <span>₹${calculatedGstSlice}</span></div>
+                        <div style="display: flex; justify-content: space-between; font-weight: bold; border-top: 1px solid #075E54; padding-top: 8px; color: #075E54;"><span>Gross Total:</span> <span>₹${grossValueStr}</span></div>
+                    </div>`;
 
-				// Combine table and summary
-        let itemsSummaryHtml = `
-            <div style="font-family: sans-serif;">
-                <table border="1" style="border-collapse: collapse; width: 100%; text-align: left;">
-                    <thead>
-                        <tr style="background-color: #f2f2f2;">
-                            <th style="padding: 8px;">Product</th>
-                            <th style="padding: 8px;">Description</th>
-                            <th style="padding: 8px;">Unit Price</th>
-                            <th style="padding: 8px;">Discounted Price</th>
-                            <th style="padding: 8px;">Qty</th>
-                            <th style="padding: 8px;">Total</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${Object.values(shoppingCartState).map(i => {
-                            let np = parseFloat(i.metadata.price.replace(/[^0-9.]/g, '')) || 0;
-                            let dp = i.metadata.discountedPrice ? parseFloat(i.metadata.discountedPrice) : np;
-                            return `
-                            <tr>
-                                <td style="padding: 8px;">
-                                    <img src="${(i.metadata.loadedImages && i.metadata.loadedImages.length > 0) ? i.metadata.loadedImages[0] : `https://print-hub-suite.vercel.app/images/${i.metadata.id}.jpg`}" 
-                                    width="50" height="50" style="border-radius: 4px;" onerror="this.style.display='none'">
-                                </td>
-                                <td style="padding: 8px;">${i.metadata.name}</td>
-                                <td style="padding: 8px;">₹${np.toFixed(2)}</td>
-                                <td style="padding: 8px;">₹${dp.toFixed(2)}</td>
-                                <td style="padding: 8px;">${i.qty}</td>
-                                <td style="padding: 8px;">₹${(dp * i.qty).toFixed(2)}</td>
-                            </tr>`;
-                        }).join('')}
-                    </tbody>
-                </table>
-                ${summaryHtml}
-            </div>`;
+                let itemsSummaryHtml = `
+                    <div style="font-family: sans-serif;">
+                        <table border="1" style="border-collapse: collapse; width: 100%; text-align: left;">
+                            <thead>
+                                <tr style="background-color: #f2f2f2;">
+                                    <th style="padding: 8px;">Product</th>
+                                    <th style="padding: 8px;">Description</th>
+                                    <th style="padding: 8px;">Unit Price</th>
+                                    <th style="padding: 8px;">Discounted Price</th>
+                                    <th style="padding: 8px;">Qty</th>
+                                    <th style="padding: 8px;">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${Object.values(shoppingCartState).map(i => {
+                                    let np = parseFloat(String(i.metadata.price).replace(/[^0-9.]/g, '')) || 0;
+                                    let dpString = i.metadata.discountedPrice;
+                                    let parsedDp = dpString ? parseFloat(String(dpString).replace(/[^0-9.]/g, '')) : NaN;
+                                    let dp = isNaN(parsedDp) ? np : parsedDp;
+                                    return `
+                                    <tr>
+                                        <td style="padding: 8px;">
+                                            <img src="${(i.metadata.loadedImages && i.metadata.loadedImages.length > 0) ? i.metadata.loadedImages[0] : `https://print-hub-suite.vercel.app/images/${i.metadata.id}.jpg`}" 
+                                            width="50" height="50" style="border-radius: 4px;" onerror="this.style.display='none'">
+                                        </td>
+                                        <td style="padding: 8px;">${i.metadata.name}</td>
+                                        <td style="padding: 8px;">₹${np.toFixed(2)}</td>
+                                        <td style="padding: 8px;">₹${dp.toFixed(2)}</td>
+                                        <td style="padding: 8px;">${i.qty}</td>
+                                        <td style="padding: 8px;">₹${(dp * i.qty).toFixed(2)}</td>
+                                    </tr>`;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                        ${summaryHtml}
+                    </div>`;
 
 				triggerEmailBackend(customerDetails, orderId, base64Pdf, itemsSummaryHtml, grossValueStr);
 
-				// Fixed WhatsApp generation logic
 				let whatsappTextMsg = `*New Order Confirmed - Printelivery*\n\n`;
 				whatsappTextMsg += `*Order ID:* ${orderId}\n`;
 				whatsappTextMsg += `*Date:* ${dateString}\n\n`;
@@ -986,7 +987,7 @@
 				actionSubmitBtn.disabled = false;
 			}
 		}
-		// This function now handles the PDF attachment data
+		
 		async function triggerEmailBackend(customerDetails, orderId, pdfBase64, itemsSummary, total) {
 			const payload = {
 				name: customerDetails.name,
@@ -996,7 +997,7 @@
 				itemsText: itemsSummary,
 				grandTotal: total,
 				addressBlock: `${customerDetails.flat}, ${customerDetails.address}, ${customerDetails.pin}`,
-				pdfBase64: pdfBase64 // This is the magic key for your Google Script
+				pdfBase64: pdfBase64 
 			};
 
 			try {
