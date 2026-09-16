@@ -806,8 +806,9 @@
       let itemsRowsHTML = '';
       let whatsappProductsList = []; 
       
-      // Pull flat discount entered by user in the form input
+      // Read manual flat discount and manual round off inputs
       const flatDiscount = parseFloat(document.getElementById('orderFlatDiscount')?.value) || 0.00;
+      const roundOffAmount = parseFloat(document.getElementById('orderRoundOff')?.value) || 0.00;
 
       Object.values(shoppingCartState).forEach((item) => {
           let numericPrice = parseFloat(item.metadata.price.replace(/[^0-9.]/g, '')) || 0;
@@ -828,10 +829,6 @@
           
           whatsappProductsList.push(`- ${item.metadata.name} (${item.qty} x ₹${discountedPrice.toFixed(2)})`);
       });
-      
-      // Read manual flat discount and manual round off inputs
-      const flatDiscount = parseFloat(document.getElementById('orderFlatDiscount')?.value) || 0.00;
-      const roundOffAmount = parseFloat(document.getElementById('orderRoundOff')?.value) || 0.00;
       
       // Calculate net after flat discount
       const netSubtotalAfterDiscount = aggregateOrderValue - flatDiscount;
