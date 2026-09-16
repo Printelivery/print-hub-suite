@@ -851,15 +851,14 @@
             const grossValueStr = finalGrossTotal.toFixed(2);
 
 						const canvas = document.getElementById('invoiceRenderCanvas');
-            
-									canvas.innerHTML = `
-                <!-- WRAPPER: No height limits. Padding controls the narrow internal margins. -->
-                <div style="position: relative; width: 100%; padding: 5px; box-sizing: border-box;">
+            canvas.innerHTML = `
+                <!-- WRAPPER: min-height set to A4 height (297mm) forces the canvas to be the size of the page. -->
+                <div style="position: relative; width: 100%; min-height: 297mm; padding: 5px; box-sizing: border-box;">
                     
-                    <!-- IMAGE: Unrestricted area. Auto-margins center it dynamically. Object-fit ensures it scales cleanly. -->
+                    <!-- IMAGE: Centered to the physical page using auto margins within the 297mm wrapper. -->
                     <img src="https://i.postimg.cc/MTjSB1LT/Printeliverylogo.png" crossorigin="anonymous" style="position: absolute; top: 0; bottom: 0; left: 0; right: 0; margin: auto; max-width: 90%; max-height: 90%; object-fit: contain; opacity: 0.15; z-index: 0; pointer-events: none;" alt="watermark" />
-                    
-                    <!-- CONTENT LAYER: Transparent backgrounds to show the watermark -->
+                   
+					<!-- CONTENT LAYER: Transparent backgrounds to show the watermark -->
                     <div class="pdf-content-layer" style="position: relative; z-index: 1;">
                         
                         <div class="inv-header" style="display: flex; justify-content: space-between; border-bottom: 2px solid #075E54; padding-bottom: 10px; margin-bottom: 15px;">
