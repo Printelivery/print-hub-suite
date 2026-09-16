@@ -852,12 +852,10 @@
 
 						const canvas = document.getElementById('invoiceRenderCanvas');
             
-			canvas.innerHTML = `
-                <div id="invoice-wrapper" style="position: relative; width: 100%; min-height: 800px;">
-                    <!-- Fixed Watermark Container -->
-                    <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; z-index: 0; opacity: 0.15; pointer-events: none;">
-                        <img src="https://i.postimg.cc/MTjSB1LT/Printeliverylogo.png" crossorigin="anonymous" style="width: 80%;" alt="watermark" />
-                    </div>
+						canvas.innerHTML = `
+                <div style="position: relative; width: 100%;">
+                    <!-- Hard-positioned Watermark (No flex or transform to break html2canvas) -->
+                    <img src="https://i.postimg.cc/MTjSB1LT/Printeliverylogo.png" crossorigin="anonymous" style="position: absolute; top: 250px; left: 10%; width: 90%; opacity: 0.15; z-index: 0; pointer-events: none;" alt="watermark" />
                     
                     <!-- Content Layer -->
                     <div class="pdf-content-layer" style="position: relative; z-index: 1;">
@@ -881,22 +879,22 @@
         						<p style="margin:5px 0;">${customerDetails.flat},<br>${customerDetails.address}<br>PIN: ${customerDetails.pin}</p>
         					</div>
         				</div>
-                        <table class="inv-table" style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; background-color: rgba(255,255,255,0.7);">
+                        <table class="inv-table" style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; background-color: transparent;">
                             <thead>
                                 <tr>
-                                    <th style="background-color: #f2f2f2; padding: 10px; border: 1px solid #ddd; text-align: left;">Item Description</th>
-                                    <th style="background-color: #f2f2f2; padding: 10px; border: 1px solid #ddd; text-align: left;">Product ID</th>
-                                    <th style="background-color: #f2f2f2; padding: 10px; border: 1px solid #ddd; text-align: left;">Unit Price</th>
-                                    <th style="background-color: #f2f2f2; padding: 10px; border: 1px solid #ddd; text-align: left;">Disc. Price</th>
-                                    <th style="background-color: #f2f2f2; padding: 10px; border: 1px solid #ddd; text-align: left;">Qty</th>
-                                    <th style="background-color: #f2f2f2; padding: 10px; border: 1px solid #ddd; text-align: left;">Amount</th>
+                                    <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Item Description</th>
+                                    <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Product ID</th>
+                                    <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Unit Price</th>
+                                    <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Disc. Price</th>
+                                    <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Qty</th>
+                                    <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Amount</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 ${itemsRowsHTML}
                             </tbody>
                         </table>
-                        <div class="inv-summary" style="background-color: rgba(255,255,255,0.8); padding: 10px; border-radius: 8px; margin-top: 15px; margin-left: auto; width: 45%; font-size: 13px;">
+                        <div class="inv-summary" style="background-color: transparent; padding: 10px; border-radius: 8px; margin-top: 15px; margin-left: auto; width: 45%; font-size: 13px;">
                             <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #eee;"><span>Subtotal:</span><span>₹${subtotal.toFixed(2)}</span></div>
                             <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #eee;"><span>Flat Discount or Round Off:</span><span>-₹${flatDiscount.toFixed(2)}</span></div>
                             <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #eee;"><span>Taxable Net Amount:</span><span>₹${baseTaxableAmount}</span></div>
@@ -916,6 +914,7 @@
 			};
 
 			canvas.style.display = "block";
+
 
 
 			try {
