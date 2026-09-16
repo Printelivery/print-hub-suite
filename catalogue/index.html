@@ -813,7 +813,7 @@
 				pin: document.getElementById('custPin').value.trim()
 			};
 
-			const orderId = "INV-" + Math.floor(100000 + Math.random() * 900000);
+			const orderId = "INV-" + Math.floor(10000000 + Math.random() * 90000000);
 			const dateString = new Date().toLocaleDateString('en-IN', { dateStyle: 'long' });
 
             let aggregateOrderValue = 0;
@@ -835,6 +835,10 @@
                 
                 itemsRowsHTML += `
                     <tr>
+                        <td style="padding: 8px;">
+                            <img src="${(i.metadata.loadedImages && i.metadata.loadedImages.length > 0) ? i.metadata.loadedImages[0] : `https://print-hub-suite.vercel.app/images/${i.metadata.id}.jpg`}" 
+                            width="50" height="50" style="border-radius: 4px;" onerror="this.style.display='none'">
+                        </td>
                         <td>${item.metadata.name}</td>
                         <td>${item.metadata.id}</td>
                         <td>₹${numericPrice.toFixed(2)}</td>
@@ -887,12 +891,13 @@
                 <table class="inv-table">
                     <thead>
                         <tr>
+                            <th>Product</th>
                             <th>Item Description</th>
                             <th>Product ID</th>
                             <th>Unit Price</th>
-                            <th>Discounted Price</th>
+                            <th>Disc. Price</th>
                             <th>Qty</th>
-                            <th>Total Gross</th>
+                            <th>Amount</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -943,9 +948,9 @@
                                     <th style="padding: 8px;">Product</th>
                                     <th style="padding: 8px;">Description</th>
                                     <th style="padding: 8px;">Unit Price</th>
-                                    <th style="padding: 8px;">Discounted Price</th>
+                                    <th style="padding: 8px;">Disc. Price</th>
                                     <th style="padding: 8px;">Qty</th>
-                                    <th style="padding: 8px;">Total</th>
+                                    <th style="padding: 8px;">Amount</th>
                                 </tr>
                             </thead>
                             <tbody>
