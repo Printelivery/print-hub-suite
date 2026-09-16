@@ -835,10 +835,6 @@
                 
                 itemsRowsHTML += `
                     <tr>
-                        <td style="padding: 8px;">
-                            <img src="${(i.metadata.loadedImages && i.metadata.loadedImages.length > 0) ? i.metadata.loadedImages[0] : `https://print-hub-suite.vercel.app/images/${i.metadata.id}.jpg`}" 
-                            width="50" height="50" style="border-radius: 4px;" onerror="this.style.display='none'">
-                        </td>
                         <td>${item.metadata.name}</td>
                         <td>${item.metadata.id}</td>
                         <td>₹${numericPrice.toFixed(2)}</td>
@@ -891,7 +887,6 @@
                 <table class="inv-table">
                     <thead>
                         <tr>
-                            <th>Product</th>
                             <th>Item Description</th>
                             <th>Product ID</th>
                             <th>Unit Price</th>
