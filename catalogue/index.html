@@ -338,6 +338,14 @@
                     <label for="custPin">Pin Code</label>
                     <input type="text" id="custPin" required placeholder="600130">
                 </div>
+                <div class="form-group">
+                    <label for="orderFlatDiscount">Flat Discount (₹)</label>
+                    <input type="number" id="orderFlatDiscount" min="0" value="0" step="1.0" placeholder="0.00">
+                </div>
+                <div class="form-group">
+                    <label for="orderRoundOff">Round Off Adjustment (₹)</label>
+                    <input type="number" id="orderRoundOff" value="0.00" step="1.0" placeholder="e.g. -2.00 or 0.50">
+                </div>
                 <button type="submit" id="submitOrderActionBtn" class="checkout-btn">Confirm Order, Download Invoice & Send</button>
             </form>
         </div>
@@ -408,6 +416,7 @@
                         name: row[2]?.trim() || "",
                         desc: row[3]?.trim() || "",
                         price: row[4]?.trim() || "",
+                        discountedPrice: row[5]?.trim() || row[4]?.trim() || "", // Reads 6th CSV column (Column F)
                         loadedImages: [] 
                     };
                 }).filter(p => p.id !== "");
@@ -793,30 +802,47 @@
 			const orderId = "INV-" + Math.floor(100000 + Math.random() * 900000);
 			const dateString = new Date().toLocaleDateString('en-IN', { dateStyle: 'long' });
 
-			let aggregateOrderValue = 0;
-			let itemsRowsHTML = '';
-			let whatsappProductsList = []; 
-			
-			Object.values(shoppingCartState).forEach((item) => {
-				let numericPrice = parseFloat(item.metadata.price.replace(/[^0-9.]/g, '')) || 0;
-				let costSum = numericPrice * item.qty;
-				aggregateOrderValue += costSum;
-				
-				itemsRowsHTML += `
-					<tr>
-						<td>${item.metadata.name}</td>
-						<td>${item.metadata.id}</td>
-						<td>₹${numericPrice.toFixed(2)}</td>
-						<td>${item.qty}</td>
-						<td>₹${costSum.toFixed(2)}</td>
-					</tr>`;
-				
-				whatsappProductsList.push(`- ${item.metadata.name} (${item.qty} x ${item.metadata.price})`);
-			});
+      let aggregateOrderValue = 0;
+      let itemsRowsHTML = '';
+      let whatsappProductsList = []; 
+      
+      // Pull flat discount entered by user in the form input
+      const flatDiscount = parseFloat(document.getElementById('orderFlatDiscount')?.value) || 0.00;
 
-			const baseTaxableAmount = (aggregateOrderValue / 1.18).toFixed(2);
-			const calculatedGstSlice = (aggregateOrderValue - baseTaxableAmount).toFixed(2);
-			const grossValueStr = aggregateOrderValue.toFixed(2);
+      Object.values(shoppingCartState).forEach((item) => {
+          let numericPrice = parseFloat(item.metadata.price.replace(/[^0-9.]/g, '')) || 0;
+          // Uses item.metadata.discountedPrice if defined; defaults to numericPrice
+          let discountedPrice = item.metadata.discountedPrice ? parseFloat(item.metadata.discountedPrice) : numericPrice;
+          let costSum = discountedPrice * item.qty;
+          aggregateOrderValue += costSum;
+          
+          itemsRowsHTML += `
+              <tr>
+                  <td>${item.metadata.name}</td>
+                  <td>${item.metadata.id}</td>
+                  <td>₹${numericPrice.toFixed(2)}</td>
+                  <td>₹${discountedPrice.toFixed(2)}</td>
+                  <td>${item.qty}</td>
+                  <td>₹${costSum.toFixed(2)}</td>
+              </tr>`;
+          
+          whatsappProductsList.push(`- ${item.metadata.name} (${item.qty} x ₹${discountedPrice.toFixed(2)})`);
+      });
+      
+      // Read manual flat discount and manual round off inputs
+      const flatDiscount = parseFloat(document.getElementById('orderFlatDiscount')?.value) || 0.00;
+      const roundOffAmount = parseFloat(document.getElementById('orderRoundOff')?.value) || 0.00;
+      
+      // Calculate net after flat discount
+      const netSubtotalAfterDiscount = aggregateOrderValue - flatDiscount;
+      
+      // Add/subtract manual round off directly to arrive at the final Gross Total
+      const finalGrossTotal = netSubtotalAfterDiscount + roundOffAmount;
+      
+      // Calculate base taxable amount & GST from the net subtotal
+      const baseTaxableAmount = (netSubtotalAfterDiscount / 1.18).toFixed(2);
+      const calculatedGstSlice = (netSubtotalAfterDiscount - parseFloat(baseTaxableAmount)).toFixed(2);
+      const grossValueStr = finalGrossTotal.toFixed(2);
 
 			const canvas = document.getElementById('invoiceRenderCanvas');
 			// Added CSS for page-break-inside avoid
@@ -847,25 +873,29 @@
 						<p style="margin:5px 0;">${customerDetails.flat},<br>${customerDetails.address}<br>PIN: ${customerDetails.pin}</p>
 					</div>
 				</div>
-				<table class="inv-table">
-					<thead>
-						<tr>
-							<th>Item Description</th>
-							<th>Product ID</th>
-							<th>Unit Price</th>
-							<th>Qty</th>
-							<th>Total Gross</th>
-						</tr>
-					</thead>
-					<tbody>
-						${itemsRowsHTML}
-					</tbody>
-				</table>
-				<div class="inv-summary">
-					<div class="inv-summary-row"><span>Taxable Net Amount:</span><span>₹${baseTaxableAmount}</span></div>
-					<div class="inv-summary-row"><span>Integrated GST (18%):</span><span>₹${calculatedGstSlice}</span></div>
-					<div class="inv-summary-row bold"><span>Gross Total:</span><span>₹${grossValueStr}</span></div>
-				</div>
+        <table class="inv-table">
+            <thead>
+                <tr>
+                    <th>Item Description</th>
+                    <th>Product ID</th>
+                    <th>Unit Price</th>
+                    <th>Discounted Price</th>
+                    <th>Qty</th>
+                    <th>Total Gross</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${itemsRowsHTML}
+            </tbody>
+        </table>
+        <div class="inv-summary">
+            <div class="inv-summary-row"><span>Subtotal:</span><span>₹${aggregateOrderValue.toFixed(2)}</span></div>
+            <div class="inv-summary-row"><span>Flat Discount:</span><span>-₹${flatDiscount.toFixed(2)}</span></div>
+            <div class="inv-summary-row"><span>Round Off:</span><span>${roundOffAmount >= 0 ? '+' : ''}₹${roundOffAmount.toFixed(2)}</span></div>
+            <div class="inv-summary-row"><span>Taxable Net Amount:</span><span>₹${baseTaxableAmount}</span></div>
+            <div class="inv-summary-row"><span>Integrated GST (18%):</span><span>₹${calculatedGstSlice}</span></div>
+            <div class="inv-summary-row bold"><span>Gross Total:</span><span>₹${grossValueStr}</span></div>
+        </div>
 			`;
 
 			const pdfOptions = {
@@ -883,47 +913,53 @@
 				const base64Pdf = pdfDataUri.split(',')[1];
 				await html2pdf().from(canvas).set(pdfOptions).save();
 				canvas.style.display = "none";
-				
-				
-				
+
 				// 4. Prepare Summary HTML
-				const summaryHtml = `
-					<div style="margin-top: 20px; border-top: 2px solid #075E54; padding-top: 15px; font-family: sans-serif; width: 100%; max-width: 400px; margin-left: auto;">
-						<div style="display: flex; justify-content: space-between; margin-bottom: 8px;"><span>Taxable Net Amount:</span> <span>₹${baseTaxableAmount}</span></div>
-						<div style="display: flex; justify-content: space-between; margin-bottom: 8px;"><span>Integrated GST (18%):</span> <span>₹${calculatedGstSlice}</span></div>
-						<div style="display: flex; justify-content: space-between; font-weight: bold; border-top: 1px solid #075E54; padding-top: 8px; color: #075E54;"><span>Gross Total:</span> <span>₹${grossValueStr}</span></div>
-					</div>`;
+        const summaryHtml = `
+            <div style="margin-top: 20px; border-top: 2px solid #075E54; padding-top: 15px; font-family: sans-serif; width: 100%; max-width: 400px; margin-left: auto;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;"><span>Subtotal:</span> <span>₹${aggregateOrderValue.toFixed(2)}</span></div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;"><span>Flat Discount:</span> <span>-₹${flatDiscount.toFixed(2)}</span></div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;"><span>Round Off:</span> <span>${roundOffAmount >= 0 ? '+' : ''}₹${roundOffAmount.toFixed(2)}</span></div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;"><span>Taxable Net Amount:</span> <span>₹${baseTaxableAmount}</span></div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;"><span>Integrated GST (18%):</span> <span>₹${calculatedGstSlice}</span></div>
+                <div style="display: flex; justify-content: space-between; font-weight: bold; border-top: 1px solid #075E54; padding-top: 8px; color: #075E54;"><span>Gross Total:</span> <span>₹${grossValueStr}</span></div>
+            </div>`;
 
 				// Combine table and summary
-				let itemsSummaryHtml = `
-					<div style="font-family: sans-serif;">
-						<table border="1" style="border-collapse: collapse; width: 100%; text-align: left;">
-							<thead>
-								<tr style="background-color: #f2f2f2;">
-									<th style="padding: 8px;">Product</th>
-									<th style="padding: 8px;">Description</th>
-									<th style="padding: 8px;">Price</th>
-									<th style="padding: 8px;">Qty</th>
-									<th style="padding: 8px;">Total</th>
-								</tr>
-							</thead>
-							<tbody>
-								${Object.values(shoppingCartState).map(i => `
-									<tr>
-										<td style="padding: 8px;">
-											<img src="${(i.metadata.loadedImages && i.metadata.loadedImages.length > 0) ? i.metadata.loadedImages[0] : `https://print-hub-suite.vercel.app/images/${i.metadata.id}.jpg`}" 
-											width="50" height="50" style="border-radius: 4px;" onerror="this.style.display='none'">
-										</td>
-										<td style="padding: 8px;">${i.metadata.name}</td>
-										<td style="padding: 8px;">${i.metadata.price}</td>
-										<td style="padding: 8px;">${i.qty}</td>
-										<td style="padding: 8px;">₹${(parseFloat(i.metadata.price.replace(/[^0-9.]/g, '')) * i.qty).toFixed(2)}</td>
-									</tr>
-								`).join('')}
-							</tbody>
-						</table>
-						${summaryHtml}
-					</div>`;
+        let itemsSummaryHtml = `
+            <div style="font-family: sans-serif;">
+                <table border="1" style="border-collapse: collapse; width: 100%; text-align: left;">
+                    <thead>
+                        <tr style="background-color: #f2f2f2;">
+                            <th style="padding: 8px;">Product</th>
+                            <th style="padding: 8px;">Description</th>
+                            <th style="padding: 8px;">Unit Price</th>
+                            <th style="padding: 8px;">Discounted Price</th>
+                            <th style="padding: 8px;">Qty</th>
+                            <th style="padding: 8px;">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${Object.values(shoppingCartState).map(i => {
+                            let np = parseFloat(i.metadata.price.replace(/[^0-9.]/g, '')) || 0;
+                            let dp = i.metadata.discountedPrice ? parseFloat(i.metadata.discountedPrice) : np;
+                            return `
+                            <tr>
+                                <td style="padding: 8px;">
+                                    <img src="${(i.metadata.loadedImages && i.metadata.loadedImages.length > 0) ? i.metadata.loadedImages[0] : `https://print-hub-suite.vercel.app/images/${i.metadata.id}.jpg`}" 
+                                    width="50" height="50" style="border-radius: 4px;" onerror="this.style.display='none'">
+                                </td>
+                                <td style="padding: 8px;">${i.metadata.name}</td>
+                                <td style="padding: 8px;">₹${np.toFixed(2)}</td>
+                                <td style="padding: 8px;">₹${dp.toFixed(2)}</td>
+                                <td style="padding: 8px;">${i.qty}</td>
+                                <td style="padding: 8px;">₹${(dp * i.qty).toFixed(2)}</td>
+                            </tr>`;
+                        }).join('')}
+                    </tbody>
+                </table>
+                ${summaryHtml}
+            </div>`;
 
 				triggerEmailBackend(customerDetails, orderId, base64Pdf, itemsSummaryHtml, grossValueStr);
 
