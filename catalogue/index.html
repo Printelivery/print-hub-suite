@@ -852,19 +852,18 @@
 
 						const canvas = document.getElementById('invoiceRenderCanvas');
             
-			canvas.innerHTML = `
+						canvas.innerHTML = `
 				<style>
                     #invoiceRenderCanvas { position: relative; }
                     .pdf-bg-watermark {
                         position: absolute;
-                        top: 0;
-                        left: 0;
-                        right: 0;
-                        bottom: 0;
-                        background: url('https://i.postimg.cc/MTjSB1LT/Printeliverylogo.png') center center no-repeat;
-                        background-size: contain; 
+                        top: 50%;
+                        left: 50%;
+                        transform: translate(-50%, -50%);
+                        width: 80%;
                         opacity: 0.15; /* 15% opacity */
                         z-index: 0;
+                        pointer-events: none;
                     }
                     .pdf-content-layer {
                         position: relative;
@@ -875,7 +874,7 @@
 					.inv-table th { background-color: rgba(242,242,242,0.9); padding: 10px; border: 1px solid #ddd; }
 					.inv-table td { padding: 10px; border: 1px solid #ddd; }
 				</style>
-                <div class="pdf-bg-watermark"></div>
+                <img src="https://i.postimg.cc/MTjSB1LT/Printeliverylogo.png" crossorigin="anonymous" class="pdf-bg-watermark" />
                 <div class="pdf-content-layer">
     				<div class="inv-header">
     					<div>
@@ -926,11 +925,12 @@
 				margin: 10,
 				filename: `Printelivery_${orderId.replace(/\s+/g, '_')}_Invoice.pdf`,
 				image: { type: 'jpeg', quality: 0.98 },
-				html2canvas: { scale: 2, useCORS: true }, 
+				html2canvas: { scale: 2, useCORS: true, allowTaint: true }, 
 				jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
 			};
 
 			canvas.style.display = "block";
+
 
 
 			try {
