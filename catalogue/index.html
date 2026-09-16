@@ -852,7 +852,7 @@
 
 						const canvas = document.getElementById('invoiceRenderCanvas');
             
-						canvas.innerHTML = `
+									canvas.innerHTML = `
 				<style>
                     #invoiceRenderCanvas { position: relative; }
                     .pdf-bg-watermark {
@@ -869,10 +869,10 @@
                         position: relative;
                         z-index: 1;
                     }
-					.inv-table { width: 100%; border-collapse: collapse; background-color: rgba(255,255,255,0.7); }
+					.inv-table { width: 100%; border-collapse: collapse; background-color: rgba(255,255,255,0.7); text-align: left; }
 					.inv-table tr { page-break-inside: avoid; }
-					.inv-table th { background-color: rgba(242,242,242,0.9); padding: 10px; border: 1px solid #ddd; }
-					.inv-table td { padding: 10px; border: 1px solid #ddd; }
+					.inv-table th { background-color: rgba(242,242,242,0.9); padding: 10px; border: 1px solid #ddd; text-align: left; }
+					.inv-table td { padding: 10px; border: 1px solid #ddd; text-align: left; }
 				</style>
                 <img src="https://i.postimg.cc/MTjSB1LT/Printeliverylogo.png" crossorigin="anonymous" class="pdf-bg-watermark" />
                 <div class="pdf-content-layer">
@@ -930,6 +930,7 @@
 			};
 
 			canvas.style.display = "block";
+
 
 
 
@@ -997,6 +998,7 @@
 				whatsappTextMsg += `*Delivery Address:*\n`;
 				whatsappTextMsg += `${customerDetails.flat}, ${customerDetails.address}, PIN: ${customerDetails.pin}\n\n`;
 				whatsappTextMsg += `*Items Ordered:*\n${whatsappProductsList.join('\n')}\n\n`;
+				whatsappTextMsg += `*Flat Discount or Round Off:* ₹${flatDiscount.toFixed(2)}\n\n`;
 				whatsappTextMsg += `*Grand Total Amount:* ₹${grossValueStr}\n\n`;
 				whatsappTextMsg += `Thank you! Your invoice copy has been downloaded automatically.`;
 				
