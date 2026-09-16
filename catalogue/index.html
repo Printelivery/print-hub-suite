@@ -318,12 +318,8 @@
                     <input type="text" id="custPin" required placeholder="600130">
                 </div>
                 <div class="form-group">
-                    <label for="orderFlatDiscount">Flat Discount (₹)</label>
+                    <label for="orderFlatDiscount">Flat Discount or Round Off (₹)</label>
                     <input type="number" id="orderFlatDiscount" min="0" value="0" step="0.01" placeholder="0.00">
-                </div>
-                <div class="form-group">
-                    <label for="orderRoundOff">Round Off Adjustment (₹)</label>
-                    <input type="number" id="orderRoundOff" value="0.00" step="0.01" placeholder="e.g. -2.00 or 0.50">
                 </div>
                 <button type="submit" id="submitOrderActionBtn" class="checkout-btn">Confirm Order, Download Invoice & Send</button>
             </form>
@@ -847,77 +843,95 @@
             });
             
             const flatDiscount = parseFloat(document.getElementById('orderFlatDiscount')?.value) || 0.00;
-            const roundOffAmount = parseFloat(document.getElementById('orderRoundOff')?.value) || 0.00;
-            
             const subtotal = aggregateOrderValue;
-            const finalGrossTotal = subtotal - flatDiscount + roundOffAmount;
+            const finalGrossTotal = subtotal - flatDiscount;
             
             const baseTaxableAmount = (finalGrossTotal / 1.18).toFixed(2);
             const calculatedGstSlice = (finalGrossTotal - parseFloat(baseTaxableAmount)).toFixed(2);
             const grossValueStr = finalGrossTotal.toFixed(2);
 
-			const canvas = document.getElementById('invoiceRenderCanvas');
+						const canvas = document.getElementById('invoiceRenderCanvas');
+            
 			canvas.innerHTML = `
 				<style>
-					.inv-table { width: 100%; border-collapse: collapse; }
+                    #invoiceRenderCanvas { position: relative; }
+                    .pdf-bg-watermark {
+                        position: absolute;
+                        top: 0;
+                        left: 0;
+                        right: 0;
+                        bottom: 0;
+                        background: url('https://i.postimg.cc/MTjSB1LT/Printeliverylogo.png') center center no-repeat;
+                        background-size: contain; 
+                        opacity: 0.15; /* 15% opacity */
+                        z-index: 0;
+                    }
+                    .pdf-content-layer {
+                        position: relative;
+                        z-index: 1;
+                    }
+					.inv-table { width: 100%; border-collapse: collapse; background-color: rgba(255,255,255,0.7); }
 					.inv-table tr { page-break-inside: avoid; }
-					.inv-table th { background-color: #f2f2f2; padding: 10px; border: 1px solid #ddd; }
+					.inv-table th { background-color: rgba(242,242,242,0.9); padding: 10px; border: 1px solid #ddd; }
 					.inv-table td { padding: 10px; border: 1px solid #ddd; }
 				</style>
-				<div class="inv-header">
-					<div>
-						<h2 class="inv-title">PRINTELIVERY</h2>
-						<p style="font-size:12px; margin:4px 0; color:#718096;">Premium Printing & Custom Designs</p>
-					</div>
-					<div style="text-align:right; font-size:12px;">
-						<p style="margin:0;"><strong>Invoice No:</strong> ${orderId}</p>
-						<p style="margin:4px 0;"><strong>Date:</strong> ${dateString}</p>
-					</div>
-				</div>
-				<div class="inv-grid">
-					<div>
-						<strong style="color:#075E54;">Invoiced To:</strong>
-						<p style="margin:5px 0;">${customerDetails.name}<br>Phone: ${customerDetails.phone}<br>email: ${customerDetails.email} </p>
-					</div>
-					<div>
-						<strong style="color:#075E54;">Delivery Destination:</strong>
-						<p style="margin:5px 0;">${customerDetails.flat},<br>${customerDetails.address}<br>PIN: ${customerDetails.pin}</p>
-					</div>
-				</div>
-                <table class="inv-table">
-                    <thead>
-                        <tr>
-                            <th>Item Description</th>
-                            <th>Product ID</th>
-                            <th>Unit Price</th>
-                            <th>Disc. Price</th>
-                            <th>Qty</th>
-                            <th>Amount</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${itemsRowsHTML}
-                    </tbody>
-                </table>
-                <div class="inv-summary">
-                    <div class="inv-summary-row"><span>Subtotal:</span><span>₹${subtotal.toFixed(2)}</span></div>
-                    <div class="inv-summary-row"><span>Flat Discount:</span><span>-₹${flatDiscount.toFixed(2)}</span></div>
-                    <div class="inv-summary-row"><span>Round Off:</span><span>${roundOffAmount >= 0 ? '+' : ''}₹${roundOffAmount.toFixed(2)}</span></div>
-                    <div class="inv-summary-row"><span>Taxable Net Amount:</span><span>₹${baseTaxableAmount}</span></div>
-                    <div class="inv-summary-row"><span>Integrated GST (18%):</span><span>₹${calculatedGstSlice}</span></div>
-                    <div class="inv-summary-row bold"><span>Gross Total:</span><span>₹${grossValueStr}</span></div>
+                <div class="pdf-bg-watermark"></div>
+                <div class="pdf-content-layer">
+    				<div class="inv-header">
+    					<div>
+    						<h2 class="inv-title">PRINTELIVERY</h2>
+    						<p style="font-size:12px; margin:4px 0; color:#718096;">Premium Printing & Custom Designs</p>
+    					</div>
+    					<div style="text-align:right; font-size:12px;">
+    						<p style="margin:0;"><strong>Invoice No:</strong> ${orderId}</p>
+    						<p style="margin:4px 0;"><strong>Date:</strong> ${dateString}</p>
+    					</div>
+    				</div>
+    				<div class="inv-grid">
+    					<div>
+    						<strong style="color:#075E54;">Invoiced To:</strong>
+    						<p style="margin:5px 0;">${customerDetails.name}<br>Phone: ${customerDetails.phone}<br>email: ${customerDetails.email} </p>
+    					</div>
+    					<div>
+    						<strong style="color:#075E54;">Delivery Destination:</strong>
+    						<p style="margin:5px 0;">${customerDetails.flat},<br>${customerDetails.address}<br>PIN: ${customerDetails.pin}</p>
+    					</div>
+    				</div>
+                    <table class="inv-table">
+                        <thead>
+                            <tr>
+                                <th>Item Description</th>
+                                <th>Product ID</th>
+                                <th>Unit Price</th>
+                                <th>Disc. Price</th>
+                                <th>Qty</th>
+                                <th>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${itemsRowsHTML}
+                        </tbody>
+                    </table>
+                    <div class="inv-summary" style="background-color: rgba(255,255,255,0.8); padding: 10px; border-radius: 8px;">
+                        <div class="inv-summary-row"><span>Subtotal:</span><span>₹${subtotal.toFixed(2)}</span></div>
+                        <div class="inv-summary-row"><span>Flat Discount or Round Off:</span><span>-₹${flatDiscount.toFixed(2)}</span></div>
+                        <div class="inv-summary-row"><span>Taxable Net Amount:</span><span>₹${baseTaxableAmount}</span></div>
+                        <div class="inv-summary-row"><span>Integrated GST (18%):</span><span>₹${calculatedGstSlice}</span></div>
+                        <div class="inv-summary-row bold"><span>Gross Total:</span><span>₹${grossValueStr}</span></div>
+                    </div>
                 </div>
 			`;
 
 			const pdfOptions = {
 				margin: 10,
-				filename: `Printelivery_${customerDetails.name.replace(/\s+/g, '_')}_Invoice.pdf`,
+				filename: `Printelivery_${orderId.replace(/\s+/g, '_')}_Invoice.pdf`,
 				image: { type: 'jpeg', quality: 0.98 },
-				html2canvas: { scale: 2 },
+				html2canvas: { scale: 2, useCORS: true }, 
 				jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
 			};
 
 			canvas.style.display = "block";
+
 
 			try {
 				const pdfDataUri = await html2pdf().from(canvas).set(pdfOptions).output('datauristring');
@@ -928,8 +942,7 @@
                 const summaryHtml = `
                     <div style="margin-top: 20px; border-top: 2px solid #075E54; padding-top: 15px; font-family: sans-serif; width: 100%; max-width: 400px; margin-left: auto;">
                         <div style="display: flex; justify-content: space-between; margin-bottom: 8px;"><span>Subtotal:</span> <span>₹${subtotal.toFixed(2)}</span></div>
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;"><span>Flat Discount:</span> <span>-₹${flatDiscount.toFixed(2)}</span></div>
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;"><span>Round Off:</span> <span>${roundOffAmount >= 0 ? '+' : ''}₹${roundOffAmount.toFixed(2)}</span></div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;"><span>Flat Discount or Round Off:</span> <span>-₹${flatDiscount.toFixed(2)}</span></div>
                         <div style="display: flex; justify-content: space-between; margin-bottom: 8px;"><span>Taxable Net Amount:</span> <span>₹${baseTaxableAmount}</span></div>
                         <div style="display: flex; justify-content: space-between; margin-bottom: 8px;"><span>Integrated GST (18%):</span> <span>₹${calculatedGstSlice}</span></div>
                         <div style="display: flex; justify-content: space-between; font-weight: bold; border-top: 1px solid #075E54; padding-top: 8px; color: #075E54;"><span>Gross Total:</span> <span>₹${grossValueStr}</span></div>
