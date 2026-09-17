@@ -851,75 +851,78 @@
             const grossValueStr = finalGrossTotal.toFixed(2);
 
 						const canvas = document.getElementById('invoiceRenderCanvas');
-           
-           			canvas.innerHTML = `
-                <!-- WRAPPER: Background image applied directly via CSS background-image so it centers natively without pushing content -->
-                <div style="position: relative; width: 100%; padding: 5px; box-sizing: border-box; background-image: url('https://i.postimg.cc/15q5NnTM/Printeliverylogo.jpg'); background-position: center; background-repeat: no-repeat; background-size: contain;">
-                    
-                    <!-- SEMI-TRANSPARENT OVERLAY to simulate 15% opacity on a background image safely -->
-                    <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(255, 255, 255, 0.85); z-index: 0; pointer-events: none;"></div>
-                    
-                    <!-- CONTENT LAYER: Untouched -->
-                    <div class="pdf-content-layer" style="position: relative; z-index: 1;">
-                        
-                        <div class="inv-header" style="display: flex; justify-content: space-between; border-bottom: 2px solid #075E54; padding-bottom: 10px; margin-bottom: 15px;">
-        					<div>
-        						<h2 class="inv-title" style="color: #075E54; margin: 0; font-size: 24px; font-weight: bold;">PRINTELIVERY</h2>
-        						<p style="font-size:12px; margin:4px 0; color:#718096;">Premium Printing & Custom Designs</p>
-        					</div>
-        					<div style="text-align:right; font-size:12px;">
-        						<p style="margin:0;"><strong>Invoice No:</strong> ${orderId}</p>
-        						<p style="margin:4px 0;"><strong>Date:</strong> ${dateString}</p>
-        					</div>
-        				</div>
+        			canvas.style.padding = '0';
+        			canvas.style.overflow = 'hidden';
+                   
+                     	canvas.innerHTML = `
+                          <!-- SINGLE PAGE A4 CONTAINER (Max height locked to 280mm to prevent 2nd page spill) -->
+                          <div style="position: relative; width: 200mm; height: 280mm; max-height: 280mm; margin: 0 auto; padding: 10px; box-sizing: border-box; background: #ffffff; overflow: hidden;">
+                              
+                              <!-- WATERMARK: Centered absolutely behind content without pushing layout -->
+                              <img src="https://i.postimg.cc/15q5NnTM/Printeliverylogo.jpg" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 60%; opacity: 0.12; z-index: 0; pointer-events: none;" crossorigin="anonymous">
+                              
+                              <!-- CONTENT LAYER: Sits cleanly on top -->
+                              <div class="pdf-content-layer" style="position: relative; z-index: 1;">
+                                  
+                                  <div class="inv-header" style="display: flex; justify-content: space-between; border-bottom: 2px solid #075E54; padding-bottom: 8px; margin-bottom: 12px;">
+                  					<div>
+                  						<h2 class="inv-title" style="color: #075E54; margin: 0; font-size: 22px; font-weight: bold;">PRINTELIVERY</h2>
+                  						<p style="font-size:11px; margin:3px 0; color:#718096;">Premium Printing & Custom Designs</p>
+                  					</div>
+                  					<div style="text-align:right; font-size:11px;">
+                  						<p style="margin:0;"><strong>Invoice No:</strong> ${orderId}</p>
+                  						<p style="margin:3px 0;"><strong>Date:</strong> ${dateString}</p>
+                  					</div>
+                  				</div>
+          
+                  				<div class="inv-grid" style="display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 12px;">
+                  					<div style="width: 48%;">
+                  						<strong style="color:#075E54;">Invoiced To:</strong>
+                  						<p style="margin:4px 0;">${customerDetails.name}<br>Phone: ${customerDetails.phone}<br>email: ${customerDetails.email} </p>
+                  					</div>
+                  					<div style="width: 48%;">
+                  						<strong style="color:#075E54;">Delivery Destination:</strong>
+                  						<p style="margin:4px 0;">${customerDetails.flat},<br>${customerDetails.address}<br>PIN: ${customerDetails.pin}</p>
+                  					</div>
+                  				</div>
+          
+                                  <table class="inv-table" style="width: 100%; border-collapse: collapse; text-align: left; font-size: 12px; background-color: transparent;">
+                                      <thead>
+                                          <tr>
+                                              <th style="padding: 8px; border: 1px solid #ddd; text-align: left; background-color: transparent;">Item Description</th>
+                                              <th style="padding: 8px; border: 1px solid #ddd; text-align: left; background-color: transparent;">Product ID</th>
+                                              <th style="padding: 8px; border: 1px solid #ddd; text-align: left; background-color: transparent;">Unit Price</th>
+                                              <th style="padding: 8px; border: 1px solid #ddd; text-align: left; background-color: transparent;">Disc. Price</th>
+                                              <th style="padding: 8px; border: 1px solid #ddd; text-align: left; background-color: transparent;">Qty</th>
+                                              <th style="padding: 8px; border: 1px solid #ddd; text-align: left; background-color: transparent;">Amount</th>
+                                          </tr>
+                                      </thead>
+                                      <tbody style="background-color: transparent;">
+                                          ${itemsRowsHTML}
+                                      </tbody>
+                                  </table>
+          
+                                  <div class="inv-summary" style="background-color: transparent; padding: 8px; border-radius: 6px; margin-top: 12px; margin-left: auto; width: 45%; font-size: 12px;">
+                                      <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #eee;"><span>Subtotal:</span><span>₹${subtotal.toFixed(2)}</span></div>
+                                      <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #eee;"><span>Flat Discount or Round Off:</span><span>-₹${flatDiscount.toFixed(2)}</span></div>
+                                      <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #eee;"><span>Taxable Net Amount:</span><span>₹${baseTaxableAmount}</span></div>
+                                      <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #eee;"><span>Integrated GST (18%):</span><span>₹${calculatedGstSlice}</span></div>
+                                      <div style="display: flex; justify-content: space-between; padding: 5px 0; font-weight: bold; color: #075E54; border-top: 1px solid #075E54; margin-top: 2px;"><span>Gross Total:</span><span>₹${grossValueStr}</span></div>
+                                  </div>
+                              </div>
+                          </div>
+          			`;
+          
+          			const pdfOptions = {
+          				margin: 5, 
+          				filename: `Printelivery_${orderId.replace(/\s+/g, '_')}_Invoice.pdf`,
+          				image: { type: 'jpeg', quality: 0.98 },
+          				html2canvas: { scale: 2, useCORS: true, allowTaint: true }, 
+          				jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+          			};
+          
+          			canvas.style.display = "block";
 
-        				<div class="inv-grid" style="display: flex; justify-content: space-between; margin-bottom: 20px; font-size: 13px;">
-        					<div style="width: 48%;">
-        						<strong style="color:#075E54;">Invoiced To:</strong>
-        						<p style="margin:5px 0;">${customerDetails.name}<br>Phone: ${customerDetails.phone}<br>email: ${customerDetails.email} </p>
-        					</div>
-        					<div style="width: 48%;">
-        						<strong style="color:#075E54;">Delivery Destination:</strong>
-        						<p style="margin:5px 0;">${customerDetails.flat},<br>${customerDetails.address}<br>PIN: ${customerDetails.pin}</p>
-        					</div>
-        				</div>
-
-                        <table class="inv-table" style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; background-color: transparent;">
-                            <thead>
-                                <tr>
-                                    <th style="padding: 10px; border: 1px solid #ddd; text-align: left; background-color: transparent;">Item Description</th>
-                                    <th style="padding: 10px; border: 1px solid #ddd; text-align: left; background-color: transparent;">Product ID</th>
-                                    <th style="padding: 10px; border: 1px solid #ddd; text-align: left; background-color: transparent;">Unit Price</th>
-                                    <th style="padding: 10px; border: 1px solid #ddd; text-align: left; background-color: transparent;">Disc. Price</th>
-                                    <th style="padding: 10px; border: 1px solid #ddd; text-align: left; background-color: transparent;">Qty</th>
-                                    <th style="padding: 10px; border: 1px solid #ddd; text-align: left; background-color: transparent;">Amount</th>
-                                </tr>
-                            </thead>
-                            <tbody style="background-color: transparent;">
-                                ${itemsRowsHTML}
-                            </tbody>
-                        </table>
-
-                        <div class="inv-summary" style="background-color: transparent; padding: 10px; border-radius: 8px; margin-top: 15px; margin-left: auto; width: 45%; font-size: 13px;">
-                            <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #eee;"><span>Subtotal:</span><span>₹${subtotal.toFixed(2)}</span></div>
-                            <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #eee;"><span>Flat Discount or Round Off:</span><span>-₹${flatDiscount.toFixed(2)}</span></div>
-                            <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #eee;"><span>Taxable Net Amount:</span><span>₹${baseTaxableAmount}</span></div>
-                            <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #eee;"><span>Integrated GST (18%):</span><span>₹${calculatedGstSlice}</span></div>
-                            <div style="display: flex; justify-content: space-between; padding: 6px 0; font-weight: bold; color: #075E54; border-top: 1px solid #075E54; margin-top: 2px;"><span>Gross Total:</span><span>₹${grossValueStr}</span></div>
-                        </div>
-                    </div>
-                </div>
-			`;
-
-			const pdfOptions = {
-				margin: 5, 
-				filename: `Printelivery_${orderId.replace(/\s+/g, '_')}_Invoice.pdf`,
-				image: { type: 'jpeg', quality: 0.98 },
-				html2canvas: { scale: 2, useCORS: true, allowTaint: true }, 
-				jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-			};
-
-			canvas.style.display = "block";
 
 
 			try {
