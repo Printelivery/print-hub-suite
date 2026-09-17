@@ -850,20 +850,18 @@
             const calculatedGstSlice = (finalGrossTotal - parseFloat(baseTaxableAmount)).toFixed(2);
             const grossValueStr = finalGrossTotal.toFixed(2);
 
-									const canvas = document.getElementById('invoiceRenderCanvas');
-			canvas.style.padding = '0';
-			canvas.style.overflow = 'hidden';
+						const canvas = document.getElementById('invoiceRenderCanvas');
+        			canvas.style.padding = '0';
+        			canvas.style.overflow = 'hidden';
            
            	canvas.innerHTML = `
-                <!-- A4 CONTAINER: Locked to top with consistent padding, natural flow -->
-                <div style="position: relative; width: 210mm; min-height: 297mm; box-sizing: border-box; background: #ffffff; padding: 15mm; font-family: Arial, sans-serif; color: #333;">
+                <!-- A4 CONTAINER: Height set to auto to eliminate sub-pixel overflow on single pages -->
+                <div id="invoiceA4Wrapper" style="position: relative; width: 210mm; height: auto; box-sizing: border-box; background: #ffffff; padding: 15mm; font-family: Arial, sans-serif; color: #333;">
                     
-                    <!-- WATERMARK LAYER: Centered absolutely in the background without affecting content flow -->
-                    <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; z-index: 0; pointer-events: none; overflow: hidden;">
-                        <img src="https://i.postimg.cc/5yYsW7M1/PrinteliveryLogo1.jpg" style="width: 65%; max-height: 65%; opacity: 0.15; object-fit: contain;" crossorigin="anonymous">
-                    </div>
+                    <!-- WATERMARK LAYER: Populated programmatically based on actual container height -->
+                    <div id="dynamicWatermarkContainer" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; overflow: hidden; z-index: 0; pointer-events: none;"></div>
                     
-                    <!-- FOREGROUND CONTENT LAYER: Locked to top, standard flow -->
+                    <!-- FOREGROUND CONTENT LAYER: Standard top-to-bottom layout flow -->
                     <div style="position: relative; z-index: 1; width: 100%;">
                         
                         <!-- Header -->
@@ -878,7 +876,7 @@
                             </div>
                         </div>
 
-                        <!-- Customer & Delivery Details (Table-based layout for 100% rendering stability) -->
+                        <!-- Customer & Delivery Details -->
                         <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 12px; background: transparent;">
                             <tr>
                                 <td style="width: 50%; vertical-align: top; padding: 0; border: none; background: transparent;">
@@ -922,6 +920,19 @@
                 </div>
 			`;
 
+            // Calculate exact pages needed by measuring rendered pixel height (1123px ≈ 297mm at 96dpi)
+            const wrapperNode = document.getElementById('invoiceA4Wrapper');
+            const exactPagesNeeded = Math.max(1, Math.ceil(wrapperNode.offsetHeight / 1123)); 
+            
+            let dynamicWatermarksHTML = '';
+            for (let i = 0; i < exactPagesNeeded; i++) {
+                dynamicWatermarksHTML += `
+                    <div style="position: absolute; top: ${i * 297}mm; left: 0; width: 100%; height: 297mm; display: flex; justify-content: center; align-items: center;">
+                        <img src="https://i.postimg.cc/5yYsW7M1/Printelivery-Logo1.jpg" style="width: 65%; max-height: 65%; opacity: 0.15; object-fit: contain;" crossorigin="anonymous">
+                    </div>`;
+            }
+            document.getElementById('dynamicWatermarkContainer').innerHTML = dynamicWatermarksHTML;
+
 			const pdfOptions = {
 				margin: 0, 
 				filename: `Printelivery_${orderId.replace(/\s+/g, '_')}_Invoice.pdf`,
@@ -931,7 +942,6 @@
 			};
 
 			canvas.style.display = "block";
-
 
 
 
